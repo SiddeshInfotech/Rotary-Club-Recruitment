@@ -2,10 +2,10 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/jwt");
 
-// 🔹 Register
+//  Register
 exports.register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name,email, password, role } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -18,6 +18,7 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
+      name,
       email,
       password: hashedPassword,
       role,

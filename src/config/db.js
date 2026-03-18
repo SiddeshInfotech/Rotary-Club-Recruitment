@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const connectDB = async () => {
   try {
     await mongoose.connect("mongodb://localhost:27017/Job-Portal");
-    console.log("✅ MongoDB Connected");
+    console.log("MongoDB Connected");
   } catch (error) {
-    console.error("❌ DB Error:", error.message);
+    console.error("DB Error:", error.message);
     process.exit(1);
   }
 };
