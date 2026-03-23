@@ -3,16 +3,19 @@ const cors = require("cors");
 
 const app = express();
 
-// Middleware
+// ✅ MIDDLEWARE FIRST
 app.use(cors());
 app.use(express.json());
 
-// Test route
+// ✅ ROUTES AFTER MIDDLEWARE
+const profileRoutes = require("./routes/profile.routes");
+app.use("/api/profile", profileRoutes);
+
+app.use("/api/auth", require("./routes/auth.routes"));
+
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-
-// Routes
-app.use("/api/auth", require("./routes/auth.routes"));
 
 module.exports = app;
