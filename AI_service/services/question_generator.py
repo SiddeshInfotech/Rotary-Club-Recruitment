@@ -1,14 +1,17 @@
 """
 Question generation for candidate assessments.
 """
+from concurrent.futures import ThreadPoolExecutor
+
 from core.errors import LLMOutputParseError
 from models.candidate_model import QuestionItem
-from services.json_parser import parse_llm_json_or_raise
 from services.llm_client import chat_completion_with_retry
+from services.json_parser import parse_llm_json_or_raise
 
 
 DEFAULT_QUESTION_COUNT = 100
 QUESTION_BATCH_SIZE = 20
+MAX_PARALLEL_BATCHES = 4
 
 
 def _extract_question_items(parsed_payload: object) -> list[QuestionItem]:
@@ -29,6 +32,42 @@ def _extract_question_items(parsed_payload: object) -> list[QuestionItem]:
     return batch_items
 
 
+def _build_questions_prompt(candidate, batch_count: int) -> str:
+    return f"""
+You are an emotional intelligence assessment expert.
+
+Candidate Information:
+Name: {candidate.name}
+Education: {candidate.education}
+Hobbies: {candidate.hobbies}
+Strengths: {candidate.strengths}
+Weaknesses: {candidate.weaknesses}
+
+Create EXACTLY {batch_count} multiple choice questions to test emotional intelligence (EQ).
+Focus on situations related to their strengths, weaknesses, education background, and hobbies.
+
+IMPORTANT: You MUST provide exactly {batch_count} questions. Do not return more or fewer.
+Each question must have exactly 4 options.
+
+Return ONLY valid JSON object in this exact format:
+{{
+    "questions": [
+        {{"question":"...", "options":["...","...","...","..."]}}
+    ]
+}}
+
+The array must contain exactly {batch_count} items.
+"""
+
+
+def _generate_question_batch(candidate, batch_count: int) -> list[QuestionItem]:
+    prompt = _build_questions_prompt(candidate, batch_count)
+    raw_content = chat_completion_with_retry(prompt, json_mode=True)
+    parsed = parse_llm_json_or_raise(raw_content)
+    items = _extract_question_items(parsed)
+    return items[:batch_count]
+
+
 def generate_questions(candidate) -> list[QuestionItem]:
     """
     Generate assessment questions tailored to a candidate.
@@ -39,37 +78,34 @@ def generate_questions(candidate) -> list[QuestionItem]:
     Returns:
         List of QuestionItem objects with questions and options
     """
-    all_questions: list[QuestionItem] = []
     needed = DEFAULT_QUESTION_COUNT
+    batch_sizes: list[int] = []
+    remaining = needed
+    while remaining > 0:
+        size = min(QUESTION_BATCH_SIZE, remaining)
+        batch_sizes.append(size)
+        remaining -= size
 
-    while len(all_questions) < needed:
-        remaining = needed - len(all_questions)
-        batch_count = min(QUESTION_BATCH_SIZE, remaining)
+    indexed_batches: dict[int, list[QuestionItem]] = {}
+    max_workers = min(MAX_PARALLEL_BATCHES, len(batch_sizes))
 
-        prompt = f"""
-You are an emotional intelligence assessment expert.
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(_generate_question_batch, candidate, size): index
+            for index, size in enumerate(batch_sizes)
+        }
 
-Candidate Information:
-Name: {candidate.name}
-Education: {candidate.education}
-Hobbies: {candidate.hobbies}
-Strengths: {candidate.strengths}
-Weaknesses: {candidate.weaknesses}
+        for future, index in futures.items():
+            indexed_batches[index] = future.result()
 
-Create {batch_count} multiple choice questions to test emotional intelligence (EQ).
-Focus on situations related to their strengths, weaknesses, education background, and hobbies.
+    all_questions: list[QuestionItem] = []
+    for index in range(len(batch_sizes)):
+        all_questions.extend(indexed_batches[index])
 
-Return ONLY valid JSON object in this exact format:
-{{
-    "questions": [
-        {{"question":"...", "options":["...","...","...","..."]}}
-    ]
-}}
-"""
-        raw_content = chat_completion_with_retry(prompt, json_mode=True)
-        parsed = parse_llm_json_or_raise(raw_content)
-        batch_items = _extract_question_items(parsed)
-
-        all_questions.extend(batch_items[:batch_count])
+    # If we fell short, generate additional questions to reach the target
+    if len(all_questions) < needed:
+        shortfall = needed - len(all_questions)
+        additional = _generate_question_batch(candidate, shortfall)
+        all_questions.extend(additional)
 
     return all_questions[:needed]
