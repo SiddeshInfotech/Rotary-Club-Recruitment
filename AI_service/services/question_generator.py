@@ -45,7 +45,7 @@ Weaknesses: {candidate.weaknesses}
 
 Create EXACTLY {batch_count} multiple choice questions to test emotional intelligence (EQ).
 Focus on situations related to their strengths, weaknesses, education background, and hobbies.
-
+Dont use name of user, use you your instead.
 IMPORTANT: You MUST provide exactly {batch_count} questions. Do not return more or fewer.
 Each question must have exactly 4 options.
 

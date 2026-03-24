@@ -13,11 +13,14 @@ class MatchJobInput(BaseModel):
     id: str | int
     eq_requirements: dict[str, float]
     weights: dict[str, float] | None = None
+    embedding: list[float] | None = None
 
 
 class MatchRequest(BaseModel):
     candidate_scores: dict[str, float]
     jobs: list[MatchJobInput]
+    candidate_embedding: list[float] | None = None
+    semantic_weight: float = Field(default=0.3, ge=0.0, le=1.0)
 
 
 class ProcessJobResponse(BaseModel):

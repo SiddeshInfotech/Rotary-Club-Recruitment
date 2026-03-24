@@ -84,7 +84,14 @@ def match_candidate_job(data: MatchRequest):
     results: list[MatchResultItem] = []
 
     for job in data.jobs:
-        score = calculate_match(data.candidate_scores, job.eq_requirements, job.weights)
+        score = calculate_match(
+            data.candidate_scores,
+            job.eq_requirements,
+            job.weights,
+            data.candidate_embedding,
+            job.embedding,
+            data.semantic_weight,
+        )
         results.append(MatchResultItem(job_id=job.id, match_score=round(score, 3)))
 
     results.sort(key=lambda item: item.match_score, reverse=True)

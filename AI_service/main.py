@@ -3,6 +3,7 @@ import time
 import uuid
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from core.errors import AIServiceError, ai_service_exception_handler, generic_exception_handler
@@ -12,6 +13,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.service_name)
+###Risky Change in production - Chanchal
+###### CORS Middleware - Allow all origins for simplicity (adjust in production) ######
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router)
 

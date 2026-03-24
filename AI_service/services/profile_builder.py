@@ -30,9 +30,8 @@ Weaknesses: {candidate.weaknesses}
 Competency Assessment Results:
 {scores_text}
 
-Based on the candidate's background and competency scores, write exactly 2 concise, professional sentences (max 40 words total):
-1) overall assessment and top strengths
-2) development recommendation and role-fit hint considering their education and interests
+Based on the candidate's background and competency scores, return exactly 1 string, professional sentence (max 40 words total):
+plain text (no bullet points, no numbering). The sentence must summarize overall assessment and key strengths
 """
 
     return chat_completion_with_retry(prompt).strip()
