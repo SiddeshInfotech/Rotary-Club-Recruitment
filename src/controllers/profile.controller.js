@@ -12,6 +12,30 @@ exports.createOrUpdateProfile = async (req, res) => {
       preferredJobRole,
     } = req.body;
 
+     // ✅ VALIDATION
+    if (
+      !college ||
+      !degree ||
+      !skills ||
+      !interests ||
+      !experienceLevel ||
+      !preferredJobRole
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // ✅ HANDLE STRING OR ARRAY INPUT
+    const skillsArray = Array.isArray(skills)
+      ? skills
+      : skills.split(",").map((s) => s.trim());
+
+    const interestsArray = Array.isArray(interests)
+      ? interests
+      : interests.split(",").map((i) => i.trim());
+
     const userId = req.user.id; // ✅ FIXED
 
     let profile = await CandidateProfile.findOne({ user: userId });

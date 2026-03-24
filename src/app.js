@@ -7,9 +7,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ ROUTES AFTER MIDDLEWARE
+// ✅ ROUTES
 const profileRoutes = require("./routes/profile.routes");
+const recruiterRoutes = require("./routes/recruiter.routes"); // ✅ ADD THIS
+
 app.use("/api/profile", profileRoutes);
+app.use("/api/recruiter", recruiterRoutes); // ✅ ADD THIS
 
 app.use("/api/auth", require("./routes/auth.routes"));
 
