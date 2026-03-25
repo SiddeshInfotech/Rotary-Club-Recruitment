@@ -2,9 +2,11 @@ import Navbar from "../components/layout/Navbar";
 
 export default function CandidateLayout({ children }) {
     return (
-        <div>
+        <div className="bg-[#f8fafc] min-h-screen font-sans">
             <Navbar />
-            <div className="p-6">{children}</div>
+            <div className="max-w-7xl mx-auto px-6 py-8">
+                {children}
+            </div>
         </div>
-    )
+    );
 }
