@@ -24,3 +24,4 @@ yarn-error.log*
 
 # local-only docs (not for git)
 PROJECT_DOCUMENTATION.md
+presentation.md
