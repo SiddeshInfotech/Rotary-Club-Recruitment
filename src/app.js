@@ -10,9 +10,12 @@ app.use(express.json());
 // ✅ ROUTES
 const profileRoutes = require("./routes/profile.routes");
 const recruiterRoutes = require("./routes/recruiter.routes"); // ✅ ADD THIS
+const jobRoutes = require("./routes/job.routes");
 
 app.use("/api/profile", profileRoutes);
 app.use("/api/recruiter", recruiterRoutes); // ✅ ADD THIS
+app.use("/api/jobs", jobRoutes); // ✅ ADD THIS
+
 
 app.use("/api/auth", require("./routes/auth.routes"));
 
