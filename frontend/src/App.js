@@ -1,12 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import CandidateDashboard from "./pages/candidate/Dashboard";
+import Matches from "./pages/candidate/Matches";
 import RecruiterDashboard from "./pages/recruiter/Dashboard";
+import JobSearch from "./pages/candidate/JobSearch";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<CandidateDashboard />} />
+        <Route path="/matches" element={<Matches />} />
+        <Route path="/job-search" element={<JobSearch />} />
         <Route path="/recruiter" element={<RecruiterDashboard />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

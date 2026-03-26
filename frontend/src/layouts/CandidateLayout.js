@@ -1,83 +1,134 @@
-import { LayoutDashboard, BrainCircuit, Briefcase, Share2, Settings, Bell, User } from 'lucide-react';
+import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Bell, Search } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 import ThemeToggle from '../components/common/ThemeToggle';
 
 export default function CandidateLayout({ children }) {
-    const navItems = [
-        { name: 'OVERVIEW', icon: LayoutDashboard },
-        { name: 'EQ INSIGHTS', icon: BrainCircuit },
-        { name: 'OPPORTUNITIES', icon: Briefcase },
-        { name: 'REFERRALS', icon: Share2 },
-        { name: 'SETTINGS', icon: Settings }
+    const location = useLocation();
+
+    const mainMenu = [
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Matches', icon: Star, path: '/matches' },
+        { name: 'Job Search', icon: Search, path: '/job-search' },
+        { name: 'Network', icon: Network, path: '/network' },
+        { name: 'Growth', icon: TrendingUp, path: '/growth' }
+    ];
+
+    const insightsMenu = [
+        { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
+        { name: 'Referrals', icon: Users, path: '/referrals' }
     ];
 
     return (
-        <div className="flex min-h-screen font-sans">
+        <div className="flex min-h-screen font-sans bg-slate-50 dark:bg-[#0b1121]">
             {/* Left Sidebar */}
-            <aside className="w-[280px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-8 pb-6 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
-                <div className="mb-12">
-                    <p className="text-xs tracking-wider font-black text-slate-800 dark:text-slate-200 uppercase mb-2">MEMBER PROFILE</p>
-                    <span className="inline-block px-3 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-bold tracking-widest uppercase">
-                        Premium Tier
-                    </span>
+            <aside className="w-[300px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
+                <div className="mb-10 px-4">
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        <span className="text-blue-600">EQ</span>-Hire
+                    </h1>
                 </div>
 
-                <nav className="flex flex-col gap-2">
-                    {navItems.map((item, idx) => {
-                        const active = idx === 0;
-                        const IconComponent = item.icon;
-                        return (
-                            <a key={item.name} href="#" className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold tracking-wider relative transition-colors ${active ? 'text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}`}>
-                                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-600 dark:bg-blue-500 rounded-r-full" />}
-                                <IconComponent className={`w-5 h-5 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                                {item.name}
+                <div className="flex-1 overflow-y-auto">
+                    {/* Main Menu Section */}
+                    <div className="mb-8">
+                        <p className="px-4 text-[10px] tracking-widest font-bold text-slate-400 dark:text-slate-500 uppercase mb-3">MAIN MENU</p>
+                        <nav className="flex flex-col gap-1">
+                            {mainMenu.map((item) => {
+                                const active = location.pathname === item.path;
+                                const IconComponent = item.icon;
+                                return (
+                                    <Link 
+                                        key={item.name} 
+                                        to={item.path} 
+                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${active ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                                    >
+                                        <IconComponent className={`w-5 h-5 ${active ? 'fill-blue-600/20 text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                                        {item.name}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
+
+                    {/* Insights Section */}
+                    <div>
+                        <p className="px-4 text-[10px] tracking-widest font-bold text-slate-400 dark:text-slate-500 uppercase mb-3">INSIGHTS</p>
+                        <nav className="flex flex-col gap-1">
+                            {insightsMenu.map((item) => {
+                                const active = location.pathname === item.path;
+                                const IconComponent = item.icon;
+                                return (
+                                    <Link 
+                                        key={item.name} 
+                                        to={item.path} 
+                                        className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${active ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                                    >
+                                        <IconComponent className={`w-5 h-5 ${active ? 'fill-blue-600/20 text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                                        {item.name}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </div>
+
+                {/* Bottom Section */}
+                <div className="pt-6 mt-6">
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                            <a href="#" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
+                                <Settings className="w-5 h-5 text-slate-400" />
+                                Settings
                             </a>
-                        );
-                    })}
-                </nav>
-                <div className="mt-auto pt-8">
-                    <button className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg py-4 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 transition shadow-sm">
+                        </div>
+                        <a href="#" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">
+                            <Bell className="w-5 h-5 text-slate-400" />
+                            Notifications
+                        </a>
+
+                    <div className="flex items-center gap-3 px-4 mb-6">
+                        <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                            <img src={`https://ui-avatars.com/api/?name=Marcus+Thorne&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Premium Tier</p>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">MARCUS THORNE</p>
+                        </div>
+                    </div>
+
+                    <button className="w-full bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white rounded-xl py-3.5 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm">
                         UPGRADE STATUS
                     </button>
                 </div>
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col bg-white dark:bg-[#0b1121] min-h-screen">
-                {/* Top Nav */}
-                <header className="h-[80px] px-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-slate-900">
-                    <div className="flex items-center gap-14">
-                        <div className="text-xl font-bold text-slate-900 dark:text-white">
+            <main className="flex-1 flex flex-col min-h-screen overflow-auto p-8 lg:p-12 relative">
+                <div className="max-w-[1240px] mx-auto w-full">
+                    {/* Top Secondary Header */}
+                    <header className="flex items-center justify-between mb-10">
+                        <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
                             <span className="text-blue-600">EQ</span>-Hire
                         </div>
-                        <nav className="flex items-center gap-10 text-sm font-bold text-slate-500 dark:text-slate-400">
-                            <a href="#" className="text-slate-900 dark:text-white pb-[27px] pt-7 border-b-[3px] border-blue-600 relative top-[1px]">Dashboard</a>
-                            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition">Matches</a>
-                            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition">Network</a>
-                            <a href="#" className="hover:text-slate-900 dark:hover:text-white transition">Growth</a>
-                        </nav>
-                    </div>
-                    
-                    <div className="flex items-center gap-6">
-                        {/* Dark Mode Toggle */}
-                        <ThemeToggle />
-
-                        <div className="relative cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                            <Bell className="w-6 h-6" />
-                            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                        <div className="hidden lg:flex flex-1 max-w-md relative">
+                            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                                type="text"
+                                placeholder="Search..."
+                                className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full text-sm font-medium text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm transition-all"
+                            />
                         </div>
-                        <div className="flex items-center gap-3 cursor-pointer pl-4 border-l border-slate-200 dark:border-slate-700">
-                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center overflow-hidden">
-                                <User className="w-6 h-6 text-slate-500 dark:text-slate-400 mt-2" />
-                            </div>
-                            <span className="text-sm font-bold text-slate-800 dark:text-white">Marcus Thorne</span>
+                        
+                        <div className="flex items-center gap-4 ml-auto">
+                            <ThemeToggle />
+                            
+                            <button className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                            </button>
                         </div>
-                    </div>
-                </header>
+                    </header>
 
-                <div className="flex-1 overflow-auto p-12">
-                    <div className="max-w-[1240px] mx-auto">
-                        {children}
-                    </div>
+                    {children}
                 </div>
             </main>
         </div>
