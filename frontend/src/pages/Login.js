@@ -1,12 +1,39 @@
+import { useState } from 'react';
 import { ArrowLeft, Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
     const navigate = useNavigate();
+    const { login, user } = useAuth();
+    const [email, setEmail] = useState('');
 
     const handleLogin = (e) => {
         e.preventDefault();
-        // Default routing for example layout:
+
+        const saved = localStorage.getItem("eqhire_user");
+        if (saved) {
+            const userData = JSON.parse(saved);
+            if (userData.email === email) {
+                login(userData);
+                navigate(userData.role === 'recruiter' ? '/recruiter' : '/candidate');
+                return;
+            }
+        }
+
+        const names = email.split('@')[0].split('.');
+        const firstName = names[0] ? names[0].charAt(0).toUpperCase() + names[0].slice(1) : 'User';
+        const lastName = names[1] ? names[1].charAt(0).toUpperCase() + names[1].slice(1) : '';
+
+        const fallbackUser = {
+            firstName,
+            lastName,
+            fullName: `${firstName} ${lastName}`.trim(),
+            email,
+            role: 'candidate',
+        };
+
+        login(fallbackUser);
         navigate('/candidate');
     };
 
@@ -34,7 +61,14 @@ export default function Login() {
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input type="email" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="jane.doe@example.com" required />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium"
+                                placeholder="jane.doe@example.com"
+                                required
+                            />
                         </div>
                     </div>
 

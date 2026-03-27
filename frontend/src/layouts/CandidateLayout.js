@@ -1,12 +1,17 @@
 import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Bell, Search } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import ThemeToggle from '../components/common/ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 
 export default function CandidateLayout({ children }) {
     const location = useLocation();
+    const { user } = useAuth();
+
+    const displayName = user?.fullName || 'Guest User';
+    const avatarName = encodeURIComponent(displayName);
 
     const baseMainMenu = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/candidate' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'Network', icon: Network, path: '/network' },
         { name: 'Growth', icon: TrendingUp, path: '/growth' }
@@ -14,11 +19,10 @@ export default function CandidateLayout({ children }) {
 
     const isJobRelated = location.pathname.includes('/job') || location.pathname === '/matches';
     
-    // Show Matches and hide Network/Growth if on job search
     const mainMenu = isJobRelated ? [
-        baseMainMenu[0], // Dashboard
-        baseMainMenu[1], // Job Search
-        { name: 'Matches', icon: Star, path: '/matches' } // Injected Matches
+        baseMainMenu[0],
+        baseMainMenu[1],
+        { name: 'Matches', icon: Star, path: '/matches' }
     ] : baseMainMenu;
 
     const insightsMenu = [
@@ -28,7 +32,6 @@ export default function CandidateLayout({ children }) {
 
     return (
         <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
-            {/* Left Sidebar */}
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -37,7 +40,6 @@ export default function CandidateLayout({ children }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {/* Main Menu Section */}
                     <div className="mb-8">
                         <p className="px-4 text-[10px] tracking-widest font-bold text-slate-400 dark:text-slate-500 uppercase mb-3">MAIN MENU</p>
                         <nav className="flex flex-col gap-1">
@@ -58,7 +60,6 @@ export default function CandidateLayout({ children }) {
                         </nav>
                     </div>
 
-                    {/* Insights Section */}
                     <div>
                         <p className="px-4 text-[10px] tracking-widest font-bold text-slate-400 dark:text-slate-500 uppercase mb-3">INSIGHTS</p>
                         <nav className="flex flex-col gap-1">
@@ -80,7 +81,6 @@ export default function CandidateLayout({ children }) {
                     </div>
                 </div>
 
-                {/* Bottom Section */}
                 <div className="pt-6 mt-6">
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             <a href="#" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
@@ -95,11 +95,11 @@ export default function CandidateLayout({ children }) {
 
                     <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
-                            <img src={`https://ui-avatars.com/api/?name=Marcus+Thorne&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
+                            <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Premium Tier</p>
-                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">MARCUS THORNE</p>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>
 
@@ -109,10 +109,8 @@ export default function CandidateLayout({ children }) {
                 </div>
             </aside>
 
-            {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full overflow-y-auto p-8 lg:p-12 relative">
                 <div className="max-w-[1240px] mx-auto w-full">
-                    {/* Top Secondary Header */}
                     <header className="flex items-center justify-between mb-10">
                         <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
                             <span className="text-blue-600">EQ</span>-Hire

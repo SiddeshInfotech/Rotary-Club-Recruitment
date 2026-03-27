@@ -5,21 +5,12 @@ import TraitBar from "../../components/profile/TraitBar";
 import StatChip from "../../components/profile/StatChip";
 import MembershipBadge from "../../components/profile/MembershipBadge";
 import QuickStatCard from "../../components/profile/QuickStatCard";
+import { useAuth } from "../../context/AuthContext";
 import {
     CheckCircle, MapPin, Sparkles, Star, Award,
     Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock,
 } from "lucide-react";
 
-const CANDIDATE = {
-    name: "Marcus Sterling",
-    legalName: "Marcus T. Sterling",
-    email: "m.sterling@executive.co",
-    role: "VP of Operations, FinTech Solutions",
-    location: "London, UK",
-    verified: true,
-    bio: '"Driving human-centric efficiency through analytical leadership and emotional intelligence."',
-    aggregateScore: 88,
-};
 
 const EQ_SCORES = {
     Leadership: 88,
@@ -74,6 +65,18 @@ const TABS = ["Overview", "EQ Details", "Growth Journey"];
 
 export default function CandidateProfile() {
     const [activeTab, setActiveTab] = useState("overview");
+    const { user } = useAuth();
+
+    const candidate = {
+        name: user?.fullName || "Guest User",
+        legalName: user?.fullName || "Guest User",
+        email: user?.email || "not set",
+        role: user?.skills ? user.skills.split(',')[0] : "Not specified",
+        location: "London, UK",
+        verified: true,
+        bio: '"Driving human-centric efficiency through analytical leadership and emotional intelligence."',
+        aggregateScore: 88,
+    };
 
     return (
         <CandidateLayout>
@@ -83,10 +86,10 @@ export default function CandidateProfile() {
                         CANDIDATE PORTFOLIO
                     </p>
                     <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
-                        {CANDIDATE.name}
+                        {candidate.name}
                     </h1>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
-                        {CANDIDATE.verified && (
+                        {candidate.verified && (
                             <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-full">
                                 <CheckCircle className="w-3 h-3" />
                                 Verified Member
@@ -94,7 +97,7 @@ export default function CandidateProfile() {
                         )}
                         <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                             <MapPin className="w-3 h-3" />
-                            {CANDIDATE.location}
+                            {candidate.location}
                         </span>
                     </div>
                 </div>
@@ -139,7 +142,7 @@ export default function CandidateProfile() {
                             </div>
                             <div className="text-right">
                                 <p className="text-5xl font-black text-slate-900 dark:text-white leading-none">
-                                    {CANDIDATE.aggregateScore}
+                                    {candidate.aggregateScore}
                                 </p>
                                 <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mt-1">
                                     AGGREGATE SCORE
@@ -246,9 +249,9 @@ export default function CandidateProfile() {
 
                         <div className="flex flex-col gap-4">
                             {[
-                                { label: "Legal Name",    value: CANDIDATE.legalName },
-                                { label: "Primary Email", value: CANDIDATE.email },
-                                { label: "Current Role",  value: CANDIDATE.role },
+                                { label: "Legal Name",    value: candidate.legalName },
+                                { label: "Primary Email", value: candidate.email },
+                                { label: "Current Role",  value: candidate.role },
                             ].map(({ label, value }) => (
                                 <div key={label}>
                                     <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
@@ -261,7 +264,7 @@ export default function CandidateProfile() {
                             ))}
                             <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                                 <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed">
-                                    {CANDIDATE.bio}
+                                    {candidate.bio}
                                 </p>
                             </div>
                         </div>

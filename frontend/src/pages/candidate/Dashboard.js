@@ -3,8 +3,12 @@ import WelcomeCard from "../../components/cards/WelcomeCard";
 import EQProfileCard from "../../components/cards/EQProfileCard";
 import RecommendedMatches from "../../components/cards/JobCard";
 import ActiveApplications from "../../components/tables/ApplicationsTables";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Dashboard() {
+    const { user } = useAuth();
+    const firstName = user?.firstName || 'there';
+
     return (
         <CandidateLayout>
             
@@ -13,7 +17,7 @@ export default function Dashboard() {
                 <div className="max-w-[700px]">
                     <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-4 font-serif">Candidate Intelligence</h1>
                     <p className="text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                        Welcome back, Marcus. Your EQ profile has been updated based on your recent teamwork simulations.
+                        Welcome back, {firstName}. Your EQ profile has been updated based on your recent teamwork simulations.
                     </p>
                 </div>
                 
