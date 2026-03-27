@@ -5,13 +5,21 @@ import ThemeToggle from '../components/common/ThemeToggle';
 export default function CandidateLayout({ children }) {
     const location = useLocation();
 
-    const mainMenu = [
+    const baseMainMenu = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-        { name: 'Matches', icon: Star, path: '/matches' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'Network', icon: Network, path: '/network' },
         { name: 'Growth', icon: TrendingUp, path: '/growth' }
     ];
+
+    const isJobRelated = location.pathname.includes('/job') || location.pathname === '/matches';
+    
+    // Show Matches and hide Network/Growth if on job search
+    const mainMenu = isJobRelated ? [
+        baseMainMenu[0], // Dashboard
+        baseMainMenu[1], // Job Search
+        { name: 'Matches', icon: Star, path: '/matches' } // Injected Matches
+    ] : baseMainMenu;
 
     const insightsMenu = [
         { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
@@ -19,9 +27,9 @@ export default function CandidateLayout({ children }) {
     ];
 
     return (
-        <div className="flex min-h-screen font-sans bg-slate-50 dark:bg-[#0b1121]">
+        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
             {/* Left Sidebar */}
-            <aside className="w-[300px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
+            <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                         <span className="text-blue-600">EQ</span>-Hire
@@ -85,7 +93,7 @@ export default function CandidateLayout({ children }) {
                             Notifications
                         </a>
 
-                    <div className="flex items-center gap-3 px-4 mb-6">
+                    <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                             <img src={`https://ui-avatars.com/api/?name=Marcus+Thorne&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
@@ -93,7 +101,7 @@ export default function CandidateLayout({ children }) {
                             <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Premium Tier</p>
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">MARCUS THORNE</p>
                         </div>
-                    </div>
+                    </Link>
 
                     <button className="w-full bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white rounded-xl py-3.5 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm">
                         UPGRADE STATUS
@@ -102,7 +110,7 @@ export default function CandidateLayout({ children }) {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-h-screen overflow-auto p-8 lg:p-12 relative">
+            <main className="flex-1 flex flex-col h-full overflow-y-auto p-8 lg:p-12 relative">
                 <div className="max-w-[1240px] mx-auto w-full">
                     {/* Top Secondary Header */}
                     <header className="flex items-center justify-between mb-10">

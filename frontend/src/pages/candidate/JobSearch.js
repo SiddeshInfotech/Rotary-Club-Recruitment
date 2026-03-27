@@ -1,7 +1,10 @@
 import CandidateLayout from "../../layouts/CandidateLayout";
 import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function JobSearch() {
+    const navigate = useNavigate();
+
     return (
         <CandidateLayout>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">
@@ -102,10 +105,18 @@ export default function JobSearch() {
                             </div>
                         </div>
                         
-                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 flex-shrink-0">
-                            <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition w-full md:w-auto text-center border border-slate-800 dark:border-slate-700">
-                                Apply Now
-                            </button>
+                        <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                            <div className="flex flex-row gap-2 w-full md:w-auto">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); navigate('/job/1'); }}
+                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
+                                >
+                                    Details
+                                </button>
+                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
+                                    Apply
+                                </button>
+                            </div>
                             <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400">
                                 <Clock className="w-3 h-3" /> 2 days ago
                             </span>
@@ -143,10 +154,18 @@ export default function JobSearch() {
                             </div>
                         </div>
                         
-                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 flex-shrink-0">
-                            <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition w-full md:w-auto text-center border border-slate-800 dark:border-slate-700">
-                                Apply Now
-                            </button>
+                        <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                            <div className="flex flex-row gap-2 w-full md:w-auto">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); navigate('/job/2'); }}
+                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
+                                >
+                                    Details
+                                </button>
+                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
+                                    Apply
+                                </button>
+                            </div>
                             <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400">
                                 <Clock className="w-3 h-3" /> 1 week ago
                             </span>
