@@ -5,6 +5,7 @@ import RecruiterDashboard from "./pages/recruiter/Dashboard";
 import JobSearch from "./pages/candidate/JobSearch";
 import JobDetail from "./pages/candidate/JobDetail";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
+import RecruiterProfile from "./pages/candidate/RecruiterProfile";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/job-search" element={<JobSearch />} />
         <Route path="/job/:id" element={<JobDetail />} />
         <Route path="/profile" element={<CandidateProfile />} />
+        <Route path="/recruiter/:id" element={<RecruiterProfile />} />
         <Route path="/recruiter" element={<RecruiterDashboard />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
