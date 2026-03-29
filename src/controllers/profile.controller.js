@@ -1,96 +1,108 @@
 const CandidateProfile = require("../models/CandidateProfile");
 
-// CREATE or UPDATE profile
+// ✅ CREATE or UPDATE profile
 exports.createOrUpdateProfile = async (req, res) => {
   try {
     const {
       college,
       degree,
+      summary,
+      highlights,
       skills,
       interests,
       experienceLevel,
       preferredJobRole,
+      resumeUrl,
+      coverLetterUrl,
+      eqScores,
     } = req.body;
 
-     // ✅ VALIDATION
-    if (
-      !college ||
-      !degree ||
-      !skills ||
-      !interests ||
-      !experienceLevel ||
-      !preferredJobRole
-    ) {
+    // ✅ BASIC VALIDATION (keep minimal)
+    if (!college || !degree || !skills || !experienceLevel) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Required fields missing",
       });
     }
 
-    // ✅ HANDLE STRING OR ARRAY INPUT
-    const skillsArray = Array.isArray(skills)
-      ? skills
-      : skills.split(",").map((s) => s.trim());
-
-    const interestsArray = Array.isArray(interests)
-      ? interests
-      : interests.split(",").map((i) => i.trim());
-
-    const userId = req.user.id; // ✅ FIXED
+    const userId = req.user.id;
 
     let profile = await CandidateProfile.findOne({ user: userId });
 
     if (profile) {
-      // UPDATE
+      // 🔄 UPDATE
       profile = await CandidateProfile.findOneAndUpdate(
         { user: userId },
         {
           college,
           degree,
+          summary,
+          highlights,
           skills,
           interests,
           experienceLevel,
           preferredJobRole,
+          resumeUrl,
+          coverLetterUrl,
+          eqScores,
         },
         { new: true }
       );
     } else {
-      // CREATE
+      // 🆕 CREATE
       profile = await CandidateProfile.create({
         user: userId,
         college,
         degree,
+        summary,
+        highlights,
         skills,
         interests,
         experienceLevel,
         preferredJobRole,
+        resumeUrl,
+        coverLetterUrl,
+        eqScores,
       });
     }
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: "Profile saved successfully",
-      profile,
+      data: profile,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// GET profile
+// ✅ GET PROFILE (candidate self view)
 exports.getProfile = async (req, res) => {
   try {
     const profile = await CandidateProfile.findOne({
-      user: req.user.id, // ✅ FIXED
-    });
+      user: req.user.id,
+    }).populate("user", "name email");
 
     if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Profile not found",
+      });
     }
 
-    res.json(profile);
+    res.status(200).json({
+      success: true,
+      data: profile,
+    });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

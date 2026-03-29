@@ -3,10 +3,9 @@ const router = express.Router();
 
 const protect = require("../middleware/auth.middleware");
 const checkRole = require("../middleware/role.middleware");
-
 const jobController = require("../controllers/job.controller");
 
-// ✅ CREATE JOB (Recruiter only)
+// ✅ CREATE JOB (Recruiter)
 router.post(
   "/",
   protect,
@@ -23,6 +22,14 @@ router.get(
   protect,
   checkRole("recruiter"),
   jobController.getMyJobs
+);
+
+// ✅ MATCH SCORE (Candidate)
+router.get(
+  "/:jobId/match",
+  protect,
+  checkRole("candidate"),
+  jobController.getMatchScore
 );
 
 module.exports = router;

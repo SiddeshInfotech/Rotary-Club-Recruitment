@@ -1,10 +1,10 @@
 const RecruiterProfile = require("../models/RecruiterProfile");
 const CandidateProfile = require("../models/CandidateProfile");
 
-// CREATE or UPDATE recruiter profile
+// ✅ CREATE or UPDATE recruiter profile
 exports.createOrUpdateRecruiterProfile = async (req, res) => {
   try {
-    let {
+    const {
       companyName,
       industry,
       roleHiringFor,
@@ -13,7 +13,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
       companyDescription,
     } = req.body;
 
-    // ✅ VALIDATION
+    // ✅ Validation
     if (
       !companyName ||
       !industry ||
@@ -28,7 +28,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
       });
     }
 
-    // ✅ HANDLE ARRAY / STRING
+    // ✅ Handle array/string
     const skillsArray = Array.isArray(requiredSkills)
       ? requiredSkills
       : requiredSkills.split(",").map((s) => s.trim());
@@ -38,7 +38,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
     let profile = await RecruiterProfile.findOne({ user: userId });
 
     if (profile) {
-      // UPDATE
+      // 🔄 UPDATE
       profile = await RecruiterProfile.findOneAndUpdate(
         { user: userId },
         {
@@ -52,7 +52,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
         { new: true }
       );
     } else {
-      // CREATE
+      // 🆕 CREATE
       profile = await RecruiterProfile.create({
         user: userId,
         companyName,
@@ -66,7 +66,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Recruiter profile saved",
+      message: "Recruiter profile saved successfully",
       data: profile,
     });
 
@@ -78,7 +78,7 @@ exports.createOrUpdateRecruiterProfile = async (req, res) => {
   }
 };
 
-// GET recruiter profile
+// ✅ GET recruiter profile
 exports.getRecruiterProfile = async (req, res) => {
   try {
     const profile = await RecruiterProfile.findOne({
@@ -88,7 +88,7 @@ exports.getRecruiterProfile = async (req, res) => {
     if (!profile) {
       return res.status(404).json({
         success: false,
-        message: "Profile not found",
+        message: "Recruiter profile not found",
       });
     }
 
@@ -105,16 +105,46 @@ exports.getRecruiterProfile = async (req, res) => {
   }
 };
 
-// ✅ GET ALL CANDIDATES (VERY IMPORTANT FEATURE)
+// ✅ GET ALL CANDIDATES (basic list)
 exports.getAllCandidates = async (req, res) => {
   try {
     const candidates = await CandidateProfile.find()
-      .populate("user", "name email role");
+      .populate("user", "name email role")
+      .select("college degree skills experienceLevel user");
 
     res.status(200).json({
       success: true,
       count: candidates.length,
       data: candidates,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ✅ GET SINGLE CANDIDATE PROFILE (FULL VIEW)
+exports.getCandidateProfileById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const profile = await CandidateProfile.findOne({
+      user: id,
+    }).populate("user", "name email role");
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate profile not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: profile,
     });
 
   } catch (error) {
