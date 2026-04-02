@@ -15,6 +15,12 @@ import Login from "./pages/Login";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 
+import Network from "./pages/candidate/Network";
+import Referrals from "./pages/candidate/Referrals";
+import Growth from "./pages/candidate/Growth";
+import Insights from "./pages/candidate/Insights";
+import EQJourney from "./pages/candidate/EQJourney";
+
 
 function App() {
   return (
@@ -31,7 +37,12 @@ function App() {
           <Route path="/job-search" element={<JobSearch />} />
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/profile" element={<CandidateProfile />} />
-          <Route path="/recruiter/:id" element={<RecruiterProfile />} />
+          <Route path="/network" element={<Network />} />
+          <Route path="/referrals" element={<Referrals />} />
+          <Route path="/growth" element={<Growth />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/eq-journey" element={<EQJourney />} />
+          <Route path="/recruiter/id" element={<RecruiterProfile />} />
           <Route path="/recruiter" element={<RecruiterDashboard />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

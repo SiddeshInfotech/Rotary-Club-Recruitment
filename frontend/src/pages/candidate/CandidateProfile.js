@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CandidateLayout from "../../layouts/CandidateLayout";
 import EQRadarChart from "../../components/profile/EQRadarChart";
 import TraitBar from "../../components/profile/TraitBar";
@@ -8,7 +9,7 @@ import QuickStatCard from "../../components/profile/QuickStatCard";
 import { useAuth } from "../../context/AuthContext";
 import {
     CheckCircle, MapPin, Sparkles, Star, Award,
-    Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock,
+    Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock, X, Save
 } from "lucide-react";
 
 
@@ -65,17 +66,37 @@ const TABS = ["Overview", "EQ Details", "Growth Journey"];
 
 export default function CandidateProfile() {
     const [activeTab, setActiveTab] = useState("overview");
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({
+        name: "",
+        role: "",
+        location: "",
+        bio: ""
+    });
     const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const candidateName = user?.fullName || "Guest User";
+    const formattedName = candidateName.replace(/([a-z])([A-Z])/g, '$1 $2');
 
     const candidate = {
-        name: user?.fullName || "Guest User",
-        legalName: user?.fullName || "Guest User",
+        name: formattedName,
+        legalName: formattedName,
         email: user?.email || "not set",
-        role: user?.skills ? user.skills.split(',')[0] : "Not specified",
-        location: "London, UK",
+        role: editForm.role || (user?.skills ? user.skills.split(',')[0] : "Strategic Leadership Expert"),
+        location: editForm.location || "London, UK",
         verified: true,
-        bio: '"Driving human-centric efficiency through analytical leadership and emotional intelligence."',
+        bio: editForm.bio || '"Driving human-centric efficiency through analytical leadership and emotional intelligence."',
         aggregateScore: 88,
+    };
+
+    const handleEditSave = () => {
+        setIsEditing(false);
+        // In a real app, you would save this to context/backend
+        candidate.role = editForm.role;
+        candidate.location = editForm.location;
+        candidate.bio = editForm.bio;
+        candidate.name = editForm.name || candidate.name;
     };
 
     return (
@@ -85,9 +106,12 @@ export default function CandidateProfile() {
                     <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                         CANDIDATE PORTFOLIO
                     </p>
-                    <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
+                    <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight mb-2">
                         {candidate.name}
                     </h1>
+                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400 capitalize">
+                        {candidate.role}
+                    </p>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                         {candidate.verified && (
                             <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-full">
@@ -102,9 +126,12 @@ export default function CandidateProfile() {
                     </div>
                 </div>
 
-                <button className="flex items-center gap-2 self-start sm:self-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-80 transition shadow-sm">
+                <button 
+                    onClick={() => navigate('/eq-journey')}
+                    className="flex items-center gap-2 self-start sm:self-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-80 transition shadow-sm"
+                >
                     <Sparkles className="w-4 h-4" />
-                    Update EQ Test
+                    Start EQ Test
                 </button>
             </div>
 
@@ -130,83 +157,90 @@ export default function CandidateProfile() {
 
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8">
                 <div className="flex flex-col gap-8">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
-                        <div className="flex items-end justify-between mb-6">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
-                                    EQ Intelligence DNA
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    Based on your latest assessment (Oct 2023)
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-5xl font-black text-slate-900 dark:text-white leading-none">
-                                    {candidate.aggregateScore}
-                                </p>
-                                <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mt-1">
-                                    AGGREGATE SCORE
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-center h-[320px] w-full">
-                            <EQRadarChart scores={EQ_SCORES} />
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                            {EQ_METRICS.map((m) => (
-                                <StatChip key={m.label} label={m.label} value={m.value} />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
-                            <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
-                                Growth Journey
-                            </p>
-                            <button className="flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                                View All <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            {GROWTH_JOURNEY.map(({ label, title, body, highlight }) => (
-                                <div key={label}>
-                                    <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-2">
-                                        {label}
+                    {/* Conditionally rendering based on activeTab */}
+                    {(activeTab === "overview" || activeTab === "eq-details") && (
+                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                            <div className="flex items-end justify-between mb-6">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                        EQ Intelligence DNA
                                     </p>
-                                    <p className={`text-sm font-bold leading-snug mb-1 ${highlight ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"}`}>
-                                        {title}
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Based on your latest assessment (Oct 2023)
                                     </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">{body}</p>
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-8">
-                            <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full w-[62%] bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" />
+                                <div className="text-right">
+                                    <p className="text-5xl font-black text-slate-900 dark:text-white leading-none">
+                                        {candidate.aggregateScore}
+                                    </p>
+                                    <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mt-1">
+                                        AGGREGATE SCORE
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex justify-between mt-2">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foundation</span>
-                                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">62% to Elite</span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Elite Tier</span>
+
+                            <div className="flex items-center justify-center h-[320px] w-full">
+                                <EQRadarChart scores={EQ_SCORES} />
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                                {EQ_METRICS.map((m) => (
+                                    <StatChip key={m.label} label={m.label} value={m.value} />
+                                ))}
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
-                        <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 mb-6">
-                            Trait Breakdown
-                        </p>
-                        <div className="flex flex-col gap-4">
-                            {Object.entries(EQ_SCORES).map(([trait, score]) => (
-                                <TraitBar key={trait} trait={trait} score={score} />
-                            ))}
+                    {(activeTab === "overview" || activeTab === "growth-journey") && (
+                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
+                                    Growth Journey
+                                </p>
+                                <button className="flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                    View All <ChevronRight className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                {GROWTH_JOURNEY.map(({ label, title, body, highlight }) => (
+                                    <div key={label}>
+                                        <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-2">
+                                            {label}
+                                        </p>
+                                        <p className={`text-sm font-bold leading-snug mb-1 ${highlight ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"}`}>
+                                            {title}
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{body}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-8">
+                                <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-full w-[62%] bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" />
+                                </div>
+                                <div className="flex justify-between mt-2">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foundation</span>
+                                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">62% to Elite</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Elite Tier</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {activeTab === "eq-details" && (
+                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                            <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 mb-6">
+                                Trait Breakdown
+                            </p>
+                            <div className="flex flex-col gap-4">
+                                {Object.entries(EQ_SCORES).map(([trait, score]) => (
+                                    <TraitBar key={trait} trait={trait} score={score} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -269,7 +303,18 @@ export default function CandidateProfile() {
                             </div>
                         </div>
 
-                        <button className="mt-5 flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                        <button 
+                            onClick={() => {
+                                setEditForm({
+                                    name: candidate.name,
+                                    role: candidate.role,
+                                    location: candidate.location,
+                                    bio: candidate.bio
+                                });
+                                setIsEditing(true);
+                            }}
+                            className="mt-5 flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
                             <Edit3 className="w-3.5 h-3.5" />
                             Edit Profile Details
                             <ChevronRight className="w-3.5 h-3.5" />
@@ -296,6 +341,66 @@ export default function CandidateProfile() {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            {isEditing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Edit Profile</h3>
+                            <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 flex flex-col gap-4">
+                            <div>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2">Display Name</label>
+                                <input 
+                                    type="text" 
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-slate-900 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2">Current Role / Title</label>
+                                <input 
+                                    type="text" 
+                                    value={editForm.role}
+                                    onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-slate-900 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2">Location</label>
+                                <input 
+                                    type="text" 
+                                    value={editForm.location}
+                                    onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-slate-900 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-2">Professional Bio</label>
+                                <textarea 
+                                    value={editForm.bio}
+                                    onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                                    rows="3"
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-slate-900 dark:text-white resize-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                            <button onClick={() => setIsEditing(false)} className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={handleEditSave} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm">
+                                <Save className="w-4 h-4" /> Save Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </CandidateLayout>
     );
 }
