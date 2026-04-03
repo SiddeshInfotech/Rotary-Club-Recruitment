@@ -5,18 +5,13 @@ const protect = require("../middleware/auth.middleware");
 const checkRole = require("../middleware/role.middleware");
 const jobController = require("../controllers/job.controller");
 
-// ✅ CREATE JOB (Recruiter)
-router.post(
-  "/",
-  protect,
-  checkRole("recruiter"),
-  jobController.createJob
-);
+// ✅ PUBLIC ROUTES (MUST BE FIRST)
+router.get("/search", jobController.searchJobs);
+router.get("/job/:id", jobController.getJobDetails);
 
-// ✅ GET ALL JOBS (Candidate)
+// ✅ PROTECTED ROUTES
 router.get("/", protect, jobController.getAllJobs);
 
-// ✅ GET MY JOBS (Recruiter)
 router.get(
   "/my",
   protect,
@@ -24,12 +19,18 @@ router.get(
   jobController.getMyJobs
 );
 
-// ✅ MATCH SCORE (Candidate)
 router.get(
   "/:jobId/match",
   protect,
   checkRole("candidate"),
   jobController.getMatchScore
+);
+
+router.post(
+  "/",
+  protect,
+  checkRole("recruiter"),
+  jobController.createJob
 );
 
 module.exports = router;

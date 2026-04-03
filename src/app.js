@@ -7,6 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // ✅ ROUTES
 const profileRoutes = require("./routes/profile.routes");
 const recruiterRoutes = require("./routes/recruiter.routes"); // ✅ ADD THIS
