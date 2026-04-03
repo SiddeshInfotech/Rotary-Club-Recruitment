@@ -20,6 +20,7 @@ import Referrals from "./pages/candidate/Referrals";
 import Growth from "./pages/candidate/Growth";
 import Insights from "./pages/candidate/Insights";
 import EQJourney from "./pages/candidate/EQJourney";
+import EQAssessment from "./pages/candidate/EQAssessment";
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
           <Route path="/growth" element={<Growth />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/eq-journey" element={<EQJourney />} />
+          <Route path="/eq-assessment" element={<EQAssessment />} />
           <Route path="/recruiter/id" element={<RecruiterProfile />} />
           <Route path="/recruiter" element={<RecruiterDashboard />} />
           <Route path="*" element={<Navigate to="/" />} />

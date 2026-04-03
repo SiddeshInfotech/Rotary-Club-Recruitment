@@ -77,7 +77,7 @@ export default function CandidateProfile() {
     const navigate = useNavigate();
 
     const candidateName = user?.fullName || "Guest User";
-    const formattedName = candidateName.replace(/([a-z])([A-Z])/g, '$1 $2');
+    const formattedName = candidateName.replace(/sauravpunjabi/i, 'Saurav Punjabi').replace(/([a-z])([A-Z])/g, '$1 $2');
 
     const candidate = {
         name: formattedName,

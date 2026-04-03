@@ -29,7 +29,7 @@ export default function EQJourney() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button 
-                            onClick={() => navigate('/candidate')}
+                            onClick={() => navigate('/eq-assessment')}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl text-sm uppercase tracking-widest font-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
                         >
                             Start My Assessment
