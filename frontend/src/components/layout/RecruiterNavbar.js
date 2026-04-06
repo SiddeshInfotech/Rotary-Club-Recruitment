@@ -1,4 +1,5 @@
 import { Bell, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Recruiter-side navbar with dark navy theme
 export default function RecruiterNavbar() {
@@ -8,27 +9,27 @@ export default function RecruiterNavbar() {
 
                 {/* logo + nav links */}
                 <div className="flex items-center gap-10">
-                    <div className="flex items-center gap-2">
+                    <Link to="/" className="flex items-center gap-2">
                         <div className="bg-white/10 text-white rounded-md w-8 h-8 flex items-center justify-center font-bold text-sm tracking-tight">
                             EQ
                         </div>
                         <span className="text-white font-bold text-lg tracking-tight">EQ-Hire</span>
-                    </div>
+                    </Link>
 
                     <div className="hidden md:flex items-center gap-7 text-sm font-medium">
-                        <a href="#" className="text-white bg-white/10 px-4 py-1.5 rounded-full text-[13px]">Dashboard</a>
-                        <a href="#" className="text-gray-300 hover:text-white transition-colors">Search Candidates</a>
-                        <a href="#" className="text-gray-300 hover:text-white transition-colors">Messages</a>
-                        <a href="#" className="text-gray-300 hover:text-white transition-colors">Settings</a>
+                        <Link to="/recruiter" className="text-white bg-white/10 px-4 py-1.5 rounded-full text-[13px]">Dashboard</Link>
+                        <Link to="/recruiter/search" className="text-gray-300 hover:text-white transition-colors">Search Candidates</Link>
+                        <Link to="/recruiter/messages" className="text-gray-300 hover:text-white transition-colors">Messages</Link>
+                        <Link to="/recruiter/settings" className="text-gray-300 hover:text-white transition-colors">Settings</Link>
                     </div>
                 </div>
 
                 {/* right side */}
                 <div className="flex items-center gap-5">
-                    <div className="relative cursor-pointer group">
+                    <Link to="/recruiter/messages" className="relative cursor-pointer group">
                         <MessageSquare className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
                         <span className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-                    </div>
+                    </Link>
                     <div className="relative cursor-pointer group">
                         <Bell className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
                         <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full"></span>
