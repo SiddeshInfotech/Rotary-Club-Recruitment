@@ -1,0 +1,287 @@
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const generateToken = require("../utils/jwt");
+const sendEmail = require("../utils/emailService");
+const crypto = require("crypto");
+
+// Register
+exports.register = async (req, res) => {
+  try {
+    const { 
+      name, email, password, role,
+      phone, location, skills, resumeLink, // Candidate fields
+      company, website, hiringNeeds // Recruiter fields
+    } = req.body;
+
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: "User already exists" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    // Create user but marking as NOT verified
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || "candidate",
+      phone,
+      location,
+      skills,
+      resumeLink,
+      company,
+      website,
+      hiringNeeds,
+      isVerified: false,
+      otp,
+      otpExpires
+    });
+
+    // Send email
+    await sendEmail({
+      email: user.email,
+      subject: "Verify Your EQ Hire Account",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #2563eb;">Welcome to EQ Hire!</h2>
+          <p>Hi ${user.name},</p>
+          <p>Thank you for registering. To complete your setup, please use the following verification code:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b;">${otp}</span>
+          </div>
+          <p>This code will expire in 10 minutes.</p>
+          <br/>
+          <p>Best regards,<br/>The EQ Hire Team</p>
+        </div>
+      `,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Please check your email for the OTP.",
+      requiresOtp: true,
+      email: user.email
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Login
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(401).json({ success: false, message: "Account is not verified. Please verify your email first.", requiresOtp: true });
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        currentTitle: user.currentTitle,
+        phone: user.phone,
+        location: user.location,
+        bio: user.bio,
+        skills: user.skills,
+        experience: user.experience,
+        eqScores: user.eqScores,
+        resumeLink: user.resumeLink,
+        company: user.company,
+        website: user.website,
+        hiringNeeds: user.hiringNeeds
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get current user (protected)
+exports.getMe = async (req, res) => {
+  res.json({
+    success: true,
+    user: req.user,
+  });
+};
+
+// Verify OTP
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (user.isVerified) return res.status(400).json({ success: false, message: "User already verified" });
+    
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+    
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
+
+    // Mark as verified and clear OTP fields
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: "Email verified successfully",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        currentTitle: user.currentTitle,
+        phone: user.phone,
+        location: user.location,
+        bio: user.bio,
+        skills: user.skills,
+        experience: user.experience,
+        eqScores: user.eqScores,
+        resumeLink: user.resumeLink,
+        company: user.company,
+        website: user.website,
+        hiringNeeds: user.hiringNeeds
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Resend OTP
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (user.isVerified) return res.status(400).json({ success: false, message: "User already verified" });
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    await user.save();
+
+    await sendEmail({
+      email: user.email,
+      subject: "Your New Verification Code - EQ Hire",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #2563eb;">New Code Requested</h2>
+          <p>Hi ${user.name},</p>
+          <p>Here is your new verification code:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b;">${otp}</span>
+          </div>
+          <p>This code will expire in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    res.json({ success: true, message: "New OTP sent to email" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Update Me
+exports.updateMe = async (req, res) => {
+  try {
+    const { name, currentTitle, location, bio, experience, email, currentPassword, newPassword, phone, skills, resumeLink } = req.body;
+    const user = req.user;
+
+    // --- Basic profile fields ---
+    if (name) user.name = name;
+    if (currentTitle) user.currentTitle = currentTitle;
+    if (location) user.location = location;
+    if (bio !== undefined) user.bio = bio;
+    if (experience !== undefined) user.experience = experience;
+    if (phone !== undefined) user.phone = phone;
+    if (skills !== undefined) user.skills = skills;
+    if (resumeLink !== undefined) user.resumeLink = resumeLink;
+
+    // --- Email change (check uniqueness) ---
+    if (email && email !== user.email) {
+      const emailTaken = await User.findOne({ email: email.toLowerCase() });
+      if (emailTaken) {
+        return res.status(400).json({ success: false, message: "That email is already in use by another account." });
+      }
+      user.email = email.toLowerCase();
+    }
+
+    // --- Password change (verify current, hash new) ---
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ success: false, message: "Current password is required to set a new password." });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: "Current password is incorrect." });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ success: false, message: "New password must be at least 6 characters." });
+      }
+      user.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        currentTitle: user.currentTitle,
+        phone: user.phone,
+        location: user.location,
+        bio: user.bio,
+        experience: user.experience,
+        skills: user.skills,
+        resumeLink: user.resumeLink,
+        company: user.company,
+        website: user.website,
+        hiringNeeds: user.hiringNeeds
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
