@@ -17,6 +17,8 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from './pages/ResetPassword';
+import VerifyResetOtp from './pages/VerifyResetOtp';
 
 import Network from "./pages/candidate/Network";
 import Referrals from "./pages/candidate/Referrals";
@@ -60,6 +62,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+         <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-reset-otp" element={<VerifyResetOtp />} />
 
           {/* Protected Candidate Routes */}
           <Route path="/candidate" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateDashboard /></ProtectedRoute>} />
