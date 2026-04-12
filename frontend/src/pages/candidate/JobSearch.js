@@ -207,6 +207,10 @@ export default function JobSearch() {
                     >
                         <option value="Most Relevant">Most Relevant</option>
                         <option value="Most Recent">Most Recent</option>
+                        <option value="Oldest">Oldest First</option>
+                        <option value="Salary High">Salary (High to Low)</option>
+                        <option value="Salary Low">Salary (Low to High)</option>
+                        <option value="Company A-Z">Company (A-Z)</option>
                     </select>
                 </div>
             </div>

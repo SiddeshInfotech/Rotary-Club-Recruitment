@@ -116,10 +116,16 @@ exports.searchJobs = async (req, res) => {
       }
     }
 
-    let sortOptions = { createdAt: -1 }; // Recent by default
+    let sortOptions = { createdAt: -1 }; // Most Recent by default
     if (sort === 'Oldest') {
         sortOptions = { createdAt: 1 };
-    } // Most Relevant could be handled here if we had text indexing
+    } else if (sort === 'Salary High') {
+        sortOptions = { salary: -1, createdAt: -1 };
+    } else if (sort === 'Salary Low') {
+        sortOptions = { salary: 1, createdAt: -1 };
+    } else if (sort === 'Company A-Z') {
+        sortOptions = { companyName: 1, company: 1, createdAt: -1 };
+    }
 
     const jobs = await Job.find(query).sort(sortOptions);
 

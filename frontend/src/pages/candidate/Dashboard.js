@@ -9,23 +9,61 @@ import api from "../../services/api";
 
 export default function Dashboard() {
     const { user } = useAuth();
-    const firstName = user?.firstName || 'there';
+    const firstName = user?.firstName || user?.name?.split(' ')[0] || 'there';
+
+    // Dashboard metrics from backend
+    const [dashData, setDashData] = useState(null);
     const [jobs, setJobs] = useState([]);
+    const [matchScores, setMatchScores] = useState({});
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchDashboard = async () => {
+            try {
+                // Fetch candidate dashboard metrics (EQ scores, elite score, rank, etc.)
+                const dashRes = await api.get('/candidate-dashboard');
+                if (dashRes.data.success) {
+                    setDashData(dashRes.data.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch dashboard data:", err);
+            }
+        };
+
         const fetchJobs = async () => {
             try {
                 const res = await api.get('/jobs');
                 const data = res.data.data || res.data;
                 if (Array.isArray(data)) {
-                    setJobs(data.slice(0, 2));
+                    const topJobs = data.slice(0, 2);
+                    setJobs(topJobs);
+
+                    // Get real match scores for these jobs
+                    if (topJobs.length > 0) {
+                        const ids = topJobs.map(j => j._id).join(',');
+                        try {
+                            const scoreRes = await api.get(`/candidate-dashboard/match-scores?jobIds=${ids}`);
+                            if (scoreRes.data.success) {
+                                setMatchScores(scoreRes.data.data);
+                            }
+                        } catch (scoreErr) {
+                            console.error("Failed to fetch match scores:", scoreErr);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Failed to fetch recommended jobs:", err);
+            } finally {
+                setLoading(false);
             }
         };
+
+        fetchDashboard();
         fetchJobs();
     }, []);
+
+    const eliteScore = dashData?.eliteScore ?? '—';
+    const globalRank = dashData?.globalRank ?? '—';
 
     return (
         <CandidateLayout>
@@ -41,11 +79,11 @@ export default function Dashboard() {
                 
                 <div className="flex gap-6">
                     <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-8 py-6 rounded-2xl flex flex-col items-center justify-center shadow-sm">
-                        <span className="text-4xl font-black text-slate-900 dark:text-white leading-none mb-2">842</span>
+                        <span className="text-4xl font-black text-slate-900 dark:text-white leading-none mb-2">{eliteScore}</span>
                         <span className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">ELITE SCORE</span>
                     </div>
                     <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-8 py-6 rounded-2xl flex flex-col items-center justify-center shadow-sm">
-                        <span className="text-4xl font-black text-blue-600 dark:text-blue-500 leading-none mb-2">Top 2%</span>
+                        <span className="text-4xl font-black text-blue-600 dark:text-blue-500 leading-none mb-2">{globalRank}</span>
                         <span className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">GLOBAL RANK</span>
                     </div>
                 </div>
@@ -61,8 +99,13 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-                <WelcomeCard />
-                <EQProfileCard />
+                <WelcomeCard 
+                    primaryAnchor={dashData?.primaryAnchor}
+                    strengthRating={dashData?.strengthRating}
+                    peerPercentile={dashData?.peerPercentile}
+                    traitStability={dashData?.traitStability}
+                />
+                <EQProfileCard eqScores={dashData?.eqScores} />
             </div>
 
             {/* Bottom Section */}
@@ -75,29 +118,20 @@ export default function Dashboard() {
                         )}
                     </div>
                     <div className="flex flex-col gap-6">
-                        {jobs.length > 0 ? jobs.map((job) => (
+                        {loading ? (
+                            <div className="text-sm text-slate-400 font-medium p-6 text-center">Loading recommendations...</div>
+                        ) : jobs.length > 0 ? jobs.map((job) => (
                             <RecommendedMatches 
                                 key={job._id}
                                 title={job.title}
                                 company={`${job.companyName || job.company || 'Company'} • ${job.type || job.jobType || 'Full-time'} • ${job.location || 'Remote'}`}
-                                match={`${Math.floor(Math.random() * 15 + 85)}%`}
-                                tags={job.skillsRequired?.slice(0, 2) || ['Leadership', 'Strategy']}
+                                match={`${matchScores[job._id] || '—'}%`}
+                                tags={job.skillsRequired?.slice(0, 2) || []}
                             />
                         )) : (
-                            <>
-                                <RecommendedMatches 
-                                    title="Strategic Operations Director"
-                                    company="NexCore Intelligence • Full-time • Hybrid"
-                                    match="98%"
-                                    tags={['Leadership', 'Strategy']}
-                                />
-                                <RecommendedMatches 
-                                    title="Senior Product Catalyst"
-                                    company="Veridian Dynamics • Remote • Global"
-                                    match="94%"
-                                    tags={['Adaptability', 'Growth']}
-                                />
-                            </>
+                            <div className="text-sm text-slate-400 font-medium p-6 text-center border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
+                                No job recommendations available yet.
+                            </div>
                         )}
                     </div>
                 </div>

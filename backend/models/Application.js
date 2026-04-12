@@ -10,7 +10,10 @@ const applicationSchema = new mongoose.Schema(
     candidateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Candidate",
-      required: [true, "Candidate ID is required"],
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     eqMatchScore: {
       type: Number,
@@ -20,7 +23,7 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Applied", "Shortlisted", "Rejected"],
+      enum: ["Applied", "Shortlisted", "Rejected", "Interview Scheduled", "Reviewing Profile"],
       default: "Applied",
     },
   },
