@@ -21,4 +21,13 @@ router.post("/verify-otp", authController.verifyOtp);
 // POST /api/auth/resend-otp
 router.post("/resend-otp", authController.resendOtp);
 
+// POST /api/auth/forgot-password
+router.post("/forgot-password", authController.forgotPassword);
+
+// POST /api/auth/reset-password/:token
+router.post("/reset-password", authController.resetPassword);
+
+// POST /api/auth/verify-reset-otp
+router.post("/verify-reset-otp", authController.verifyResetOtp);
+
 module.exports = router;

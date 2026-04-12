@@ -14,35 +14,75 @@ exports.register = async (req, res) => {
     } = req.body;
 
     // Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+
+    let user = await User.findOne({ email });
+    if (user) {
+      // IF user exists AND is already verified, block registration
+      if (user.isVerified) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "User already exists and is verified. Please login." 
+        });
+      }
+      
+      // IF user exists but NOT verified, UPDATE their info for the retry
+      user.name = name;
+      user.password = await bcrypt.hash(password, 10);
+      user.role = role || "candidate";
+      user.phone = phone;
+      user.location = location;
+      
+      // Role-specific updates
+      if (role === 'candidate') {
+        user.skills = skills;
+        user.resumeLink = resumeLink;
+      } else if (role === 'recruiter') {
+        user.company = company;
+        user.website = website;
+        user.hiringNeeds = hiringNeeds;
+      }
+    } else {
+      // 2. Create NEW unverified user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || "candidate",
+        phone,
+        location,
+        skills,
+        resumeLink,
+        company,
+        website,
+        hiringNeeds,
+        isVerified: false
+      });
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    await user.save();
 
     // Create user but marking as NOT verified
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "candidate",
-      phone,
-      location,
-      skills,
-      resumeLink,
-      company,
-      website,
-      hiringNeeds,
-      isVerified: false,
-      otp,
-      otpExpires
-    });
+    // const user = await User.create({
+    //   name,
+    //   email,
+    //   password: hashedPassword,
+    //   role: role || "candidate",
+    //   phone,
+    //   location,
+    //   skills,
+    //   resumeLink,
+    //   company,
+    //   website,
+    //   hiringNeeds,
+    //   isVerified: false,
+    //   otp,
+    //   otpExpires
+    // });
 
     // Send email
     await sendEmail({
@@ -89,8 +129,17 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
+    // if (!user.isVerified) {
+    //   return res.status(401).json({ success: false, message: "Account is not verified. Please verify your email first.", requiresOtp: true });
+    // }
+
+    // Gatekeeper: Reject unverified users
     if (!user.isVerified) {
-      return res.status(401).json({ success: false, message: "Account is not verified. Please verify your email first.", requiresOtp: true });
+      return res.status(401).json({ 
+        success: false, 
+        message: "Account is not verified. Please verify your email first.", 
+        requiresOtp: true 
+      });
     }
 
     const token = generateToken(user);
@@ -117,6 +166,96 @@ exports.login = async (req, res) => {
         hiringNeeds: user.hiringNeeds
       },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- 1. FORGOT PASSWORD (Sends 6-digit OTP) ---
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "No account found with this email." });
+    }
+
+    // Generate 6-digit OTP
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordToken = resetOtp; 
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+
+    await user.save();
+
+    await sendEmail({
+      email: user.email,
+      subject: "Password Reset Code - EQ Hire",
+      html: `
+        <div style="font-family: sans-serif; text-align: center; color: #333;">
+          <h2>Password Reset Request</h2>
+          <p>Your 6-digit verification code is:</p>
+          <h1 style="color: #2563eb; letter-spacing: 5px; font-size: 32px;">${resetOtp}</h1>
+          <p>This code will expire in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    res.status(200).json({ success: true, message: "OTP sent to your email!" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- 2. VERIFY RESET OTP (The Bridge) ---
+exports.verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: otp,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "OTP is incorrect or has expired." });
+    }
+
+    res.status(200).json({ success: true, message: "OTP matched!" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- 3. RESET PASSWORD (Final Step) ---
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    // Use trim() to ensure no accidental spaces cause a mismatch
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
+      resetPasswordToken: otp,
+      resetPasswordExpires: { $gt: Date.now() } // Add this for security!
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid session or OTP has expired. Please try again." 
+      });
+    }
+
+    // Hash the new password
+    user.password = await bcrypt.hash(password, 10);
+    
+    // Clear the reset fields so the same OTP can't be used twice
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Password updated successfully!" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

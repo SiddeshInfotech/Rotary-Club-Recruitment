@@ -45,7 +45,11 @@ const userSchema = new mongoose.Schema(
     website: { type: String, default: "" },
     hiringNeeds: { type: String, default: "" },
     otp: { type: String },
-    otpExpires: { type: Date }
+    otpExpires: { type: Date },
+
+    // reset password fields
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
   },
   { timestamps: true }
 );

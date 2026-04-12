@@ -35,9 +35,14 @@ const checkRole = require("./middleware/role");
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────
-app.use(cors());
+// Updated CORS configuration to explicitly allow localhost:3000
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
-
 // ── Routes (Your Recruiter Dashboard) ──────────────────
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/jobs", jobRoutes);
