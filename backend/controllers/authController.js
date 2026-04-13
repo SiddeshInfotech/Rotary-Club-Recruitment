@@ -3,95 +3,33 @@ const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/jwt");
 const sendEmail = require("../utils/emailService");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
-// Register
+// --- 1. REGISTER (No DB Save) ---
 exports.register = async (req, res) => {
   try {
-    const { 
-      name, email, password, role,
-      phone, location, skills, resumeLink, // Candidate fields
-      company, website, hiringNeeds // Recruiter fields
-    } = req.body;
-
-    // Check if user exists
-
-    let user = await User.findOne({ email });
-    if (user) {
-      // IF user exists AND is already verified, block registration
-      if (user.isVerified) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "User already exists and is verified. Please login." 
+    const { email, name } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser.isVerified) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "User already exists. Please login.",
         });
-      }
-      
-      // IF user exists but NOT verified, UPDATE their info for the retry
-      user.name = name;
-      user.password = await bcrypt.hash(password, 10);
-      user.role = role || "candidate";
-      user.phone = phone;
-      user.location = location;
-      
-      // Role-specific updates
-      if (role === 'candidate') {
-        user.skills = skills;
-        user.resumeLink = resumeLink;
-      } else if (role === 'recruiter') {
-        user.company = company;
-        user.website = website;
-        user.hiringNeeds = hiringNeeds;
-      }
-    } else {
-      // 2. Create NEW unverified user
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user = new User({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || "candidate",
-        phone,
-        location,
-        skills,
-        resumeLink,
-        company,
-        website,
-        hiringNeeds,
-        isVerified: false
-      });
     }
-    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    const signupToken = jwt.sign({ ...req.body, otp }, process.env.JWT_SECRET, {
+      expiresIn: "10m",
+    });
 
-    await user.save();
-
-    // Create user but marking as NOT verified
-    // const user = await User.create({
-    //   name,
-    //   email,
-    //   password: hashedPassword,
-    //   role: role || "candidate",
-    //   phone,
-    //   location,
-    //   skills,
-    //   resumeLink,
-    //   company,
-    //   website,
-    //   hiringNeeds,
-    //   isVerified: false,
-    //   otp,
-    //   otpExpires
-    // });
-
-    // Send email
     await sendEmail({
-      email: user.email,
+      email: email,
       subject: "Verify Your EQ Hire Account",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <h2 style="color: #2563eb;">Welcome to EQ Hire!</h2>
-          <p>Hi ${user.name},</p>
+          <p>Hi ${name},</p>
           <p>Thank you for registering. To complete your setup, please use the following verification code:</p>
           <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b;">${otp}</span>
@@ -102,92 +40,128 @@ exports.register = async (req, res) => {
         </div>
       `,
     });
-
-    res.status(201).json({
-      success: true,
-      message: "Please check your email for the OTP.",
-      requiresOtp: true,
-      email: user.email
-    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "OTP sent!",
+        requiresOtp: true,
+        signupToken,
+      });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Login
+// --- 2. VERIFY OTP (Saves to DB) ---
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { otp, signupToken } = req.body;
+    if (!signupToken)
+      return res
+        .status(400)
+        .json({ success: false, message: "Session expired." });
+
+    const decoded = jwt.verify(signupToken, process.env.JWT_SECRET);
+    if (decoded.otp !== otp)
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+    const hashedPassword = await bcrypt.hash(decoded.password, 10);
+    const newUser = new User({
+      name: decoded.name,
+      email: decoded.email,
+      password: hashedPassword,
+      role: decoded.role || "candidate",
+      phone: decoded.phone,
+      location: decoded.location,
+      skills: decoded.skills,
+      resumeLink: decoded.resumeLink,
+      company: decoded.company,
+      website: decoded.website,
+      hiringNeeds: decoded.hiringNeeds,
+      isVerified: true,
+    });
+
+    await newUser.save();
+    const token = generateToken(newUser);
+    res.json({ success: true, message: "Verified!", token, user: newUser });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Invalid or expired session." });
+  }
+};
+
+// --- 3. RESEND OTP ---
+exports.resendOtp = async (req, res) => {
+  try {
+   const { email, name } = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const signupToken = jwt.sign({ ...req.body, otp }, process.env.JWT_SECRET, {
+      expiresIn: "10m",
+    });
+
+    await sendEmail({
+      email: email,
+      subject: "Your New Verification Code - EQ Hire",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #2563eb;">New Code Requested</h2>
+          <p>Hi ${name},</p>
+          <p>Here is your new verification code:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b;">${otp}</span>
+          </div>
+          <p>This code will expire in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    res.json({ success: true, message: "New OTP sent!", signupToken });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- LOGIN & PASS RESET LOGIC ---
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
-
+    if (!user)
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
-
-    // if (!user.isVerified) {
-    //   return res.status(401).json({ success: false, message: "Account is not verified. Please verify your email first.", requiresOtp: true });
-    // }
-
-    // Gatekeeper: Reject unverified users
-    if (!user.isVerified) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Account is not verified. Please verify your email first.", 
-        requiresOtp: true 
-      });
-    }
-
+    if (!isMatch)
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid credentials" });
+    if (!user.isVerified)
+      return res
+        .status(401)
+        .json({ success: false, message: "Not verified.", requiresOtp: true });
     const token = generateToken(user);
-
-    res.json({
-      success: true,
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        currentTitle: user.currentTitle,
-        phone: user.phone,
-        location: user.location,
-        bio: user.bio,
-        skills: user.skills,
-        experience: user.experience,
-        eqScores: user.eqScores,
-        resumeLink: user.resumeLink,
-        company: user.company,
-        website: user.website,
-        hiringNeeds: user.hiringNeeds
-      },
-    });
+    res.json({ success: true, token, user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// --- 1. FORGOT PASSWORD (Sends 6-digit OTP) ---
+// --- PASSWORD RESET FLOW ---
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "No account found with this email." });
-    }
-
-    // Generate 6-digit OTP
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "No account found." });
     const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.resetPasswordToken = resetOtp; 
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
-
+    user.resetPasswordToken = resetOtp;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
-
     await sendEmail({
       email: user.email,
       subject: "Password Reset Code - EQ Hire",
@@ -200,14 +174,13 @@ exports.forgotPassword = async (req, res) => {
         </div>
       `,
     });
-
-    res.status(200).json({ success: true, message: "OTP sent to your email!" });
+    res.status(200).json({ success: true, message: "OTP sent successfully!" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// --- 2. VERIFY RESET OTP (The Bridge) ---
+// --- Verify Reset OTP ---
 exports.verifyResetOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -216,149 +189,54 @@ exports.verifyResetOtp = async (req, res) => {
       resetPasswordToken: otp,
       resetPasswordExpires: { $gt: Date.now() },
     });
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: "OTP is incorrect or has expired." });
-    }
-
+    if (!user)
+      return res.status(400).json({ success: false, message: "Invalid OTP." });
     res.status(200).json({ success: true, message: "OTP matched!" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// --- 3. RESET PASSWORD (Final Step) ---
+// --- Reset Password ---
 exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, password } = req.body;
-
-    // Use trim() to ensure no accidental spaces cause a mismatch
     const user = await User.findOne({
       email: email.trim().toLowerCase(),
       resetPasswordToken: otp,
-      resetPasswordExpires: { $gt: Date.now() } // Add this for security!
+      resetPasswordExpires: { $gt: Date.now() },
     });
-
-    if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid session or OTP has expired. Please try again." 
-      });
-    }
-
-    // Hash the new password
+    if (!user)
+      return res
+        .status(400)
+        .json({ success: false, message: "Expired session." });
     user.password = await bcrypt.hash(password, 10);
-    
-    // Clear the reset fields so the same OTP can't be used twice
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    
     await user.save();
-
     res.status(200).json({ success: true, message: "Password updated successfully!" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get current user (protected)
+// --- PROFILE MANAGEMENT ---
 exports.getMe = async (req, res) => {
-  res.json({
-    success: true,
-    user: req.user,
-  });
+  res.json({ success: true, user: req.user });
 };
+// exports.updateMe = async (req, res) => {
+//   try {
+//     const user = req.user;
+//     Object.assign(user, req.body);
+//     if (req.body.newPassword)
+//       user.password = await bcrypt.hash(req.body.newPassword, 10);
+//     await user.save();
+//     res.json({ success: true, data: user });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
-// Verify OTP
-exports.verifyOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ success: false, message: "User already verified" });
-    
-    if (user.otp !== otp) {
-      return res.status(400).json({ success: false, message: "Invalid OTP" });
-    }
-    
-    if (user.otpExpires < Date.now()) {
-      return res.status(400).json({ success: false, message: "OTP has expired" });
-    }
-
-    // Mark as verified and clear OTP fields
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      message: "Email verified successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        currentTitle: user.currentTitle,
-        phone: user.phone,
-        location: user.location,
-        bio: user.bio,
-        skills: user.skills,
-        experience: user.experience,
-        eqScores: user.eqScores,
-        resumeLink: user.resumeLink,
-        company: user.company,
-        website: user.website,
-        hiringNeeds: user.hiringNeeds
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Resend OTP
-exports.resendOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    if (user.isVerified) return res.status(400).json({ success: false, message: "User already verified" });
-
-    // Generate new OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-    await user.save();
-
-    await sendEmail({
-      email: user.email,
-      subject: "Your New Verification Code - EQ Hire",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #2563eb;">New Code Requested</h2>
-          <p>Hi ${user.name},</p>
-          <p>Here is your new verification code:</p>
-          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e293b;">${otp}</span>
-          </div>
-          <p>This code will expire in 10 minutes.</p>
-        </div>
-      `,
-    });
-
-    res.json({ success: true, message: "New OTP sent to email" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Update Me
 exports.updateMe = async (req, res) => {
   try {
     const { name, currentTitle, location, bio, experience, email, currentPassword, newPassword, phone, skills, resumeLink } = req.body;
@@ -389,8 +267,7 @@ exports.updateMe = async (req, res) => {
         return res.status(400).json({ success: false, message: "Current password is required to set a new password." });
       }
       const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ success: false, message: "Current password is incorrect." });
+      if (!isMatch) {return res.status(400).json({ success: false, message: "Current password is incorrect." });
       }
       if (newPassword.length < 6) {
         return res.status(400).json({ success: false, message: "New password must be at least 6 characters." });
@@ -423,4 +300,3 @@ exports.updateMe = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-

@@ -3,31 +3,22 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const protect = require("../middleware/auth");
 
-// POST /api/auth/register
+// --- Registration & Login ---
 router.post("/register", authController.register);
-
-// POST /api/auth/login
 router.post("/login", authController.login);
 
-// GET /api/auth/me (protected)
-router.get("/me", protect, authController.getMe);
-
-// PUT /api/auth/me (protected)
-router.put("/me", protect, authController.updateMe);
-
-// POST /api/auth/verify-otp
+// --- OTP Verification (New Logic: Saves user to DB only here) ---
+// Make sure your frontend calls: api.post('/auth/verify-otp', { otp, signupToken })
 router.post("/verify-otp", authController.verifyOtp);
-
-// POST /api/auth/resend-otp
 router.post("/resend-otp", authController.resendOtp);
 
-// POST /api/auth/forgot-password
+// --- Password Reset Flow (OTP-based) ---
 router.post("/forgot-password", authController.forgotPassword);
-
-// POST /api/auth/reset-password/:token
+router.post("/verify-reset-otp", authController.verifyResetOtp);
 router.post("/reset-password", authController.resetPassword);
 
-// POST /api/auth/verify-reset-otp
-router.post("/verify-reset-otp", authController.verifyResetOtp);
+// --- Profile Management ---
+router.get("/me", protect, authController.getMe);
+router.put("/me", protect, authController.updateMe);
 
 module.exports = router;
