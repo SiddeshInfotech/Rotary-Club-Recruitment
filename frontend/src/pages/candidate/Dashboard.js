@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import WelcomeCard from "../../components/cards/WelcomeCard";
-import EQProfileCard from "../../components/cards/EQProfileCard";
+
 import RecommendedMatches from "../../components/cards/JobCard";
 import ActiveApplications from "../../components/tables/ApplicationsTables";
 import { useAuth } from "../../context/AuthContext";
@@ -11,25 +10,11 @@ export default function Dashboard() {
     const { user } = useAuth();
     const firstName = user?.firstName || user?.name?.split(' ')[0] || 'there';
 
-    // Dashboard metrics from backend
-    const [dashData, setDashData] = useState(null);
     const [jobs, setJobs] = useState([]);
     const [matchScores, setMatchScores] = useState({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                // Fetch candidate dashboard metrics (EQ scores, elite score, rank, etc.)
-                const dashRes = await api.get('/candidate-dashboard');
-                if (dashRes.data.success) {
-                    setDashData(dashRes.data.data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch dashboard data:", err);
-            }
-        };
-
         const fetchJobs = async () => {
             try {
                 const res = await api.get('/jobs');
@@ -58,54 +43,18 @@ export default function Dashboard() {
             }
         };
 
-        fetchDashboard();
         fetchJobs();
     }, []);
-
-    const eliteScore = dashData?.eliteScore ?? '—';
-    const globalRank = dashData?.globalRank ?? '—';
 
     return (
         <CandidateLayout>
             
             {/* Hero Header Area */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 mt-4 gap-8">
-                <div className="max-w-[700px]">
-                    <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-4 font-serif">Candidate Intelligence</h1>
-                    <p className="text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                        Welcome back, {firstName}. Your EQ profile has been updated based on your recent teamwork simulations.
-                    </p>
-                </div>
-                
-                <div className="flex gap-6">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-8 py-6 rounded-2xl flex flex-col items-center justify-center shadow-sm">
-                        <span className="text-4xl font-black text-slate-900 dark:text-white leading-none mb-2">{eliteScore}</span>
-                        <span className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">ELITE SCORE</span>
-                    </div>
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-8 py-6 rounded-2xl flex flex-col items-center justify-center shadow-sm">
-                        <span className="text-4xl font-black text-blue-600 dark:text-blue-500 leading-none mb-2">{globalRank}</span>
-                        <span className="text-xs uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">GLOBAL RANK</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* EQ CORE DNA ANALYSIS */}
-            <div className="mb-6 flex items-end justify-between">
-                <h3 className="text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 uppercase">EQ CORE DNA ANALYSIS</h3>
-                <a href="#" className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline flex items-center gap-2">
-                    Detailed Breakdown 
-                    <span className="text-xl leading-none">&rarr;</span>
-                </a>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-                <WelcomeCard 
-                    primaryAnchor={dashData?.primaryAnchor}
-                    strengthRating={dashData?.strengthRating}
-                    peerPercentile={dashData?.peerPercentile}
-                    traitStability={dashData?.traitStability}
-                />
-                <EQProfileCard eqScores={dashData?.eqScores} />
+            <div className="mb-12 mt-4">
+                <h1 className="text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-4 font-serif">Action Hub</h1>
+                <p className="text-base text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-[700px]">
+                    Welcome back, {firstName}. Manage your active applications, browse AI-matched opportunities, and prepare for your next steps.
+                </p>
             </div>
 
             {/* Bottom Section */}

@@ -105,7 +105,9 @@ export default function CandidateLayout({ children }) {
                             <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Premium Tier</p>
+                            <p className={`text-xs font-bold ${user?.eqScores?.aggregate >= 90 ? 'text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                                {user?.eqScores?.aggregate >= 90 ? 'Elite Tier' : 'Premium Tier'}
+                            </p>
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>

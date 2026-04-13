@@ -41,6 +41,7 @@ const candidateProfileSchema = new mongoose.Schema(
       teamwork: { type: Number, default: 0 },
       collaboration: { type: Number, default: 0 },
       problemSolving: { type: Number, default: 0 },
+      aggregate: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

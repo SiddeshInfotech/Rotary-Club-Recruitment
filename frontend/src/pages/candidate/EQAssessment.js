@@ -15,7 +15,7 @@ export default function EQAssessment() {
     const [candidateId, setCandidateId] = useState(null);
     
     const navigate = useNavigate();
-    const { user } = useAuth(); // <-- Grabbing actual logged in user!
+    const { user, updateUser } = useAuth(); // <-- Grabbing actual logged in user!
 
     useEffect(() => {
         const initAssessment = async () => {
@@ -61,7 +61,16 @@ export default function EQAssessment() {
                     answer: optId
                 }));
                 
-                await aiApi.post(`/assessment/evaluate/${assessmentId}`, { answers: formattedAnswers });
+                const res = await aiApi.post(`/assessment/evaluate/${assessmentId}`, { answers: formattedAnswers });
+                
+                if (res.data && res.data.success) {
+                    updateUser({ 
+                        eqScores: {
+                            ...res.data.data.dimensionScores,
+                            aggregate: res.data.data.overallScore
+                        }
+                    });
+                }
                 
                 setTimeout(() => {
                     navigate('/candidate'); // Redirect once scores are saved (dashboard)

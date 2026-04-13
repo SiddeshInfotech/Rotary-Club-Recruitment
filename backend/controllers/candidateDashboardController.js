@@ -137,16 +137,19 @@ exports.getDashboardData = async (req, res) => {
     else if (stdDev > 10) traitStability = "Medium";
 
     // 6. Peer Percentile — compare against all other candidates
-    const allProfiles = await CandidateProfile.find({}).select("eqScores");
+    const allProfiles = await CandidateProfile.find({}).select("eqScores user");
     const myAvg = computeAverage(scores);
     let belowCount = 0;
-    for (const p of allProfiles) {
+    
+    // Count how many OTHER candidates we scored higher than
+    const otherProfiles = allProfiles.filter(p => !p.user || p.user.toString() !== userId);
+    for (const p of otherProfiles) {
       const otherAvg = computeAverage(p.eqScores || {});
       if (otherAvg < myAvg) belowCount++;
     }
-    const peerPercentile =
-      allProfiles.length > 1
-        ? Math.round((belowCount / (allProfiles.length - 1)) * 100)
+    
+    const peerPercentile = otherProfiles.length > 0
+        ? Math.round((belowCount / otherProfiles.length) * 100)
         : 99;
 
     // 7. Global Rank

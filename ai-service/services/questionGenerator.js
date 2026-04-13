@@ -1,7 +1,7 @@
 const { generateJSON } = require("./aiClient");
 
 /**
- * Generate 30 EQ assessment questions tailored to the candidate's skills and profile.
+ * Generate 40 EQ assessment questions tailored to the candidate's skills and profile.
  *
  * The questions are distributed across 3 EQ dimensions:
  * - Emotional Intelligence (10 questions): self-awareness, empathy, emotional regulation
@@ -12,7 +12,7 @@ const { generateJSON } = require("./aiClient");
  * @param {string} candidate.name
  * @param {string} candidate.title
  * @param {string[]} candidate.skills
- * @returns {object[]} Array of 30 question objects
+ * @returns {object[]} Array of 40 question objects
  */
 const generateQuestions = async (candidate) => {
   const { name, title, skills } = candidate;
@@ -30,11 +30,11 @@ A candidate has the following profile:
 - Title: ${title || "Not specified"}
 - Skills: ${skills.join(", ")}
 
-Generate exactly 30 situational Multiple Choice Questions (MCQs) to evaluate this candidate's Emotional Quotient (EQ). The questions must be:
+Generate exactly 40 situational Multiple Choice Questions (MCQs) to evaluate this candidate's Emotional Quotient (EQ). The questions must be:
 
 1. **Relevant** to the candidate's skills and professional domain
 2. **Scenario-based** — present realistic workplace situations the candidate might face
-3. **Distributed** across these 8 EQ dimensions (distribute them so that each dimension gets 3 to 4 questions, totaling exactly 30):
+3. **Distributed** across these 8 EQ dimensions (distribute them so that each dimension gets exactly 5 questions, totaling exactly 40):
    - "leadership", "loyalty", "adaptability", "growthMindset", "reliability", "teamwork", "collaboration", "problemSolving"
 
 Each question MUST have a populated 'options' array containing EXACTLY 4 JSON objects (A, B, C, D). DO NOT return empty options [].
@@ -63,7 +63,7 @@ Here is the exact JSON structure you MUST follow:
   ]
 }
 
-Ensure all 30 questions are in the array. Do not include any text outside the JSON object.`;
+Ensure all 40 questions are in the array. Do not include any text outside the JSON object.`;
 
   const result = await generateJSON(prompt);
 
@@ -72,9 +72,9 @@ Ensure all 30 questions are in the array. Do not include any text outside the JS
     throw new Error("AI response missing 'questions' array");
   }
 
-  if (result.questions.length < 30) {
+  if (result.questions.length < 40) {
     throw new Error(
-      `AI generated only ${result.questions.length} questions, expected 30. Please retry.`
+      `AI generated only ${result.questions.length} questions, expected 40. Please retry.`
     );
   }
 

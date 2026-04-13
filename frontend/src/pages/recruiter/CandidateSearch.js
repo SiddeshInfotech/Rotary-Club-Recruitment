@@ -32,6 +32,12 @@ export default function CandidateSearch() {
         return name.includes(q) || title.includes(q);
     });
 
+    const sortedCandidates = [...filteredCandidates].sort((a, b) => {
+        const scoreA = a.eqScores?.aggregate || a.overallEqScore || 0;
+        const scoreB = b.eqScores?.aggregate || b.overallEqScore || 0;
+        return scoreB - scoreA;
+    });
+
     return (
         <RecruiterLayout>
             <div className="space-y-6 pb-10">
@@ -68,26 +74,31 @@ export default function CandidateSearch() {
 
                 {/* Result count */}
                 <p className="text-sm font-bold text-slate-900 dark:text-white">
-                    {loading ? 'Loading...' : `${filteredCandidates.length} candidate${filteredCandidates.length !== 1 ? 's' : ''} found`}
+                    {loading ? 'Loading...' : `${sortedCandidates.length} candidate${sortedCandidates.length !== 1 ? 's' : ''} found`}
                 </p>
 
                 {/* Candidate Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {loading ? (
                         <div className="col-span-3 text-center py-12 text-slate-500 font-medium">Loading candidates...</div>
-                    ) : filteredCandidates.length === 0 ? (
+                    ) : sortedCandidates.length === 0 ? (
                         <div className="col-span-3 text-center py-12 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
                             <p className="text-slate-500 dark:text-slate-400 font-medium">No candidates found.</p>
                         </div>
                     ) : (
-                        filteredCandidates.map(candidate => {
-                            const eqScore = candidate.overallEqScore || candidate.eqScores
-                                ? Math.round(((candidate.eqScores?.emotionalIntelligence || 0) + (candidate.eqScores?.collaboration || 0) + (candidate.eqScores?.adaptability || 0)) / 3)
-                                : 0;
+                        sortedCandidates.map(candidate => {
+                            const eqScore = candidate.eqScores?.aggregate || candidate.overallEqScore || 0;
                             const avatarUrl = candidate.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=0d1b2a&color=67e8f9`;
+                            const isElite = eqScore >= 90;
 
                             return (
-                                <div key={candidate._id} className="bg-white dark:bg-[#131b2f] rounded-xl border border-gray-200 dark:border-slate-800 p-5 hover:shadow-lg hover:border-cyan-200 dark:hover:border-cyan-800 hover:-translate-y-1 transition-all duration-300">
+                                <div key={candidate._id} className={`bg-white dark:bg-[#131b2f] rounded-xl border ${isElite ? 'border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)] dark:border-amber-500' : 'border-gray-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800'} p-5 relative overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
+                                    
+                                    {isElite && (
+                                        <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg shadow-sm z-10 flex items-center gap-1">
+                                            <span>⭐ Top 1% Match</span>
+                                        </div>
+                                    )}
                                     <div className="flex items-start justify-between">
                                         <div className="flex gap-4">
                                             <img src={avatarUrl} alt={candidate.name} className="w-14 h-14 rounded-full border-2 border-gray-100 dark:border-slate-700" />
@@ -97,8 +108,8 @@ export default function CandidateSearch() {
                                             </div>
                                         </div>
                                         {eqScore > 0 && (
-                                            <div className="w-[42px] h-[42px] flex flex-col items-center justify-center rounded-full border-[2px] border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20">
-                                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 leading-none">{eqScore}%</span>
+                                            <div className={`w-[42px] h-[42px] flex flex-col items-center justify-center rounded-full border-[2px] ${isElite ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'}`}>
+                                                <span className={`text-xs font-bold leading-none ${isElite ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>{eqScore}%</span>
                                             </div>
                                         )}
                                     </div>

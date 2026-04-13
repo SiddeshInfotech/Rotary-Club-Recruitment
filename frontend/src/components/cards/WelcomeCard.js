@@ -4,6 +4,14 @@ export default function WelcomeCard({ primaryAnchor, strengthRating, peerPercent
     const rating = strengthRating || 0;
     const percentile = peerPercentile || 0;
     const stability = traitStability || 'N/A';
+    
+    const getOrdinalSuffix = (i) => {
+        const j = i % 10, k = i % 100;
+        if (j === 1 && k !== 11) return i + "st";
+        if (j === 2 && k !== 12) return i + "nd";
+        if (j === 3 && k !== 13) return i + "rd";
+        return i + "th";
+    };
 
     return (
         <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-10 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
@@ -32,7 +40,7 @@ export default function WelcomeCard({ primaryAnchor, strengthRating, peerPercent
                 <div className="grid grid-cols-2 gap-6">
                     <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-6 rounded-2xl shadow-sm hover:shadow transition">
                         <p className="text-xs font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-2">PEER PERCENTILE</p>
-                        <p className="text-3xl font-black text-slate-900 dark:text-white">{percentile > 0 ? `${percentile}th` : '—'}</p>
+                        <p className="text-3xl font-black text-slate-900 dark:text-white">{percentile > 0 ? getOrdinalSuffix(percentile) : '—'}</p>
                     </div>
                     <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-6 rounded-2xl shadow-sm hover:shadow transition">
                         <p className="text-xs font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 mb-2">TRAIT STABILITY</p>

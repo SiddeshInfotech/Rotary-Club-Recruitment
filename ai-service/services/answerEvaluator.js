@@ -80,6 +80,7 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
   }
 
   const overallScore = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0;
+  finalScores.aggregate = overallScore;
 
   // Write scores back to BOTH collections to ensure everything stays in sync
   await User.findByIdAndUpdate(candidateId, { eqScores: finalScores });

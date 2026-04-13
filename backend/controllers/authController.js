@@ -163,7 +163,8 @@ exports.login = async (req, res) => {
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
-        hiringNeeds: user.hiringNeeds
+        hiringNeeds: user.hiringNeeds,
+        updatedAt: user.updatedAt
       },
     });
   } catch (error) {
@@ -416,7 +417,8 @@ exports.updateMe = async (req, res) => {
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
-        hiringNeeds: user.hiringNeeds
+        hiringNeeds: user.hiringNeeds,
+        updatedAt: user.updatedAt
       }
     });
   } catch (error) {
