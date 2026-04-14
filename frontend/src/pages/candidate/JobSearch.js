@@ -69,15 +69,37 @@ export default function JobSearch() {
         fetchJobs();
     };
 
-    const timeAgo = (date) => {
-        if (!date) return '';
-        const diff = Math.floor((Date.now() - new Date(date)) / 86400000);
-        if (diff === 0) return 'Today';
-        if (diff === 1) return '1 day ago';
-        if (diff < 7) return `${diff} days ago`;
-        if (diff < 30) return `${Math.floor(diff / 7)} week(s) ago`;
-        return `${Math.floor(diff / 30)} month(s) ago`;
-    };
+    // Helper function to display "time ago" format
+   const timeAgo = (date) => {
+    if (!date) return '';
+    const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+    
+    // Greater than 1 year
+    let interval = Math.floor(seconds / 31536000);
+    if (interval >= 1) return interval === 1 ? "1 year ago" : `${interval} years ago`;
+    
+    // Greater than 1 month
+    interval = Math.floor(seconds / 2592000);
+    if (interval >= 1) return interval === 1 ? "1 month ago" : `${interval} months ago`;
+    
+    // Greater than 1 week
+    interval = Math.floor(seconds / 604800);
+    if (interval >= 1) return interval === 1 ? "1 week ago" : `${interval} weeks ago`;
+    
+    // Greater than 1 day
+    interval = Math.floor(seconds / 86400);
+    if (interval >= 1) return interval === 1 ? "1 day ago" : `${interval} days ago`;
+    
+    // Greater than 1 hour
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1) return interval === 1 ? "1 hour ago" : `${interval} hours ago`;
+    
+    // Greater than 1 minute
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) return interval === 1 ? "1 minute ago" : `${interval} minutes ago`;
+    
+    return "Just now";
+};
 
     return (
         <CandidateLayout>

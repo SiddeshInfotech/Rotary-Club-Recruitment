@@ -16,27 +16,30 @@ exports.getMatchScore = async (req, res) => {
       return res.status(404).json({ success: false, message: "Candidate profile not found" });
     }
 
-    // Skills Match
+    // --- 1. Skills Match ---
     const candidateSkills = profile.skills?.technical || [];
     const jobSkills = job.skillsRequired || [];
-
     const matchedSkills = jobSkills.filter((skill) =>
-      candidateSkills.includes(skill)
+      candidateSkills.some(s => s.toLowerCase() === skill.toLowerCase())
     );
 
-    const skillsMatch =
-      jobSkills.length > 0
+    const skillsMatch = jobSkills.length > 0
         ? (matchedSkills.length / jobSkills.length) * 100
         : 0;
 
-    // EQ Match
+    // --- 2. EQ Match ---
     const eq = profile.eqScores || {};
     const eqValues = Object.values(eq).filter(v => typeof v === 'number');
-
-    const eqMatch =
-      eqValues.length > 0
+    const eqMatch = eqValues.length > 0
         ? eqValues.reduce((a, b) => a + b, 0) / eqValues.length
         : 0;
+
+    // --- 3. Education/Backlog Check (Added logic) ---
+    // You can use this to lower the score or flag the user
+    let criteriaMet = true;
+    if (job.education?.allowBacklogs === false && profile.hasBacklogs === true) {
+        criteriaMet = false;
+    }
 
     // Final Score
     const matchScore = Math.round((skillsMatch + eqMatch) / 2);
@@ -47,6 +50,7 @@ exports.getMatchScore = async (req, res) => {
         matchScore,
         skillsMatch: Math.round(skillsMatch),
         eqMatch: Math.round(eqMatch),
+        meetsCriteria: criteriaMet
       },
     });
   } catch (error) {
@@ -61,7 +65,6 @@ exports.getJobDetails = async (req, res) => {
     if (!job) {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
-
     res.status(200).json({ success: true, data: job });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -73,53 +76,54 @@ exports.searchJobs = async (req, res) => {
   try {
     const { keyword, location, jobType, experience, skills, remote, sort } = req.query;
 
-    let query = {};
+    let query = { status: "Active" }; // Only show active jobs
 
+    // A. Keyword Search
     if (keyword) {
       const regex = { $regex: keyword, $options: "i" };
       query.$or = [
         { title: regex },
-        { company: regex },
         { companyName: regex },
         { description: regex },
       ];
     }
 
+    // B. Smart Location Logic (Updated for your 3-option model)
     if (remote === 'true') {
-      query.location = { $regex: 'remote', $options: 'i' };
+      query.locationType = "Remote";
     } else if (location) {
-      query.location = { $regex: location, $options: "i" };
+      // Searches both the City field and the General Location field
+      query.$or = query.$or || [];
+      query.$or.push(
+        { location: { $regex: location, $options: "i" } },
+        { locationType: { $regex: location, $options: "i" } }
+      );
     }
 
+    // C. Employment Type (Full-time, Internship, etc.)
     if (jobType && jobType !== "All") {
-      query.$and = query.$and || [];
-      query.$and.push({
-        $or: [
-          { type: { $regex: jobType, $options: "i" } },
-          { jobType: { $regex: jobType, $options: "i" } }
-        ]
-      });
+      query.type = jobType;
     }
 
+    // D. Exact Experience Level Match
     if (experience && experience !== "All") {
-      query.experienceRequired = { $regex: experience, $options: "i" };
+      query.experienceLevel = experience;
     }
 
+    // E. Skills Filter
     if (skills) {
-      // Allow comma separated skills e.g. "React, Node"
       const skillsArray = skills.split(',').map(s => s.trim()).filter(Boolean);
       if (skillsArray.length > 0) {
-        query.$and = query.$and || [];
-        query.$and.push({
-          skillsRequired: { $regex: skillsArray.join('|'), $options: 'i' }
-        });
+        // Find jobs that have ANY of these skills
+        query.skillsRequired = { $in: skillsArray.map(s => new RegExp(s, 'i')) };
       }
     }
 
-    let sortOptions = { createdAt: -1 }; // Recent by default
+    // F. Sorting
+    let sortOptions = { createdAt: -1 }; 
     if (sort === 'Oldest') {
         sortOptions = { createdAt: 1 };
-    } // Most Relevant could be handled here if we had text indexing
+    }
 
     const jobs = await Job.find(query).sort(sortOptions);
 

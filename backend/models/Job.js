@@ -2,71 +2,61 @@ const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: [true, "Job title is required"],
-      trim: true,
-    },
-    // From your schema
+    title: { type: String, required: [true, "Job title is required"], trim: true },
+    // Use this for Full-time/Internship logic
     type: {
       type: String,
       enum: ["Full-time", "Part-time", "Contract", "Internship"],
       default: "Full-time",
     },
-    location: {
+    // The new 3-option logic
+    locationType: {
       type: String,
-      default: "Remote",
-      trim: true,
+      enum: ["Remote", "Hybrid", "On-site"],
+      required: true,
     },
+    location: { type: String, trim: true }, // The City Name
     status: {
       type: String,
       enum: ["Active", "Closed", "Draft", "Paused"],
       default: "Active",
     },
-    recruiterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Recruiter",
-    },
-    company: {
+    recruiter: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    companyName: { type: String, trim: true },
+    skillsRequired: { type: [String], default: [] },
+
+    // Add this line to your jobSchema
+companyWebsite: { type: String, trim: true },
+    
+    // NEW: Detailed Criteria
+    experienceLevel: {
       type: String,
-      trim: true,
-      default: "",
+      enum: ["Entry Level", "Mid Level", "Senior Level", "Executive"],
+      required: true,
     },
-    employeeCount: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    // From teammates' schema
-    recruiter: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    companyName: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    jobType: {
-      type: String,
-      default: "",
-    },
-    skillsRequired: {
-      type: [String],
-      default: [],
-    },
-    experienceRequired: {
-      type: String,
-      default: "",
-    },
-    description: {
-      type: String,
-      default: "",
-    },
+    shift: { type: String, enum: ["Day", "Night", "Flexible"], default: "Day" },
+    salary: {
+           min: { 
+          type: Number, 
+          min: [0, "Salary cannot be negative"] 
+                },
+          max: { 
+          type: Number, 
+          min: [0, "Salary cannot be negative"] 
   },
-  {
-    timestamps: true,
-  }
+  currency: { type: String, default: "INR" }
+},
+    education: {
+      qualification: { type: String, enum: ["Graduate", "Post Graduate", "Undergraduate", "Any"] },
+      allowBacklogs: { type: Boolean, default: false }
+    },
+    description: { type: String },
+
+    // --- LEGACY FIELDS (Kept to prevent team errors) ---
+    employeeCount: { type: String, default: "" },
+    jobType: { type: String, default: "" } 
+  },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Job", jobSchema);

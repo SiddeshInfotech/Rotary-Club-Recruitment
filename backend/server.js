@@ -42,9 +42,17 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
+
+// ── Routes (Job Match / Search / Details — from backend_job) ──
+app.get("/api/jobs/search", jobMatchController.searchJobs);
+app.get("/api/jobs/job/:id", jobMatchController.getJobDetails);
+app.get("/api/jobs/:jobId/match", protect, checkRole("candidate"), jobMatchController.getMatchScore);
+
+app.use("/api/jobs", jobRoutes);
+
 // ── Routes (Your Recruiter Dashboard) ──────────────────
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/jobs", jobRoutes);
+// app.use("/api/jobs", jobRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/recruiter-profile", recruiterProfileRoutes);
@@ -54,10 +62,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/recruiter", recruiterTeamRoutes);
 
-// ── Routes (Job Match / Search / Details — from backend_job) ──
-app.get("/api/jobs/search", jobMatchController.searchJobs);
-app.get("/api/jobs/job/:id", jobMatchController.getJobDetails);
-app.get("/api/jobs/:jobId/match", protect, checkRole("candidate"), jobMatchController.getMatchScore);
+// // ── Routes (Job Match / Search / Details — from backend_job) ── temmates' original code
+// app.get("/api/jobs/search", jobMatchController.searchJobs);
+// app.get("/api/jobs/job/:id", jobMatchController.getJobDetails);
+// app.get("/api/jobs/:jobId/match", protect, checkRole("candidate"), jobMatchController.getMatchScore);
 
 // ── Routes (New Frontend Pages) ────────────────
 app.use("/api/community", communityRoutes);
