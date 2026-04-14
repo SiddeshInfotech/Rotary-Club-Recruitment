@@ -6,22 +6,16 @@ const Candidate = require("../models/Candidate");
 // Returns: { activeJobs, totalApplications, shortlisted, avgEqMatch }
 exports.getStats = async (req, res) => {
   try {
-    let recruiterId = req.query.recruiterId;
-    if (!recruiterId) {
-      const Recruiter = require("../models/Recruiter");
-      const firstRecruiter = await Recruiter.findOne();
-      if (!firstRecruiter) return res.json({ success: true, data: { activeJobs: 0, totalApplications: 0, shortlisted: 0, avgEqMatch: 0 } });
-      recruiterId = firstRecruiter._id;
-    }
+    const recruiterId = req.user._id;
 
     // Count active jobs for this recruiter
     const activeJobs = await Job.countDocuments({
-      recruiterId,
+      recruiter: recruiterId,
       status: "Active",
     });
 
     // Get all job IDs for this recruiter
-    const recruiterJobs = await Job.find({ recruiterId }).select("_id");
+    const recruiterJobs = await Job.find({ recruiter: recruiterId }).select("_id");
     const jobIds = recruiterJobs.map((j) => j._id);
 
     // Total applications across all recruiter's jobs
@@ -60,15 +54,9 @@ exports.getStats = async (req, res) => {
 // Returns active job listings with application count & top EQ match per job
 exports.getActiveJobListings = async (req, res) => {
   try {
-    let recruiterId = req.query.recruiterId;
-    if (!recruiterId) {
-      const Recruiter = require("../models/Recruiter");
-      const firstRecruiter = await Recruiter.findOne();
-      if (!firstRecruiter) return res.json({ success: true, data: [] });
-      recruiterId = firstRecruiter._id;
-    }
+    const recruiterId = req.user._id;
 
-    const activeJobs = await Job.find({ recruiterId, status: "Active" }).lean();
+    const activeJobs = await Job.find({ recruiter: recruiterId, status: "Active" }).lean();
 
     // For each job, get application count and top EQ match score
     const jobListings = await Promise.all(
@@ -104,17 +92,11 @@ exports.getActiveJobListings = async (req, res) => {
 // Returns top EQ matched candidates with their scores (deduplicated)
 exports.getTopCandidates = async (req, res) => {
   try {
-    let recruiterId = req.query.recruiterId;
-    if (!recruiterId) {
-      const Recruiter = require("../models/Recruiter");
-      const firstRecruiter = await Recruiter.findOne();
-      if (!firstRecruiter) return res.json({ success: true, data: [] });
-      recruiterId = firstRecruiter._id;
-    }
+    const recruiterId = req.user._id;
     const limit = parseInt(req.query.limit) || 4;
 
     // Get all job IDs for this recruiter
-    const recruiterJobs = await Job.find({ recruiterId }).select("_id");
+    const recruiterJobs = await Job.find({ recruiter: recruiterId }).select("_id");
     const jobIds = recruiterJobs.map((j) => j._id);
 
     // Aggregate: group by candidateId, pick highest match score, deduplicate
