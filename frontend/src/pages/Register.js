@@ -14,6 +14,7 @@ export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [otp, setOtp] = useState('');
     const [otpEmail, setOtpEmail] = useState('');
+    const [signupToken, setSignupToken] = useState(''); // NEW: Holds the temporary data briefcase
     const [successMessage, setSuccessMessage] = useState('');
 
     const [form, setForm] = useState({
@@ -42,7 +43,7 @@ export default function Register() {
         try {
             const fullName = `${form.firstName} ${form.lastName}`.trim();
             
-            // Register user with the backend
+            // 1. Send registration data to backend
             const res = await api.post('/auth/register', {
                 name: fullName,
                 email: form.email,
@@ -61,20 +62,19 @@ export default function Register() {
                 }),
             });
 
+            // 2. If backend sends back a signupToken, save it and show OTP screen
             if (res.data.requiresOtp) {
                 setOtpEmail(form.email);
+                setSignupToken(res.data.signupToken); // SAVE THE TOKEN HERE
                 setShowOtp(true);
                 setSuccessMessage(res.data.message || 'Please check your email for the OTP.');
                 return;
             }
 
-            if (res.data.success && !res.data.requiresOtp) {
+            // Fallback for immediate success (if OTP is disabled)
+            if (res.data.success) {
                 const { user: userData, token } = res.data;
-                login({
-                    ...userData,
-                    fullName,
-                }, token);
-
+                login({ ...userData, fullName }, token);
                 navigate(role === 'recruiter' ? '/recruiter' : '/candidate');
             }
         } catch (err) {
@@ -89,14 +89,15 @@ export default function Register() {
         setError('');
         setLoading(true);
         try {
+            // 3. Send the OTP AND the signupToken back to the server
+            // The server uses the token to "remember" who you are
             const res = await api.post('/auth/verify-otp', {
-                email: otpEmail,
+                signupToken: signupToken,
                 otp: otp
             });
 
             if (res.data.success) {
                 const { user: userData, token } = res.data;
-                // Add fullName for context consistency
                 const fullName = `${form.firstName} ${form.lastName}`.trim();
                 
                 login({
@@ -107,7 +108,7 @@ export default function Register() {
                 navigate(role === 'recruiter' ? '/recruiter' : '/candidate');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+            setError(err.response?.data?.message || 'Invalid OTP or session expired.');
         } finally {
             setLoading(false);
         }
@@ -117,8 +118,16 @@ export default function Register() {
         setError('');
         setSuccessMessage('');
         try {
-            const res = await api.post('/auth/resend-otp', { email: otpEmail });
+            // Send email and name so backend can generate a new signupToken
+            const fullName = `${form.firstName} ${form.lastName}`.trim();
+            const res = await api.post('/auth/resend-otp', { 
+                email: otpEmail,
+                name: fullName,
+                ...form // Pass form data again to keep the token updated
+            });
+            
             if (res.data.success) {
+                setSignupToken(res.data.signupToken); // Update with new token
                 setSuccessMessage('A new verification code has been sent to your email.');
             }
         } catch (err) {
@@ -126,7 +135,7 @@ export default function Register() {
         }
     };
 
-    return (
+   return (
         <div className="min-h-screen bg-white dark:bg-[#0b1121] flex w-full font-sans transition-colors duration-300">
             
             <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative flex-col p-12 overflow-hidden bg-slate-900 border-r border-slate-800">
