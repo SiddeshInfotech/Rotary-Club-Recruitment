@@ -1,5 +1,6 @@
 const Job = require("../models/Job");
 const CandidateProfile = require("../models/CandidateProfile");
+const User = require("../models/User");
 
 // MATCH SCORE (Candidate vs Job)
 exports.getMatchScore = async (req, res) => {
@@ -74,7 +75,11 @@ exports.getJobDetails = async (req, res) => {
 // SEARCH JOBS — public
 exports.searchJobs = async (req, res) => {
   try {
-    const { keyword, location, jobType, experience, skills, remote, sort } = req.query;
+    const { keyword, location, jobType, experience, skills, remote, sort, page, limit } = req.query;
+
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
 
     let query = { status: "Active" }; // Only show active jobs
 
@@ -125,13 +130,71 @@ exports.searchJobs = async (req, res) => {
         sortOptions = { createdAt: 1 };
     }
 
-    const jobs = await Job.find(query).sort(sortOptions);
+    const jobs = await Job.find(query)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNumber);
+        
+    const totalJobs = await Job.countDocuments(query);
 
     res.status(200).json({
       success: true,
       count: jobs.length,
+      totalJobs,
+      hasNextPage: skip + jobs.length < totalJobs,
       data: jobs,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// TOGGLE SAVE JOB (Candidate)
+exports.toggleSaveJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(req.user._id || req.user.id);
+    
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const jobIndex = user.savedJobs.findIndex(jobId => jobId.toString() === id);
+    if (jobIndex > -1) {
+      user.savedJobs.splice(jobIndex, 1);
+      await user.save();
+      return res.status(200).json({ success: true, message: "Removed", isSaved: false });
+    } else {
+      user.savedJobs.push(id);
+      await user.save();
+      return res.status(200).json({ success: true, message: "Saved", isSaved: true });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// CHECK IF JOB IS SAVED
+exports.checkSavedJob = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    const isSaved = user.savedJobs.includes(req.params.id);
+    res.status(200).json({ success: true, isSaved });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// GET SAVED JOBS (Candidate)
+exports.getSavedJobs = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id).populate({
+      path: 'savedJobs',
+      select: 'title companyName company location type jobType description skillsRequired createdAt'
+    });
+    
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    res.status(200).json({ success: true, data: user.savedJobs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

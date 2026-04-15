@@ -8,6 +8,7 @@ import RecruiterDashboard from "./pages/recruiter/Dashboard";
 import JobSearch from "./pages/candidate/JobSearch";
 
 import JobDetail from "./pages/candidate/JobDetail";
+import MyJobs from "./pages/candidate/MyJobs";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
 import CandidateSettings from "./pages/candidate/Settings";
 import RecruiterProfile from "./pages/candidate/RecruiterProfile";
@@ -70,6 +71,7 @@ function App() {
           <Route path="/matches" element={<ProtectedRoute allowedRoles={["candidate"]}><Matches /></ProtectedRoute>} />
           <Route path="/job-search" element={<ProtectedRoute allowedRoles={["candidate"]}><JobSearch /></ProtectedRoute>} />
           <Route path="/job/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
+          <Route path="/my-jobs" element={<ProtectedRoute allowedRoles={["candidate"]}><MyJobs /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><CandidateProfile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><CandidateSettings /></ProtectedRoute>} />
           <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />

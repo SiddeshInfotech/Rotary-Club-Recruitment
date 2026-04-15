@@ -13,7 +13,7 @@ export default function JobSearch() {
     const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || '');
     const [jobTypeFilter, setJobTypeFilter] = useState(searchParams.get('type') || 'All');
     const [experienceFilter, setExperienceFilter] = useState(searchParams.get('experience') || 'All');
-    const [sortOrder, setSortOrder] = useState(searchParams.get('sort') || 'Most Relevant');
+    const [sortOrder, setSortOrder] = useState(searchParams.get('sort') || 'Most Recent');
     
     // Advanced Filters state
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
@@ -22,9 +22,14 @@ export default function JobSearch() {
 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-    const fetchJobs = useCallback(async () => {
-        setLoading(true);
+    const fetchJobs = useCallback(async (currentPage = 1, append = false) => {
+        if (!append) setLoading(true);
+        else setLoadingMore(true);
+
         try {
             const params = new URLSearchParams();
             if (keyword) params.append('keyword', keyword);
@@ -34,22 +39,30 @@ export default function JobSearch() {
             if (skillsFilter) params.append('skills', skillsFilter);
             if (remoteOnly) params.append('remote', 'true');
             if (sortOrder) params.append('sort', sortOrder);
+            params.append('page', currentPage);
 
             const url = `/jobs/search?${params.toString()}`;
             const res = await api.get(url);
             if (res.data.success) {
-                setJobs(res.data.data);
+                if (append) {
+                    setJobs(prev => [...prev, ...res.data.data]);
+                } else {
+                    setJobs(res.data.data);
+                }
+                setHasNextPage(res.data.hasNextPage);
+                setPage(currentPage);
             }
         } catch (err) {
             console.error("Failed to fetch jobs:", err);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     }, [keyword, locationFilter, jobTypeFilter, experienceFilter, skillsFilter, remoteOnly, sortOrder]);
 
     // Fetch jobs when dependencies change securely
     useEffect(() => {
-        fetchJobs();
+        fetchJobs(1, false);
     }, [fetchJobs]);
 
     const handleSearch = (e) => {
@@ -63,10 +76,14 @@ export default function JobSearch() {
         if (experienceFilter !== 'All') params.append('experience', experienceFilter);
         if (skillsFilter) params.append('skills', skillsFilter);
         if (remoteOnly) params.append('remote', 'true');
-        if (sortOrder !== 'Most Relevant') params.append('sort', sortOrder);
+        if (sortOrder !== 'Most Recent') params.append('sort', sortOrder);
         setSearchParams(params);
         
-        fetchJobs();
+        fetchJobs(1, false);
+    };
+
+    const handleLoadMore = () => {
+        fetchJobs(page + 1, true);
     };
 
     // Helper function to display "time ago" format
@@ -227,8 +244,8 @@ export default function JobSearch() {
                         onChange={(e) => setSortOrder(e.target.value)}
                         className="bg-transparent text-slate-900 dark:text-white font-bold cursor-pointer focus:outline-none"
                     >
-                        <option value="Most Relevant">Most Relevant</option>
                         <option value="Most Recent">Most Recent</option>
+                        <option value="Oldest">Oldest</option>
                     </select>
                 </div>
             </div>
@@ -296,6 +313,26 @@ export default function JobSearch() {
                     ))
                 )}
             </div>
+
+            {/* Load More Button */}
+            {hasNextPage && (
+                <div className="flex justify-center mt-10 mb-8">
+                    <button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl text-sm uppercase tracking-widest font-black transition shadow-sm flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {loadingMore ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-slate-400 border-t-slate-700 dark:border-slate-500 dark:border-t-slate-200 rounded-full animate-spin"></span>
+                                Loading...
+                            </>
+                        ) : (
+                            'Load More'
+                        )}
+                    </button>
+                </div>
+            )}
         </CandidateLayout>
     );
 }

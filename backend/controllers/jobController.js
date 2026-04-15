@@ -11,33 +11,79 @@ const Job = require("../models/Job");
 // };
 
 
+// exports.getAllJobs = async (req, res) => {
+// try {
+// const { keyword, location, jobType, skills, remote } = req.query;
+// // Only show "Active" jobs to candidates
+// let query = { status: "Active" };
+
+// if (keyword) {
+// query.$or = [
+// { title: { $regex: keyword, $options: "i" } },
+// { description: { $regex: keyword, $options: "i" } },
+// { companyName: { $regex: keyword, $options: "i" } }
+// ];
+// }
+// if (location) query.location = { $regex: location, $options: "i" };
+// if (remote === 'true') query.location = { $regex: "remote", $options: "i" };
+// if (jobType && jobType !== 'All') query.type = jobType;
+// if (skills) {
+// query.skillsRequired = { $in: skills.split(',').map(s => s.trim()) };
+// }
+
+// const jobs = await Job.find(query).sort({ createdAt: -1 });
+// res.json({ success: true, count: jobs.length, data: jobs });
+// } catch (error) {
+// res.status(500).json({ success: false, message: error.message });
+// }
+// };
+
 exports.getAllJobs = async (req, res) => {
-try {
-const { keyword, location, jobType, skills, remote } = req.query;
-// Only show "Active" jobs to candidates
-let query = { status: "Active" };
+    try {
+        // 1. Extract page/limit from the request
+        const { keyword, location, jobType, skills, remote, page, limit } = req.query;
+        
+        // 2. Pagination Math
+        const pageNumber = parseInt(page) || 1;
+        const limitNumber = parseInt(limit) || 10;
+        const skip = (pageNumber - 1) * limitNumber;
 
-if (keyword) {
-query.$or = [
-{ title: { $regex: keyword, $options: "i" } },
-{ description: { $regex: keyword, $options: "i" } },
-{ companyName: { $regex: keyword, $options: "i" } }
-];
-}
-if (location) query.location = { $regex: location, $options: "i" };
-if (remote === 'true') query.location = { $regex: "remote", $options: "i" };
-if (jobType && jobType !== 'All') query.type = jobType;
-if (skills) {
-query.skillsRequired = { $in: skills.split(',').map(s => s.trim()) };
-}
+        let query = { status: "Active" };
 
-const jobs = await Job.find(query).sort({ createdAt: -1 });
-res.json({ success: true, count: jobs.length, data: jobs });
-} catch (error) {
-res.status(500).json({ success: false, message: error.message });
-}
+        // ... (Keep your existing filtering logic here)
+        if (keyword) {
+            query.$or = [
+                { title: { $regex: keyword, $options: "i" } },
+                { description: { $regex: keyword, $options: "i" } },
+                { companyName: { $regex: keyword, $options: "i" } }
+            ];
+        }
+        if (location) query.location = { $regex: location, $options: "i" };
+        if (remote === 'true') query.location = { $regex: "remote", $options: "i" };
+        if (jobType && jobType !== 'All') query.type = jobType;
+        if (skills) {
+            query.skillsRequired = { $in: skills.split(',').map(s => s.trim()) };
+        }
+
+        // 3. Update the Find command
+        const jobs = await Job.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)           // Jump over already loaded jobs
+            .limit(limitNumber);  // Only take the next "chunk"
+
+        const totalJobs = await Job.countDocuments(query);
+
+        res.json({ 
+            success: true, 
+            count: jobs.length, 
+            totalJobs,
+            hasNextPage: skip + jobs.length < totalJobs, // Tells frontend to show/hide button
+            data: jobs 
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
-
 
 // GET /api/jobs/:id — Get single job - teammate's original code
 // exports.getJobById = async (req, res) => {

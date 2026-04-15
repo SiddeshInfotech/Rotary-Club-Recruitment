@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { ArrowLeft, Building2, MapPin, Briefcase, Clock, ShieldCheck, Share2, Bookmark, GraduationCap, DollarSign, Timer, Zap, Code2, Globe } from 'lucide-react'; // Added Globe icon
+import { ArrowLeft, Building2, MapPin, Briefcase, Clock, ShieldCheck, Share2, Bookmark, GraduationCap, IndianRupee, Timer, Zap, Code2, Globe } from 'lucide-react'; // Added Globe icon
 import { useNavigate, useParams } from 'react-router-dom';
 import api from "../../services/api";
 
@@ -9,13 +9,26 @@ export default function JobDetail() {
     const { id } = useParams();
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSaved, setIsSaved] = useState(false);
+    const [shared, setShared] = useState(false);
 
     useEffect(() => {
         const fetchJob = async () => {
             try {
+                // Fetch job details
                 const res = await api.get(`/jobs/job/${id}`);
                 if (res.data.success) {
                     setJob(res.data.data);
+                }
+                
+                // Fetch saved status (ignore error if not logged in or fails)
+                try {
+                    const savedRes = await api.get(`/jobs/job/${id}/check-saved`);
+                    if (savedRes.data.success) {
+                        setIsSaved(savedRes.data.isSaved);
+                    }
+                } catch (e) {
+                    console.error("Failed to check saved status:", e);
                 }
             } catch (err) {
                 console.error("Failed to fetch job:", err);
@@ -36,6 +49,45 @@ export default function JobDetail() {
         interval = Math.floor(seconds / 60);
         if (interval >= 1) return interval === 1 ? "1 minute ago" : `${interval} minutes ago`;
         return "Just now";
+    };
+
+    const handleSave = async () => {
+        try {
+            // Optimistic UI update
+            setIsSaved(!isSaved);
+            
+            const res = await api.post(`/jobs/job/${id}/save`);
+            if (res.data.success) {
+                setIsSaved(res.data.isSaved); // Sync with actual backend state
+            } else {
+                // Revert on failure
+                setIsSaved(!isSaved);
+            }
+        } catch (error) {
+            console.error("Error saving job:", error);
+            setIsSaved(!isSaved); // Revert on error
+        }
+    };
+
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: job?.title || 'Job Opportunity',
+                    text: `Check out this ${job?.title} position at ${job?.companyName || 'this amazing company'}!`,
+                    url: window.location.href,
+                });
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Error sharing:', error);
+                }
+            }
+        } else {
+            // Fallback for browsers that do not support navigator.share
+            navigator.clipboard.writeText(window.location.href);
+            setShared(true);
+            setTimeout(() => setShared(false), 2000);
+        }
     };
 
     if (loading) {
@@ -116,11 +168,22 @@ export default function JobDetail() {
                     </div>
 
                     <div className="flex gap-3 w-full md:w-auto flex-shrink-0">
-                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <Bookmark className="w-5 h-5" />
+                        <button 
+                            onClick={handleSave}
+                            className={`p-3.5 rounded-xl transition border shadow-sm ${isSaved ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
+                            title={isSaved ? "Saved" : "Save Job"}
+                        >
+                            <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
                         </button>
-                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <button 
+                            onClick={handleShare}
+                            className="relative p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition border border-slate-200 dark:border-slate-700 shadow-sm"
+                            title="Share Job"
+                        >
                             <Share2 className="w-5 h-5" />
+                            {shared && (
+                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-black tracking-widest uppercase shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 whitespace-nowrap z-50">Copied!</span>
+                            )}
                         </button>
                         <button className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg shadow-blue-500/20 w-full md:w-auto text-center hover:scale-[1.02] active:scale-[0.98]">
                             Apply Now
@@ -164,9 +227,9 @@ export default function JobDetail() {
                         
                         <div className="space-y-8">
                             <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
-                                <DollarSign className="w-6 h-6 text-blue-500 mt-1" />
+                                <IndianRupee className="w-6 h-6 text-blue-500 mt-1" />
                                 <div>
-                                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Target Compensation</p>
+                                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Salary Range</p>
                                     <p className="text-xl font-black text-white tracking-tight">
                                         {job.salary?.min ? `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : "Market Competitive"}
                                     </p>

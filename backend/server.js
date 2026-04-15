@@ -47,6 +47,10 @@ app.use(express.json());
 app.get("/api/jobs/search", jobMatchController.searchJobs);
 app.get("/api/jobs/job/:id", jobMatchController.getJobDetails);
 app.get("/api/jobs/:jobId/match", protect, checkRole("candidate"), jobMatchController.getMatchScore);
+// NEW: Save job functionality
+app.get("/api/jobs/job/:id/check-saved", protect, jobMatchController.checkSavedJob);
+app.post("/api/jobs/job/:id/save", protect, jobMatchController.toggleSaveJob);
+app.get("/api/jobs/saved", protect, jobMatchController.getSavedJobs);
 
 app.use("/api/jobs", jobRoutes);
 

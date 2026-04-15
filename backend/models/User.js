@@ -49,7 +49,10 @@ const userSchema = new mongoose.Schema(
 
     // reset password fields
     resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date }
+    resetPasswordExpires: { type: Date },
+
+    // Candidate saved jobs
+    savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }]
   },
   { timestamps: true }
 );

@@ -1,14 +1,11 @@
-import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Search } from 'lucide-react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Search, Bookmark } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
 export default function CandidateLayout({ children }) {
     const location = useLocation();
-    const navigate = useNavigate();
     const { user } = useAuth();
-    const [headerSearch, setHeaderSearch] = useState('');
 
     const displayName = user?.fullName || 'Guest User';
     const avatarName = encodeURIComponent(displayName);
@@ -16,6 +13,7 @@ export default function CandidateLayout({ children }) {
     const baseMainMenu = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/candidate' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
+        { name: 'My Jobs', icon: Bookmark, path: '/my-jobs' },
         { name: 'Network', icon: Network, path: '/network' },
         { name: 'Growth', icon: TrendingUp, path: '/growth' }
     ];
@@ -25,6 +23,7 @@ export default function CandidateLayout({ children }) {
     const mainMenu = isJobRelated ? [
         baseMainMenu[0],
         baseMainMenu[1],
+        baseMainMenu[2],
         { name: 'Matches', icon: Star, path: '/matches' }
     ] : baseMainMenu;
 
@@ -32,14 +31,6 @@ export default function CandidateLayout({ children }) {
         { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
         { name: 'Referrals', icon: Users, path: '/referrals' }
     ];
-
-    const handleHeaderSearch = (e) => {
-        e.preventDefault();
-        if (headerSearch.trim()) {
-            navigate(`/job-search?q=${encodeURIComponent(headerSearch.trim())}`);
-            setHeaderSearch('');
-        }
-    };
 
     return (
         <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
@@ -94,10 +85,10 @@ export default function CandidateLayout({ children }) {
 
                 <div className="pt-6 mt-6">
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            <a href="#" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
+                            <button className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full focus:outline-none">
                                 <Settings className="w-5 h-5 text-slate-400" />
                                 Settings
-                            </a>
+                            </button>
                         </div>
 
                     <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
@@ -122,16 +113,6 @@ export default function CandidateLayout({ children }) {
                         <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
                             <span className="text-blue-600">EQ</span>-Hire
                         </div>
-                        <form onSubmit={handleHeaderSearch} className="hidden lg:flex flex-1 max-w-md relative">
-                            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input 
-                                type="text"
-                                value={headerSearch}
-                                onChange={(e) => setHeaderSearch(e.target.value)}
-                                placeholder="Search jobs..."
-                                className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full text-sm font-medium text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm transition-all"
-                            />
-                        </form>
                         
                         <div className="flex items-center gap-4 ml-auto">
                             <ThemeToggle />
