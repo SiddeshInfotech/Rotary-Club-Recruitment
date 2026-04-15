@@ -6,9 +6,10 @@ exports.getAllApplications = async (req, res) => {
   try {
     const filter = {};
     if (req.query.jobId) filter.jobId = req.query.jobId;
+    if (req.query.candidateId) filter.candidateId = req.query.candidateId;
 
     const applications = await Application.find(filter)
-      .populate("jobId", "title type location status")
+      .populate("jobId", "title type location status company companyName description skillsRequired")
       .populate("candidateId", "name title eqScores")
       .sort({ createdAt: -1 });
 
@@ -21,6 +22,13 @@ exports.getAllApplications = async (req, res) => {
 // POST /api/applications — Create an application
 exports.createApplication = async (req, res) => {
   try {
+    const { jobId, candidateId } = req.body;
+    
+    const existingApplication = await Application.findOne({ jobId, candidateId });
+    if (existingApplication) {
+      return res.status(400).json({ success: false, message: "You have already applied for this job." });
+    }
+
     const application = await Application.create(req.body);
     res.status(201).json({ success: true, data: application });
   } catch (error) {

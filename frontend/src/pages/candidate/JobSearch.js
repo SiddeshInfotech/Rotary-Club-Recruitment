@@ -293,17 +293,12 @@ export default function JobSearch() {
                                 </div>
                                 
                                 <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                                    <div className="flex flex-row gap-2 w-full md:w-auto">
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); navigate(`/job/${job._id}`); }}
-                                            className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
-                                        >
-                                            Details
-                                        </button>
-                                        <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
-                                            Apply
-                                        </button>
-                                    </div>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/job/${job._id}`); }}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition w-full md:w-auto text-center shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        View Details
+                                    </button>
                                     <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400">
                                         <Clock className="w-3 h-3" /> {timeAgo(job.createdAt)}
                                     </span>

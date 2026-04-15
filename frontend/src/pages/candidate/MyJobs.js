@@ -1,36 +1,59 @@
 import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { Briefcase, MapPin, Building2, Clock, Bookmark } from 'lucide-react';
+import { Briefcase, MapPin, Building2, Clock, Bookmark, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 export default function MyJobs() {
     const navigate = useNavigate();
-    const [jobs, setJobs] = useState([]);
+    const [savedJobs, setSavedJobs] = useState([]);
+    const [appliedJobs, setAppliedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Saved');
-
-    const tabs = [
-        { name: 'Saved', count: jobs.length },
-        { name: 'Applied', count: 0 },
-        { name: 'Interviews', count: 0 }
-    ];
+    const { user } = useAuth();
 
     useEffect(() => {
-        const fetchSavedJobs = async () => {
+        if (!user?._id) return;
+        const fetchAllData = async () => {
+            setLoading(true);
             try {
-                const res = await api.get('/jobs/saved');
-                if (res.data.success) {
-                    setJobs(res.data.data.reverse()); // Show newest saved first
+                const [savedRes, appliedRes] = await Promise.all([
+                    api.get('/jobs/saved'),
+                    api.get(`/applications?candidateId=${user._id}`)
+                ]);
+                
+                if (savedRes.data.success) {
+                    setSavedJobs(savedRes.data.data.reverse());
+                }
+                if (appliedRes.data.success) {
+                    // Application API returns populated jobId. We keep the whole application object
+                    // Remove legacy duplicates so the user only sees one application per job
+                    const uniqueAppsMap = new Map();
+                    appliedRes.data.data.forEach(app => {
+                        const jId = app.jobId?._id || app.jobId?.toString() || app.jobId;
+                        if (jId && !uniqueAppsMap.has(jId)) {
+                            uniqueAppsMap.set(jId, app);
+                        }
+                    });
+                    setAppliedJobs(Array.from(uniqueAppsMap.values()));
                 }
             } catch (err) {
-                console.error("Failed to fetch saved jobs:", err);
+                console.error("Failed to fetch jobs:", err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchSavedJobs();
-    }, []);
+        fetchAllData();
+    }, [user]);
+
+    const tabs = [
+        { name: 'Saved', count: savedJobs.length },
+        { name: 'Applied', count: appliedJobs.length },
+        { name: 'Interviews', count: 0 }
+    ];
+
+    const currentList = activeTab === 'Saved' ? savedJobs : activeTab === 'Applied' ? appliedJobs : [];
 
     const timeAgo = (date) => {
         if (!date) return '';
@@ -68,22 +91,22 @@ export default function MyJobs() {
             <div className="flex flex-col gap-4">
                 {loading ? (
                     <div className="text-center py-12 text-slate-500 font-medium">Loading saved jobs...</div>
-                ) : activeTab !== 'Saved' ? (
-                     <div className="text-center py-12 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/10">
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-bold tracking-widest uppercase">COMING SOON</p>
-                        <p className="text-slate-400 dark:text-slate-500 mt-2 text-sm">You haven't {activeTab.toLowerCase()} any jobs yet.</p>
-                    </div>
-                ) : jobs.length === 0 ? (
+                ) : currentList.length === 0 ? (
                     <div className="text-center py-12 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/10 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer" onClick={() => navigate('/job-search')}>
                         <Bookmark className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">You haven't saved any jobs yet.</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">You haven't {activeTab.toLowerCase()} any jobs yet.</p>
                         <p className="mt-4 text-blue-600 dark:text-blue-400 text-sm font-bold">
                             Find opportunities &rarr;
                         </p>
                     </div>
                 ) : (
-                    jobs.map((job) => (
-                        <div key={job._id} className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm hover:shadow-md transition group cursor-pointer" onClick={() => navigate(`/job/${job._id}`)}>
+                    currentList.map((item) => {
+                        const isAppliedTab = activeTab === 'Applied';
+                        const job = isAppliedTab ? item.jobId : item;
+                        if (!job) return null;
+
+                        return (
+                        <div key={job._id || item._id} className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm hover:shadow-md transition group cursor-pointer" onClick={() => navigate(`/job/${job._id}`)}>
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                                 <div className="flex gap-4">
                                     <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -92,18 +115,30 @@ export default function MyJobs() {
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
                                              <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">{job.title}</h3>
-                                             <Bookmark className="w-4 h-4 fill-slate-400 text-slate-400" />
+                                             {!isAppliedTab && <Bookmark className="w-4 h-4 fill-slate-400 text-slate-400" />}
                                         </div>
-                                        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-4">{job.companyName || job.company || "—"}</p>
-                                        
-                                        <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-4">
+                                        <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 mt-1.5 uppercase tracking-wider">
                                             <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.location || 'Remote'}</span>
                                             <span className="text-slate-300 dark:text-slate-600">•</span>
                                             <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> {job.type || job.jobType || 'Full-time'}</span>
                                         </div>
 
+                                        {(job.companyName || job.company) && (
+                                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                                <Building2 className="w-4 h-4 text-slate-400" /> {job.companyName || job.company}
+                                            </p>
+                                        )}
+
+                                        {job.description ? (
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 md:pr-10 leading-relaxed font-medium">
+                                                {job.description}
+                                            </p>
+                                        ) : (
+                                            <div className="mb-4"></div>
+                                        )}
+
                                         {job.skillsRequired && job.skillsRequired.length > 0 && (
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-wrap gap-2 mt-auto">
                                                 {job.skillsRequired.slice(0, 4).map((skill, i) => (
                                                     <span key={i} className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-[10px] font-bold uppercase tracking-wider">{skill}</span>
                                                 ))}
@@ -116,18 +151,37 @@ export default function MyJobs() {
                                     <div className="flex flex-row gap-2 w-full md:w-auto">
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); navigate(`/job/${job._id}`); }}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-lg shadow-blue-500/20"
+                                            className={
+                                                isAppliedTab
+                                                ? "bg-emerald-500 text-white px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer hover:bg-emerald-600"
+                                                : "bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-lg shadow-blue-500/20"
+                                            }
                                         >
-                                            Apply Now
+                                            {isAppliedTab ? (
+                                                <><CheckCircle className="w-4 h-4" /> Applied</>
+                                            ) : 'Apply Now'}
                                         </button>
                                     </div>
-                                    <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 mt-2">
-                                        <Clock className="w-3 h-3" /> Posted {timeAgo(job.createdAt)}
-                                    </span>
+                                    
+                                    {isAppliedTab ? (
+                                        <div className="flex flex-col items-center md:items-end w-full">
+                                            <span className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 w-max mt-3 mb-2 justify-center shadow-sm border border-emerald-100 dark:border-emerald-800">
+                                                Status: {item.status || "Applied"}
+                                            </span>
+                                            <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400">
+                                                <Clock className="w-3 h-3" /> Applied {timeAgo(item.createdAt)}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 mt-2">
+                                            <Clock className="w-3 h-3" /> Posted {timeAgo(job.createdAt)}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </CandidateLayout>

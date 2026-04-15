@@ -1,6 +1,6 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
-const Candidate = require("../models/Candidate");
+const User = require("../models/User");
 
 // GET /api/dashboard/stats
 // Returns: { activeJobs, totalApplications, shortlisted, avgEqMatch }
@@ -107,29 +107,41 @@ exports.getTopCandidates = async (req, res) => {
         $group: {
           _id: "$candidateId",
           maxMatchScore: { $max: "$eqMatchScore" },
+          jobId: { $first: "$jobId" },
         },
       },
       { $sort: { maxMatchScore: -1 } },
       { $limit: limit },
     ]);
 
-    // Populate candidate details
+    // Populate candidate details from User model (since Auth creates Users, not Candidates)
     const candidateIds = topResults.map((r) => r._id);
-    const candidates = await Candidate.find({ _id: { $in: candidateIds } }).lean();
+    const linkedUsers = await User.find({ _id: { $in: candidateIds } }).lean();
 
-    const topCandidates = topResults.map((result) => {
-      const candidate = candidates.find(
-        (c) => c._id.toString() === result._id.toString()
-      );
-      return {
-        _id: candidate._id,
-        name: "Protected Candidate",
-        title: candidate.title || "Undisclosed Role",
-        avatar: null,
-        matchPercentage: result.maxMatchScore,
-        eqScores: candidate.eqScores,
-      };
-    });
+    // Also fetch the respective jobs to show what they applied for
+    const resultJobIds = topResults.map((r) => r.jobId);
+    const linkedJobs = await Job.find({ _id: { $in: resultJobIds } }).lean();
+
+    const topCandidates = topResults
+      .map((result) => {
+        const linkedUser = linkedUsers.find(
+          (u) => u._id.toString() === result._id.toString()
+        );
+        const linkedJob = linkedJobs.find(
+          (j) => j._id.toString() === result.jobId?.toString()
+        );
+        if (!linkedUser) return null;
+        
+        return {
+          _id: linkedUser._id,
+          name: linkedUser.name || "Candidate",
+          title: linkedJob ? `Applied for: ${linkedJob.title}` : (linkedUser.currentTitle || "Active Candidate"),
+          avatar: null,
+          matchPercentage: result.maxMatchScore || 0,
+          eqScores: { emotionalIntelligence: 0, collaboration: 0, adaptability: 0 }, // Stub since User doesn't have EQ yet
+        };
+      })
+      .filter(Boolean);
 
     res.json({ success: true, data: topCandidates });
   } catch (error) {

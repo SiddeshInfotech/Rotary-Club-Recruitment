@@ -96,9 +96,15 @@ topJobs.map((job, idx) => (
 <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{job.title}</h4>
 <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{job.type} {job.location && `· ${job.location}`}</p>
 </div>
-<div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg flex flex-col items-center">
-<span className="text-blue-600 dark:text-blue-400 font-black text-sm">{job.topEqMatch || 0}%</span>
-<span className="text-[10px] text-blue-500/70 font-bold uppercase tracking-widest">Match</span>
+<div className="flex flex-col items-end gap-2">
+    <div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg flex flex-col items-center">
+        <span className="text-blue-600 dark:text-blue-400 font-black text-sm">{job.topEqMatch || 0}%</span>
+        <span className="text-[10px] text-blue-500/70 font-bold uppercase tracking-widest">Match</span>
+    </div>
+    <div className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+        <Users className="w-3.5 h-3.5" />
+        <span>{job.applications ?? 0} Applicant{job.applications !== 1 ? 's' : ''}</span>
+    </div>
 </div>
 </div>
 </Link>

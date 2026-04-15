@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { ArrowLeft, Building2, MapPin, Briefcase, Clock, ShieldCheck, Share2, Bookmark, GraduationCap, IndianRupee, Timer, Zap, Code2, Globe } from 'lucide-react'; // Added Globe icon
+import { ArrowLeft, Building2, MapPin, Briefcase, Clock, ShieldCheck, Share2, Bookmark, GraduationCap, IndianRupee, Timer, Zap, Code2, Globe, CheckCircle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 export default function JobDetail() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { user } = useAuth();
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaved, setIsSaved] = useState(false);
     const [shared, setShared] = useState(false);
+    const [hasApplied, setHasApplied] = useState(false);
+    const [applying, setApplying] = useState(false);
 
     useEffect(() => {
         const fetchJob = async () => {
@@ -30,6 +34,15 @@ export default function JobDetail() {
                 } catch (e) {
                     console.error("Failed to check saved status:", e);
                 }
+
+                // Check localStorage for apply status
+                if (user?._id) {
+                    const storageKey = `applied_${user._id}`;
+                    const appliedJobs = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                    if (appliedJobs[id]) {
+                        setHasApplied(true);
+                    }
+                }
             } catch (err) {
                 console.error("Failed to fetch job:", err);
             } finally {
@@ -37,7 +50,7 @@ export default function JobDetail() {
             }
         };
         fetchJob();
-    }, [id]);
+    }, [id, user]);
 
     const timeAgo = (date) => {
         if (!date) return '';
@@ -87,6 +100,38 @@ export default function JobDetail() {
             navigator.clipboard.writeText(window.location.href);
             setShared(true);
             setTimeout(() => setShared(false), 2000);
+        }
+    };
+
+    const handleApply = async () => {
+        if (hasApplied || applying || !user?._id) return;
+        setApplying(true);
+        try {
+            const res = await api.post('/applications', {
+                jobId: id,
+                candidateId: user._id,
+            });
+            if (res.data.success) {
+                setHasApplied(true);
+                const storageKey = `applied_${user._id}`;
+                const appliedJobs = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                appliedJobs[id] = true;
+                localStorage.setItem(storageKey, JSON.stringify(appliedJobs));
+            }
+        } catch (error) {
+            const msg = error.response?.data?.message || '';
+            if (msg.toLowerCase().includes('duplicate') || error.response?.status === 400) {
+                setHasApplied(true);
+                const storageKey = `applied_${user._id}`;
+                const appliedJobs = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                appliedJobs[id] = true;
+                localStorage.setItem(storageKey, JSON.stringify(appliedJobs));
+            } else {
+                console.error("Failed to apply:", error);
+                alert("Something went wrong. Please try again.");
+            }
+        } finally {
+            setApplying(false);
         }
     };
 
@@ -185,8 +230,25 @@ export default function JobDetail() {
                                 <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-black tracking-widest uppercase shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 whitespace-nowrap z-50">Copied!</span>
                             )}
                         </button>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg shadow-blue-500/20 w-full md:w-auto text-center hover:scale-[1.02] active:scale-[0.98]">
-                            Apply Now
+                        <button 
+                            onClick={handleApply}
+                            disabled={hasApplied || applying}
+                            className={`px-10 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg w-full md:w-auto text-center
+                                ${
+                                    hasApplied
+                                        ? 'bg-emerald-500 text-white cursor-default shadow-emerald-500/20 flex items-center gap-2'
+                                        : applying
+                                        ? 'bg-blue-400 text-white cursor-wait shadow-blue-400/20'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98]'
+                                }`
+                            }
+                        >
+                            {hasApplied ? (
+                                <span className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Applied
+                                </span>
+                            ) : applying ? 'Applying...' : 'Apply Now'}
                         </button>
                     </div>
                 </div>
