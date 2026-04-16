@@ -29,4 +29,7 @@ const applicationSchema = new mongoose.Schema(
   }
 );
 
+// Prevent duplicate applications for the same job by the same candidate
+applicationSchema.index({ jobId: 1, candidateId: 1 }, { unique: true });
+
 module.exports = mongoose.model("Application", applicationSchema);
