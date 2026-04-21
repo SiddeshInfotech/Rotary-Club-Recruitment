@@ -71,7 +71,7 @@ export default function JobDetail() {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[20px] flex items-center justify-center flex-shrink-0">
                             <Building2 className={`w-10 h-10 ${id === '2' ? 'text-indigo-600 dark:text-indigo-500' : 'text-blue-600 dark:text-blue-500'}`} />
                         </div>
                         <div>
@@ -96,13 +96,13 @@ export default function JobDetail() {
                     </div>
 
                     <div className="flex gap-3 w-full md:w-auto">
-                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm">
+                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-[20px] transition border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm">
                             <Bookmark className="w-5 h-5" />
                         </button>
-                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm">
+                        <button className="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-[20px] transition border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm">
                             <Share2 className="w-5 h-5" />
                         </button>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-sm w-full md:w-auto text-center">
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-[20px] text-xs uppercase tracking-widest font-black transition shadow-sm w-full md:w-auto text-center">
                             Apply Now
                         </button>
                     </div>
@@ -151,7 +151,7 @@ export default function JobDetail() {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-transform duration-700 group-hover:scale-110"></div>
                         <h3 className="text-sm font-bold text-slate-400 tracking-widest uppercase mb-4">Company Overview</h3>
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0 p-2">
+                            <div className="w-12 h-12 bg-white rounded-[16px] flex items-center justify-center flex-shrink-0 p-2">
                                 <Building2 className="w-full h-full text-slate-900" />
                             </div>
                             <div>
@@ -185,13 +185,13 @@ export default function JobDetail() {
                         <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Required Skills</h3>
                         <div className="flex flex-wrap gap-2">
                             {jobData.tags.map(tag => (
-                                <span key={tag} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition">
+                                <span key={tag} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] text-xs font-bold transition">
                                     {tag}
                                 </span>
                             ))}
-                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition">Budgeting</span>
-                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition">Team Building</span>
-                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition">Strategy</span>
+                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] text-xs font-bold transition">Budgeting</span>
+                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] text-xs font-bold transition">Team Building</span>
+                            <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] text-xs font-bold transition">Strategy</span>
                         </div>
                     </div>
                 </div>

@@ -10,20 +10,12 @@ export default function CandidateLayout({ children }) {
     const displayName = user?.fullName || 'Guest User';
     const avatarName = encodeURIComponent(displayName);
 
-    const baseMainMenu = [
+    const mainMenu = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/candidate' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'Network', icon: Network, path: '/network' },
         { name: 'Growth', icon: TrendingUp, path: '/growth' }
     ];
-
-    const isJobRelated = location.pathname.includes('/job') || location.pathname === '/matches';
-    
-    const mainMenu = isJobRelated ? [
-        baseMainMenu[0],
-        baseMainMenu[1],
-        { name: 'Matches', icon: Star, path: '/matches' }
-    ] : baseMainMenu;
 
     const insightsMenu = [
         { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
@@ -31,7 +23,7 @@ export default function CandidateLayout({ children }) {
     ];
 
     return (
-        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
+        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -127,10 +119,7 @@ export default function CandidateLayout({ children }) {
                         <div className="flex items-center gap-4 ml-auto">
                             <ThemeToggle />
                             
-                            <button className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
-                                <Bell className="w-5 h-5" />
-                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                            </button>
+
                         </div>
                     </header>
 

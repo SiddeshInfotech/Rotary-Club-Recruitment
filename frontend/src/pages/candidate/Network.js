@@ -15,7 +15,7 @@ export default function Network() {
                 </div>
                 
                 <div className="flex gap-4">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 px-8 text-xs uppercase font-bold tracking-widest transition shadow-sm w-full md:w-auto">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white rounded-[20px] py-4 px-8 text-xs uppercase font-bold tracking-widest transition shadow-sm w-full md:w-auto">
                         NEW POST
                     </button>
                 </div>
@@ -25,9 +25,9 @@ export default function Network() {
                 {/* Main Feed */}
                 <div className="lg:col-span-2 flex flex-col gap-6">
                     {/* Post 1 */}
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 shadow-sm">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                            <div className="w-12 h-12 rounded-[20px] bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                                 <img src="https://ui-avatars.com/api/?name=Sarah+Al-Fayed&background=0F172A&color=fff&bold=true" alt="Sarah" className="w-full h-full object-cover"/>
                             </div>
                             <div>
@@ -49,9 +49,9 @@ export default function Network() {
                     </div>
 
                     {/* Post 2 */}
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 shadow-sm">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                            <div className="w-12 h-12 rounded-[20px] bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                                 <img src="https://ui-avatars.com/api/?name=Marcus+Thorne&background=0F172A&color=fff&bold=true" alt="Marcus" className="w-full h-full object-cover"/>
                             </div>
                             <div>
@@ -76,7 +76,7 @@ export default function Network() {
                 {/* Sidebar Widgets */}
                 <div className="flex flex-col gap-6">
                     {/* Suggested Connections */}
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 shadow-sm">
                         <h4 className="text-xs uppercase tracking-widest font-bold text-slate-800 dark:text-slate-200 mb-6">High Resonance Profiles</h4>
                         
                         <div className="flex flex-col gap-5">
@@ -91,7 +91,7 @@ export default function Network() {
                                             <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">94% Match</p>
                                         </div>
                                     </div>
-                                    <button className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-lg transition">
+                                    <button className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-2 rounded-[16px] transition">
                                         <Users className="w-4 h-4" />
                                     </button>
                                 </div>

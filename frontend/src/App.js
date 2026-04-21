@@ -37,7 +37,7 @@ import SuccessStoryDetails from "./pages/SuccessStoryDetails";
 import MemberDirectory from "./pages/MemberDirectory";
 import MembershipUpgrade from "./pages/MembershipUpgrade";
 import ClubDetails from "./pages/ClubDetails";
-import AdminDashboard from "./pages/admin/Dashboard";
+
 
 // Shared Utilities
 import GlobalSearch from "./pages/shared/GlobalSearch";
@@ -57,7 +57,6 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/candidate" element={<CandidateDashboard />} />
-          <Route path="/matches" element={<Matches />} />
           <Route path="/job-search" element={<JobSearch />} />
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/profile" element={<CandidateProfile />} />
@@ -83,13 +82,13 @@ function App() {
           <Route path="/membership/upgrade" element={<MembershipUpgrade />} />
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/success-stories/:id" element={<SuccessStoryDetails />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+
 
           <Route path="/search" element={<GlobalSearch />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/faq" element={<FAQ />} />
-          
+
           <Route path="/404" element={<NotFound />} />
           <Route path="*" element={<Navigate to="/404" />} />
         </Routes>

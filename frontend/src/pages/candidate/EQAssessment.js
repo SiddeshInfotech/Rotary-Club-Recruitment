@@ -135,7 +135,7 @@ export default function EQAssessment() {
                                     <button
                                         key={index}
                                         onClick={() => handleSelect(index)}
-                                        className={`group relative w-full text-left p-5 rounded-2xl border transition-all duration-200 ${
+                                        className={`group relative w-full text-left p-5 rounded-[20px] border transition-all duration-200 ${
                                             isSelected 
                                                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 shadow-md ring-1 ring-blue-600' 
                                                 : 'bg-white dark:bg-[#131b2f] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
@@ -162,7 +162,7 @@ export default function EQAssessment() {
                             <button
                                 disabled={answers[currentStep] === undefined}
                                 onClick={handleNext}
-                                className={`flex items-center gap-2 px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                className={`flex items-center gap-2 px-8 py-4 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all ${
                                     answers[currentStep] !== undefined 
                                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 shadow-md transform hover:-translate-y-0.5' 
                                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'

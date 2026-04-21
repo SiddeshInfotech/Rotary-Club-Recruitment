@@ -23,7 +23,7 @@ export default function RecruiterLayout({ children }) {
     ];
 
     return (
-        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
+        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">

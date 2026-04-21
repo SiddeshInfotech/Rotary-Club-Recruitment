@@ -105,11 +105,11 @@ export default function RecruiterProfile() {
                 </div>
 
                 <div className="flex gap-3 self-start sm:self-auto">
-                    <button className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
+                    <button className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-[20px] px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
                         <Bookmark className="w-4 h-4" />
                         Save
                     </button>
-                    <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm">
+                    <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-[20px] px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm">
                         <Send className="w-4 h-4" />
                         Express Interest
                     </button>
@@ -118,7 +118,7 @@ export default function RecruiterProfile() {
 
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-8">
                 <div className="flex flex-col gap-8">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-8 shadow-sm">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-4">
                             ABOUT
                         </p>
@@ -132,7 +132,7 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-8 shadow-sm">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                             EQ HIRING PRIORITIES
                         </p>
@@ -151,7 +151,7 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-8 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
                                 Open Roles
@@ -167,7 +167,7 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-8 shadow-sm">
                         <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 mb-6">
                             Candidate Testimonials
                         </p>
@@ -180,12 +180,12 @@ export default function RecruiterProfile() {
                 </div>
 
                 <div className="flex flex-col gap-6">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-6 shadow-sm">
                         <div className="flex flex-col items-center text-center mb-6">
                             <img
                                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(RECRUITER.name)}&background=1e3a6e&color=fff&bold=true&size=128`}
                                 alt={RECRUITER.name}
-                                className="w-20 h-20 rounded-2xl shadow-md mb-4"
+                                className="w-20 h-20 rounded-[20px] shadow-md mb-4"
                             />
                             <p className="text-sm font-black text-slate-900 dark:text-white">{RECRUITER.name}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{RECRUITER.title}</p>
@@ -211,7 +211,7 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-6 shadow-sm">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-4">
                             MEMBERSHIPS
                         </p>
@@ -222,7 +222,7 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-6 shadow-sm">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-3">
                             YOUR MATCH
                         </p>
@@ -245,14 +245,14 @@ export default function RecruiterProfile() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-900 dark:bg-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="bg-slate-900 dark:bg-slate-800 rounded-[20px] p-6 flex flex-col gap-4">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
                             ELITE RECRUITER
                         </p>
                         <p className="text-2xl font-black text-white leading-tight">
                             Top 5% on<br />EQ-Hire Platform
                         </p>
-                        <button className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 text-xs font-bold uppercase tracking-widest transition">
+                        <button className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-[20px] py-3 text-xs font-bold uppercase tracking-widest transition">
                             Express Interest
                         </button>
                     </div>

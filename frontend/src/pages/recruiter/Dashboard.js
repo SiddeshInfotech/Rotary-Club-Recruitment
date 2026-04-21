@@ -23,7 +23,7 @@ export default function RecruiterDashboard() {
                             </p>
                         </div>
                         <div className="flex gap-4 mt-2">
-                            <Link to="/recruiter/search" className="bg-white text-[#0d62a6] px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-center inline-block">
+                            <Link to="/recruiter/search" className="bg-white text-[#0d62a6] px-6 py-2.5 rounded-lg font-semibold hover:bg-slate-50 transition-colors text-center inline-block">
                                 View Matches
                             </Link>
                             <Link to="/recruiter/post-job" className="bg-transparent border border-white/30 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-white/10 transition-colors text-center flex items-center justify-center gap-2">
@@ -51,7 +51,7 @@ export default function RecruiterDashboard() {
                                     {/* Header */}
                                     <div className="flex justify-between items-start">
                                         <div className="flex gap-5 items-center">
-                                            <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-slate-400 tracking-wider">
+                                            <div className="w-14 h-14 bg-slate-100 rounded-[20px] flex items-center justify-center text-[10px] font-bold text-slate-400 tracking-wider">
                                                 {job.company}
                                             </div>
                                             <div>

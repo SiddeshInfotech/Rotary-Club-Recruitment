@@ -15,11 +15,11 @@ export default function Matches() {
                 </div>
                 
                 <div className="flex gap-4">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-6 py-4 rounded-2xl flex flex-col items-center justify-center shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-6 py-4 rounded-[20px] flex flex-col items-center justify-center shadow-sm">
                         <span className="text-3xl font-black text-slate-900 dark:text-white leading-none mb-2">42</span>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">HIGH RESONANCE</span>
                     </div>
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-6 py-4 rounded-2xl flex flex-col items-center justify-center shadow-sm">
+                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] px-6 py-4 rounded-[20px] flex flex-col items-center justify-center shadow-sm">
                         <span className="text-3xl font-black text-blue-600 dark:text-blue-500 leading-none mb-2">12</span>
                         <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">CLUB REFERRALS</span>
                     </div>
@@ -29,7 +29,7 @@ export default function Matches() {
             {/* Filter Bar */}
             <div className="flex flex-wrap items-center gap-4 mb-10 w-full">
                 <div className="flex-1 min-w-[200px] relative">
-                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
+                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
                         <option>All Communities</option>
                         <option>Rotary Club</option>
                         <option>Lions Club</option>
@@ -38,7 +38,7 @@ export default function Matches() {
                     <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <div className="flex-1 min-w-[200px] relative">
-                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
+                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
                         <option>Industry Focus</option>
                         <option>Technology</option>
                         <option>Finance</option>
@@ -47,7 +47,7 @@ export default function Matches() {
                     <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
                 <div className="flex-1 min-w-[200px] relative">
-                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
+                    <select className="w-full appearance-none bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-sm font-semibold text-slate-700 dark:text-slate-300 py-3.5 pl-5 pr-12 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm cursor-pointer transition">
                         <option>Global Location</option>
                         <option>EMEA</option>
                         <option>North America</option>
@@ -55,7 +55,7 @@ export default function Matches() {
                     </select>
                     <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
-                <button className="bg-slate-900 border border-slate-800 dark:bg-slate-800 dark:border-slate-700 text-white rounded-xl py-3.5 px-8 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm w-full md:w-auto">
+                <button className="bg-slate-900 border border-slate-800 dark:bg-slate-800 dark:border-slate-700 text-white rounded-[20px] py-3.5 px-8 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm w-full md:w-auto">
                     APPLY
                 </button>
             </div>
@@ -63,11 +63,11 @@ export default function Matches() {
             {/* Grid Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Standard Card 1 */}
-                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
+                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
                     <div>
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[16px] flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
                                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                                 </div>
                                 <div>
@@ -98,7 +98,7 @@ export default function Matches() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-xl flex items-center justify-between">
+                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-[20px] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0 overflow-hidden">
                                 <img src="https://ui-avatars.com/api/?name=Elena+Vance&background=0F172A&color=fff&bold=true" alt="Elena" className="w-full h-full object-cover"/>
@@ -108,18 +108,18 @@ export default function Matches() {
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Head Curator, Elite</p>
                             </div>
                         </div>
-                        <button className="bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/60 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition">
+                        <button className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 px-5 py-2.5 rounded-[16px] text-[10px] uppercase tracking-widest font-bold transition">
                             ENGAGE
                         </button>
                     </div>
                 </div>
 
                 {/* Standard Card 2 */}
-                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
+                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
                     <div>
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[16px] flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
                                     <Users className="w-6 h-6" />
                                 </div>
                                 <div>
@@ -150,7 +150,7 @@ export default function Matches() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-xl flex items-center justify-between">
+                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-[20px] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0 overflow-hidden">
                                 <img src="https://ui-avatars.com/api/?name=Marcus+Thorne&background=0F172A&color=fff&bold=true" alt="Marcus" className="w-full h-full object-cover"/>
@@ -160,18 +160,18 @@ export default function Matches() {
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">District Governor, Rotary</p>
                             </div>
                         </div>
-                        <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition shadow-sm">
+                        <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 px-5 py-2.5 rounded-[16px] text-[10px] uppercase tracking-widest font-bold transition shadow-sm">
                             ENGAGE
                         </button>
                     </div>
                 </div>
 
                 {/* Standard Card 3 */}
-                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
+                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-8 flex flex-col justify-between shadow-sm dark:shadow-none hover:shadow-md transition">
                     <div>
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[16px] flex items-center justify-center flex-shrink-0 text-slate-600 dark:text-slate-400">
                                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                                 </div>
                                 <div>
@@ -202,7 +202,7 @@ export default function Matches() {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-xl flex items-center justify-between">
+                    <div className="bg-slate-50 dark:bg-[#0b1121] border border-slate-100 dark:border-[#1e293b] p-4 rounded-[20px] flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0 overflow-hidden">
                                 <img src="https://ui-avatars.com/api/?name=Sarah+Al-Fayed&background=0F172A&color=fff&bold=true" alt="Sarah" className="w-full h-full object-cover"/>
@@ -212,14 +212,14 @@ export default function Matches() {
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Lions Club Regional Lead</p>
                             </div>
                         </div>
-                        <button className="bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/60 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition">
+                        <button className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 px-5 py-2.5 rounded-[16px] text-[10px] uppercase tracking-widest font-bold transition">
                             ENGAGE
                         </button>
                     </div>
                 </div>
 
                 {/* Premium Spotlight Card */}
-                <div className="bg-slate-900 dark:bg-[#0f172a] border border-slate-800 dark:border-[#1e293b] rounded-2xl p-10 flex flex-col justify-between shadow-lg relative overflow-hidden group">
+                <div className="bg-slate-900 dark:bg-[#0f172a] border border-slate-800 dark:border-[#1e293b] rounded-[20px] p-10 flex flex-col justify-between shadow-lg relative overflow-hidden group">
                     {/* Background faint glow / shape */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 dark:bg-blue-600/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none transition-transform duration-700 group-hover:scale-110"></div>
                     
@@ -232,7 +232,7 @@ export default function Matches() {
                         </p>
                     </div>
 
-                    <button className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-4 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-sm w-max">
+                    <button className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-4 rounded-[20px] text-xs uppercase tracking-widest font-black transition shadow-sm w-max">
                         VIEW INVITATION
                     </button>
                 </div>

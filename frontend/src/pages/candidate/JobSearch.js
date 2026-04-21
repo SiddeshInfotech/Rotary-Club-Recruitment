@@ -1,9 +1,11 @@
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote } from 'lucide-react';
+import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 export default function JobSearch() {
     const navigate = useNavigate();
+    const [showMatchesOnly, setShowMatchesOnly] = useState(false);
 
     return (
         <CandidateLayout>
@@ -18,14 +20,14 @@ export default function JobSearch() {
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 mb-10 shadow-sm">
+            <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 mb-10 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4 mb-6">
                     <div className="flex-1 relative">
                         <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input 
                             type="text" 
                             placeholder="Job title, keywords, or company..." 
-                            className="w-full bg-slate-50 dark:bg-[#0b1121] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm font-semibold py-4 pl-12 pr-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
+                            className="w-full bg-slate-50 dark:bg-[#0b1121] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm font-semibold py-4 pl-12 pr-4 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
                         />
                     </div>
                     <div className="md:w-[250px] relative">
@@ -33,23 +35,31 @@ export default function JobSearch() {
                         <input 
                             type="text" 
                             placeholder="City, state, or Remote" 
-                            className="w-full bg-slate-50 dark:bg-[#0b1121] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm font-semibold py-4 pl-12 pr-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
+                            className="w-full bg-slate-50 dark:bg-[#0b1121] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm font-semibold py-4 pl-12 pr-4 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
                         />
                     </div>
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 px-10 text-xs uppercase font-bold tracking-widest transition shadow-sm w-full md:w-auto">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white rounded-[20px] py-4 px-10 text-xs uppercase font-bold tracking-widest transition shadow-sm w-full md:w-auto">
                         SEARCH
                     </button>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex flex-wrap gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        <button 
+                            onClick={() => setShowMatchesOnly(!showMatchesOnly)}
+                            className={`flex items-center gap-2 px-4 py-2 border rounded-[16px] text-xs font-bold transition ${showMatchesOnly ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        >
+                            <Star className={`w-3.5 h-3.5 ${showMatchesOnly ? 'fill-current' : ''}`} />
+                            Matches Only
+                        </button>
+                        <div className="w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-[16px] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             Job Type <ChevronDown className="w-3 h-3" />
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-[16px] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             Experience Level <ChevronDown className="w-3 h-3" />
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-[16px] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             Salary Range <ChevronDown className="w-3 h-3" />
                         </button>
                     </div>
@@ -76,10 +86,10 @@ export default function JobSearch() {
             {/* Job List */}
             <div className="flex flex-col gap-4">
                 {/* Job Card 1 */}
-                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm hover:shadow-md transition group cursor-pointer">
+                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 shadow-sm hover:shadow-md transition group cursor-pointer">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         <div className="flex gap-4">
-                            <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[20px] flex items-center justify-center flex-shrink-0">
                                 <Building2 className="w-7 h-7 text-blue-600 dark:text-blue-500" />
                             </div>
                             <div>
@@ -109,11 +119,11 @@ export default function JobSearch() {
                             <div className="flex flex-row gap-2 w-full md:w-auto">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); navigate('/job/1'); }}
-                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
+                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-[20px] text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
                                 >
                                     Details
                                 </button>
-                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
+                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-[20px] text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
                                     Apply
                                 </button>
                             </div>
@@ -125,10 +135,10 @@ export default function JobSearch() {
                 </div>
 
                 {/* Job Card 2 */}
-                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-2xl p-6 shadow-sm hover:shadow-md transition group cursor-pointer">
+                <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] rounded-[20px] p-6 shadow-sm hover:shadow-md transition group cursor-pointer">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         <div className="flex gap-4">
-                            <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[20px] flex items-center justify-center flex-shrink-0">
                                 <Building2 className="w-7 h-7 text-indigo-600 dark:text-indigo-500" />
                             </div>
                             <div>
@@ -158,11 +168,11 @@ export default function JobSearch() {
                             <div className="flex flex-row gap-2 w-full md:w-auto">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); navigate('/job/2'); }}
-                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
+                                    className="bg-white dark:bg-[#131b2f] text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-[20px] text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center border border-slate-200 dark:border-slate-700 shadow-sm"
                                 >
                                     Details
                                 </button>
-                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
+                                <button className="bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 px-6 py-3 rounded-[20px] text-xs uppercase tracking-widest font-black transition flex-1 md:flex-none text-center shadow-sm">
                                     Apply
                                 </button>
                             </div>
@@ -176,7 +186,7 @@ export default function JobSearch() {
             
             {/* Pagination Placeholder */}
             <div className="flex justify-center mt-10">
-                <button className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-8 py-3 rounded-xl text-xs uppercase tracking-widest font-bold transition shadow-sm">
+                <button className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-8 py-3 rounded-[20px] text-xs uppercase tracking-widest font-bold transition shadow-sm">
                     Load More Jobs
                 </button>
             </div>
