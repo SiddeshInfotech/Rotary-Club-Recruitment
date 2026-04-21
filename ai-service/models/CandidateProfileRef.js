@@ -23,6 +23,13 @@ const candidateProfileRefSchema = new mongoose.Schema(
       collaboration: { type: Number, min: 0, max: 100, default: 0 },
       problemSolving: { type: Number, min: 0, max: 100, default: 0 },
     },
+    // Premium Features
+    isPremium: { type: Boolean, default: false },
+    premiumInsights: {
+      strengths: [String],
+      weaknesses: [String],
+      recommendations: [String],
+    },
   },
   {
     timestamps: true,

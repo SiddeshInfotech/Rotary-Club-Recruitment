@@ -3,7 +3,6 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import CandidateDashboard from "./pages/candidate/Dashboard";
-import Matches from "./pages/candidate/Matches";
 import RecruiterDashboard from "./pages/recruiter/Dashboard";
 import JobSearch from "./pages/candidate/JobSearch";
 
@@ -26,6 +25,9 @@ import Growth from "./pages/candidate/Growth";
 import Insights from "./pages/candidate/Insights";
 import EQJourney from "./pages/candidate/EQJourney";
 import EQAssessment from "./pages/candidate/EQAssessment";
+import PremiumPricing from "./pages/candidate/PremiumPricing";
+import PremiumCheckout from "./pages/candidate/PremiumCheckout";
+import CandidateMessages from "./pages/candidate/Messages";
 
 import RecruiterCandidateSearch from "./pages/recruiter/CandidateSearch";
 import RecruiterPostJob from "./pages/recruiter/PostJob";
@@ -67,7 +69,6 @@ function App() {
 
           {/* Protected Candidate Routes */}
           <Route path="/candidate" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateDashboard /></ProtectedRoute>} />
-          <Route path="/matches" element={<ProtectedRoute allowedRoles={["candidate"]}><Matches /></ProtectedRoute>} />
           <Route path="/job-search" element={<ProtectedRoute allowedRoles={["candidate"]}><JobSearch /></ProtectedRoute>} />
           <Route path="/job/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><CandidateProfile /></ProtectedRoute>} />
@@ -78,6 +79,9 @@ function App() {
           <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
           <Route path="/eq-journey" element={<ProtectedRoute><EQJourney /></ProtectedRoute>} />
           <Route path="/eq-assessment" element={<ProtectedRoute><EQAssessment /></ProtectedRoute>} />
+          <Route path="/premium/pricing" element={<ProtectedRoute allowedRoles={["candidate"]}><PremiumPricing /></ProtectedRoute>} />
+          <Route path="/premium/checkout" element={<ProtectedRoute allowedRoles={["candidate"]}><PremiumCheckout /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateMessages /></ProtectedRoute>} />
 
           {/* Protected Recruiter Routes */}
           <Route path="/recruiter/id" element={<ProtectedRoute><RecruiterProfile /></ProtectedRoute>} />

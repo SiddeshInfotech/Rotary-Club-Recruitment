@@ -33,6 +33,11 @@ export default function CandidateSearch() {
     });
 
     const sortedCandidates = [...filteredCandidates].sort((a, b) => {
+        // Primary sort: Premium users first
+        if (a.isPremium && !b.isPremium) return -1;
+        if (!a.isPremium && b.isPremium) return 1;
+
+        // Secondary sort: EQ score descending
         const scoreA = a.eqScores?.aggregate || a.overallEqScore || 0;
         const scoreB = b.eqScores?.aggregate || b.overallEqScore || 0;
         return scoreB - scoreA;
@@ -91,15 +96,22 @@ export default function CandidateSearch() {
                             const avatarUrl = candidate.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=0d1b2a&color=67e8f9`;
                             const isElite = eqScore >= 90;
 
+                            const isPremium = candidate.isPremium;
+
                             return (
-                                <div key={candidate._id} className={`bg-white dark:bg-[#131b2f] rounded-xl border ${isElite ? 'border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)] dark:border-amber-500' : 'border-gray-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800'} p-5 relative overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
+                                <div key={candidate._id} className={`bg-white dark:bg-[#131b2f] rounded-xl border ${isPremium ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.2)] dark:border-yellow-500' : isElite ? 'border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)] dark:border-amber-500' : 'border-gray-200 dark:border-slate-800 hover:border-cyan-200 dark:hover:border-cyan-800'} p-5 relative overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
                                     
-                                    {isElite && (
+                                    {isPremium && (
+                                        <div className="absolute top-0 right-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg shadow-sm z-10 flex items-center gap-1">
+                                            <span>⭐ PREMIUM</span>
+                                        </div>
+                                    )}
+                                    {!isPremium && isElite && (
                                         <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-lg shadow-sm z-10 flex items-center gap-1">
                                             <span>⭐ Top 1% Match</span>
                                         </div>
                                     )}
-                                    <div className="flex items-start justify-between">
+                                    <div className="flex items-start justify-between mt-2">
                                         <div className="flex gap-4">
                                             <img src={avatarUrl} alt={candidate.name} className="w-14 h-14 rounded-full border-2 border-gray-100 dark:border-slate-700" />
                                             <div>

@@ -12,4 +12,13 @@ router.get("/applications", protect, candidateDashboardController.getMyApplicati
 // GET /api/candidate-dashboard/match-scores?jobIds=id1,id2 — Real match scores for jobs
 router.get("/match-scores", protect, candidateDashboardController.getMatchScores);
 
+// POST /api/candidate-dashboard/start-trial — Activate free 1-month trial
+router.post("/start-trial", protect, candidateDashboardController.startTrial);
+
+// POST /api/candidate-dashboard/create-order — Create a Razorpay order for premium upgrade
+router.post("/create-order", protect, candidateDashboardController.createOrder);
+
+// POST /api/candidate-dashboard/verify-payment — Verify Razorpay signature & activate premium
+router.post("/verify-payment", protect, candidateDashboardController.verifyPayment);
+
 module.exports = router;

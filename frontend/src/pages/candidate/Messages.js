@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import RecruiterLayout from "../../layouts/RecruiterLayout";
+import CandidateLayout from "../../layouts/CandidateLayout";
 import { Search, MoreVertical, Send, Paperclip, MessageSquareText, Globe } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -87,43 +87,43 @@ export default function Messages() {
     const getAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=0d1b2a&color=67e8f9`;
 
     return (
-        <RecruiterLayout>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-[calc(100vh-140px)] flex dark:bg-[#131b2f] dark:border-slate-800">
+        <CandidateLayout>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-140px)] flex dark:bg-[#131b2f] dark:border-slate-800">
                 {/* Sidebar */}
-                <div className="w-1/3 border-r border-gray-100 dark:border-slate-800 flex flex-col">
-                    <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex-shrink-0">
-                        <h2 className="text-lg font-bold text-[#1a2b4b] dark:text-white">Messages</h2>
+                <div className="w-full md:w-1/3 border-r border-slate-200 dark:border-slate-800 flex flex-col hidden md:flex">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif tracking-tight">Messaging</h2>
                         <div className="relative mt-3">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input 
                                 type="text" 
                                 placeholder="Search messages..." 
-                                className="w-full pl-9 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-sm dark:text-white"
+                                className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0a66c2]/40 text-sm dark:text-white"
                             />
                         </div>
                     </div>
                     <div className="overflow-y-auto flex-grow">
                         {loading ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">Loading...</div>
+                            <div className="p-6 text-center text-gray-400 text-sm font-medium">Loading...</div>
                         ) : conversations.length === 0 ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">No conversations yet</div>
+                            <div className="p-6 text-center text-gray-400 text-sm font-medium">No conversations yet</div>
                         ) : conversations.map(c => {
                             const other = getOtherParticipant(c);
                             const isActive = activeConvo && activeConvo._id === c._id;
                             
                             return (
-                                <div key={c._id} onClick={() => setActiveConvo(c)} className={`p-4 border-b border-gray-50 dark:border-slate-800/50 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors flex gap-3 ${isActive ? "bg-cyan-50/30 dark:bg-cyan-900/20" : ""}`}>
+                                <div key={c._id} onClick={() => setActiveConvo(c)} className={`p-4 border-b border-gray-50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex gap-3 ${isActive ? "bg-slate-50 dark:bg-slate-800/80 border-l-4 border-l-[#0a66c2]" : "border-l-4 border-transparent"}`}>
                                     <div className="relative flex-shrink-0">
                                         <img src={getAvatar(other.name)} alt={other.name} className="w-10 h-10 rounded-full" />
                                     </div>
                                     <div className="flex-grow min-w-0">
                                         <div className="flex justify-between items-baseline mb-0.5">
-                                            <h3 className="text-sm font-bold text-[#1a2b4b] dark:text-gray-200 truncate">{other.name}</h3>
+                                            <h3 className="text-sm font-bold text-slate-900 dark:text-gray-200 truncate">{other.name}</h3>
                                         </div>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{c.lastMessage}</p>
                                     </div>
                                     {c.unreadCount > 0 && !isActive && (
-                                        <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 bg-cyan-500 rounded-full text-[10px] font-bold text-white">
+                                        <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 bg-[#0a66c2] rounded-full text-[10px] font-bold text-white">
                                             {c.unreadCount}
                                         </div>
                                     )}
@@ -134,16 +134,16 @@ export default function Messages() {
                 </div>
 
                 {/* Chat Area */}
-                <div className="flex-grow flex flex-col bg-[#fcfdfd] dark:bg-[#0f172a]">
+                <div className="flex-grow flex flex-col bg-slate-50 dark:bg-[#0f172a]">
                     {activeConvo ? (
                         <>
                             {/* Header */}
-                            <div className="h-16 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 flex-shrink-0 bg-white dark:bg-[#131b2f]">
+                            <div className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 flex-shrink-0 bg-white dark:bg-[#131b2f]">
                                 <div className="flex items-center gap-3">
                                     <img src={getAvatar(getOtherParticipant(activeConvo).name)} alt="avatar" className="w-9 h-9 rounded-full" />
                                     <div>
-                                        <h3 className="text-[15px] font-bold text-[#1a2b4b] dark:text-white leading-tight">{getOtherParticipant(activeConvo).name}</h3>
-                                        <p className="text-[11px] text-green-500 font-medium">Online</p>
+                                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white leading-tight">{getOtherParticipant(activeConvo).name}</h3>
+                                        <p className="text-[11px] text-[#057642] font-medium tracking-wide">Online</p>
                                     </div>
                                 </div>
                                 <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md">
@@ -160,7 +160,7 @@ export default function Messages() {
                                             {!isMe && (
                                                 <img src={getAvatar(msg.sender.name)} alt="avatar" className="w-8 h-8 rounded-full flex-shrink-0 mt-1" />
                                             )}
-                                            <div className={`flex flex-col gap-1 ${msg.sharedPost ? 'max-w-[85%]' : 'max-w-[70%]'} ${isMe ? 'items-end' : ''}`}>
+                                            <div className={`flex flex-col gap-1 ${msg.sharedPost ? 'max-w-[85%]' : 'max-w-[75%]'} ${isMe ? 'items-end' : ''}`}>
                                                 
                                                 {/* Standard Text Message */}
                                                 {!msg.sharedPost && (
@@ -204,31 +204,34 @@ export default function Messages() {
                             </div>
 
                             {/* Input Area */}
-                            <form onSubmit={handleSendMessage} className="p-4 bg-white dark:bg-[#131b2f] border-t border-gray-100 dark:border-slate-800 flex-shrink-0">
-                                <div className="flex gap-3 items-center bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1 focus-within:ring-2 focus-within:ring-cyan-500/40 focus-within:border-cyan-500 transition-all">
-                                    <button type="button" className="p-1 text-gray-400 hover:text-cyan-600 transition-colors">
+                            <form onSubmit={handleSendMessage} className="p-4 bg-white dark:bg-[#131b2f] border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
+                                <div className="flex gap-3 items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full pl-4 pr-1 py-1 focus-within:ring-2 focus-within:ring-[#0a66c2]/40 focus-within:border-[#0a66c2] transition-all">
+                                    <button type="button" className="p-1 text-slate-400 hover:text-[#0a66c2] transition-colors">
                                         <Paperclip className="w-5 h-5" />
                                     </button>
                                     <input 
                                         type="text" 
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="Type a message..." 
-                                        className="flex-grow bg-transparent border-none focus:outline-none focus:ring-0 text-sm py-2 dark:text-white"
+                                        placeholder="Write a message..." 
+                                        className="flex-grow bg-transparent border-none focus:outline-none focus:ring-0 text-sm font-medium py-2 dark:text-white placeholder:text-slate-400"
                                     />
-                                    <button type="submit" disabled={!newMessage.trim()} className="w-9 h-9 flex items-center justify-center bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-colors shadow-sm flex-shrink-0 disabled:opacity-50">
+                                    <button type="submit" disabled={!newMessage.trim()} className="w-9 h-9 flex items-center justify-center bg-[#0a66c2] text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm flex-shrink-0 disabled:opacity-50">
                                         <Send className="w-4 h-4 ml-0.5" />
                                     </button>
                                 </div>
                             </form>
                         </>
                     ) : (
-                        <div className="flex-grow flex items-center justify-center text-gray-400">
+                        <div className="flex-grow flex flex-col items-center justify-center text-slate-400 font-medium">
+                            <span className="bg-slate-100 dark:bg-slate-800 rounded-full p-4 mb-3">
+                                <MessageSquareText className="w-8 h-8 text-slate-400" />
+                            </span>
                             Select a conversation to start messaging
                         </div>
                     )}
                 </div>
             </div>
-        </RecruiterLayout>
+        </CandidateLayout>
     );
 }

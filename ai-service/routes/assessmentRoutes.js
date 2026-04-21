@@ -17,4 +17,7 @@ router.get("/status/:candidateId", assessmentController.getAssessmentStatus);
 // GET /api/assessment/:assessmentId — Get full assessment details
 router.get("/:assessmentId", assessmentController.getAssessmentById);
 
+// POST /api/assessment/generate-insights — Generate deep EQ insights from scores
+router.post("/generate-insights", assessmentController.generateInsights);
+
 module.exports = router;

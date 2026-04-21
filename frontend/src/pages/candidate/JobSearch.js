@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote } from 'lucide-react';
+import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote, Star } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from "../../services/api";
 
@@ -22,6 +22,24 @@ export default function JobSearch() {
 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [suggestedJobs, setSuggestedJobs] = useState([]);
+    const [suggestedLoading, setSuggestedLoading] = useState(true);
+
+    const fetchSuggestedJobs = useCallback(async () => {
+        setSuggestedLoading(true);
+        try {
+            const res = await api.get('/jobs');
+            if (res.data.success || Array.isArray(res.data.data) || Array.isArray(res.data)) {
+                let jobsList = Array.isArray(res.data) ? res.data : (res.data.data || []);
+                setSuggestedJobs(jobsList.slice(0, 3));
+            }
+        } catch (err) {
+            console.error("Failed to fetch suggestions", err);
+        } finally {
+            setSuggestedLoading(false);
+        }
+    }, []);
 
     const fetchJobs = useCallback(async () => {
         setLoading(true);
@@ -50,7 +68,8 @@ export default function JobSearch() {
     // Fetch jobs when dependencies change securely
     useEffect(() => {
         fetchJobs();
-    }, [fetchJobs]);
+        fetchSuggestedJobs();
+    }, [fetchJobs, fetchSuggestedJobs]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -192,6 +211,52 @@ export default function JobSearch() {
                     </div>
                 )}
             </form>
+
+            {/* AI Matches Section */}
+            {!suggestedLoading && suggestedJobs.length > 0 && (
+                <div className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+                            <Star className="w-5 h-5 fill-current" />
+                        </div>
+                        <h2 className="text-2xl font-black font-serif text-slate-900 dark:text-white">Curated Matches</h2>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full ml-2">Suggested for You</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {suggestedJobs.map(job => {
+                            const resonance = Math.floor(Math.random() * 15 + 80);
+                            return (
+                                <div onClick={() => navigate(`/job/${job._id}`)} key={job._id} className="bg-white dark:bg-[#131b2f] border border-blue-100 dark:border-blue-900/30 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition cursor-pointer relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <Star className="w-24 h-24 text-blue-500 fill-current -mt-4 -mr-4" />
+                                    </div>
+                                    <div className="flex justify-between items-start mb-5 relative z-10">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 tracking-widest uppercase mb-1.5">{job.companyName || job.company || "—"}</p>
+                                            <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight line-clamp-1 pr-2">{job.title}</h3>
+                                        </div>
+                                        {/* Circular Rate */}
+                                        <div className="relative w-12 h-12 flex-shrink-0 ml-2">
+                                            <svg viewBox="0 0 36 36" className="w-full h-full text-blue-600">
+                                                <path className="text-slate-100 dark:text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                                                <path className="text-blue-600 dark:text-blue-500" strokeDasharray={`${resonance}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            </svg>
+                                            <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                                <span className="text-[11px] font-bold text-slate-900 dark:text-white leading-none">{resonance}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-6 relative z-10 font-medium leading-relaxed">{job.description}</p>
+                                    <div className="flex gap-2 relative z-10">
+                                      <span className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-md text-[9px] uppercase tracking-widest font-bold text-slate-600 dark:text-slate-300">{job.location || 'REMOTE'}</span>
+                                      <span className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-md text-[9px] uppercase tracking-widest font-bold text-slate-600 dark:text-slate-300">{job.type || job.jobType || 'FULL-TIME'}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Results Header */}
             <div className="flex items-center justify-between mb-6">

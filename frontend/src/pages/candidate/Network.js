@@ -77,10 +77,10 @@ export default function Network() {
                                 </p>
                                 <div className="flex items-center gap-6 border-t border-slate-100 dark:border-slate-800 pt-4">
                                     <button className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition uppercase tracking-widest">
-                                        <Award className="w-4 h-4" /> {post.likes} Resonate
+                                        <Award className="w-4 h-4" /> {post.likesCount || 0} Resonate
                                     </button>
                                     <button className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition uppercase tracking-widest">
-                                        <MessageSquare className="w-4 h-4" /> {post.comments} Comments
+                                        <MessageSquare className="w-4 h-4" /> {post.commentsCount || 0} Comments
                                     </button>
                                 </div>
                             </div>

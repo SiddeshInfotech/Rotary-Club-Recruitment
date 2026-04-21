@@ -133,10 +133,10 @@ export default function CommunityFeed() {
                                         onClick={() => handleLike(post._id)}
                                         className="flex items-center gap-2 hover:text-rose-500 transition-colors"
                                     >
-                                        <Heart className="w-5 h-5" /> {post.likes || 0}
+                                        <Heart className="w-5 h-5" /> {post.likesCount || 0}
                                     </button>
                                     <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-                                        <MessageSquare className="w-5 h-5" /> {post.comments || 0}
+                                        <MessageSquare className="w-5 h-5" /> {post.commentsCount || 0}
                                     </button>
                                     <button className="flex items-center gap-2 hover:text-green-500 transition-colors ml-auto">
                                         <Share2 className="w-5 h-5" /> Share

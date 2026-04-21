@@ -69,7 +69,7 @@ exports.getAllCandidates = async (req, res) => {
   try {
     const candidates = await CandidateProfile.find()
       .populate("user", "name email role")
-      .select("college degree skills experienceLevel user");
+      .select("college degree skills experienceLevel user isPremium eqScores");
 
     res.status(200).json({ success: true, count: candidates.length, data: candidates });
   } catch (error) {
@@ -82,7 +82,9 @@ exports.getCandidateProfileById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const profile = await CandidateProfile.findOne({ user: id }).populate("user", "name email role");
+    const profile = await CandidateProfile.findOne({ user: id })
+      .populate("user", "name email role")
+      .select("-premiumInsights");
 
     if (!profile) {
       return res.status(404).json({ success: false, message: "Candidate profile not found" });

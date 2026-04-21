@@ -44,14 +44,14 @@ export default function PublicNavbar() {
             <div className="flex justify-between items-center w-full px-6 lg:px-8 py-3 lg:py-4 max-w-7xl mx-auto h-16">
                 
                 {/* Left side: Logo */}
-                <div className="flex items-center gap-2 group cursor-pointer">
+                <Link to="/" className="flex items-center gap-2 group cursor-pointer no-underline">
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-md w-8 h-8 flex items-center justify-center font-bold text-sm tracking-tight shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
                         EQ
                     </div>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400 font-bold text-lg tracking-tight">
                         EQ HIRE
                     </span>
-                </div>
+                </Link>
 
                 {/* Center: Links */}
                 <div className="hidden md:flex items-center space-x-8 relative">

@@ -1,4 +1,5 @@
 const Interview = require("../models/Interview");
+const createNotification = require("../utils/createNotification");
 
 exports.getInterviews = async (req, res) => {
   try {
@@ -16,6 +17,21 @@ exports.createInterview = async (req, res) => {
       recruiter: req.user.id, candidate, candidateName, candidateEmail, job, jobTitle,
       date, time, duration: duration || 30, type: type || "Video", notes, meetingLink,
     });
+
+    // Notify candidate
+    if (candidate) {
+      const avatarName = encodeURIComponent(req.user.name || "Recruiter");
+      await createNotification({
+        user: candidate,
+        type: "interview",
+        title: "Interview Scheduled",
+        message: `An interview for ${jobTitle || "a job"} has been scheduled with ${req.user.name}.`,
+        link: `/candidate-dashboard`,
+        actorName: req.user.name,
+        actorAvatar: `https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`
+      });
+    }
+
     res.status(201).json({ success: true, data: interview });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
@@ -36,6 +52,21 @@ exports.cancelInterview = async (req, res) => {
       { _id: req.params.id, recruiter: req.user.id }, { status: "Cancelled" }, { new: true }
     );
     if (!interview) return res.status(404).json({ success: false, message: "Interview not found" });
+
+    // Notify candidate
+    if (interview.candidate) {
+      const avatarName = encodeURIComponent(req.user.name || "Recruiter");
+      await createNotification({
+        user: interview.candidate,
+        type: "warning",
+        title: "Interview Cancelled",
+        message: `Your interview for ${interview.jobTitle || "a job"} has been cancelled.`,
+        link: `/candidate-dashboard`,
+        actorName: req.user.name,
+        actorAvatar: `https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`
+      });
+    }
+
     res.json({ success: true, data: interview });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };

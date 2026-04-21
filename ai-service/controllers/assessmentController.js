@@ -2,6 +2,7 @@ const Candidate = require("../models/CandidateRef");
 const Assessment = require("../models/Assessment");
 const { generateQuestions } = require("../services/questionGenerator");
 const { evaluateAnswers } = require("../services/answerEvaluator");
+const { generatePremiumInsights } = require("../services/premiumInsightGenerator");
 
 /**
  * POST /api/assessment/generate/:candidateId
@@ -315,6 +316,37 @@ exports.getAssessmentById = async (req, res) => {
       data: assessment,
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * POST /api/assessment/generate-insights
+ *
+ * Generates premium insights for a candidate based on their EQ scores.
+ * Expects { name, eqScores } in the request body.
+ */
+exports.generateInsights = async (req, res) => {
+  try {
+    const { name, eqScores } = req.body;
+    if (!name || !eqScores) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing 'name' or 'eqScores' in request body.",
+      });
+    }
+
+    const insights = await generatePremiumInsights({ name, eqScores });
+
+    res.json({
+      success: true,
+      data: insights,
+    });
+  } catch (error) {
+    console.error("Error generating premium insights:", error.message);
     res.status(500).json({
       success: false,
       message: error.message,

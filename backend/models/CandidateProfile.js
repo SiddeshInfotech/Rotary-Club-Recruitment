@@ -43,6 +43,17 @@ const candidateProfileSchema = new mongoose.Schema(
       problemSolving: { type: Number, default: 0 },
       aggregate: { type: Number, default: 0 },
     },
+
+    // Premium Features
+    isPremium: { type: Boolean, default: false },
+    isTrial: { type: Boolean, default: false },
+    premiumPlan: { type: String, enum: ["trial", "1month", "6months", "12months"], default: null },
+    premiumExpiresAt: { type: Date, default: null },
+    premiumInsights: {
+      strengths: [String],
+      weaknesses: [String],
+      recommendations: [String],
+    },
   },
   { timestamps: true }
 );

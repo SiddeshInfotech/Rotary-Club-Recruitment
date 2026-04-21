@@ -1,11 +1,30 @@
 import { LayoutDashboard, Users, MessageSquare, Calendar, PlusCircle, Settings, Bell, Search, Network } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function RecruiterLayout({ children }) {
     const location = useLocation();
     const { user } = useAuth();
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+    useEffect(() => {
+        const fetchNotificationsCount = async () => {
+            try {
+                const notifRes = await api.get('/notifications');
+                if (notifRes.data.success) {
+                    setUnreadNotifications(notifRes.data.unreadCount || 0);
+                }
+            } catch (err) {
+                console.error("Failed to fetch notifications count", err);
+            }
+        };
+        if (user) {
+            fetchNotificationsCount();
+        }
+    }, [user]);
 
     const displayName = user?.fullName || 'Recruiter';
     const avatarName = encodeURIComponent(displayName);
@@ -109,10 +128,14 @@ export default function RecruiterLayout({ children }) {
                         <div className="flex items-center gap-4 ml-auto">
                             <ThemeToggle />
                             
-                            <button className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
+                            <Link to="/notifications" className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
                                 <Bell className="w-5 h-5" />
-                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                            </button>
+                                {unreadNotifications > 0 && (
+                                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-white dark:border-slate-900 rounded-full">
+                                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                                    </span>
+                                )}
+                            </Link>
                         </div>
                     </header>
 

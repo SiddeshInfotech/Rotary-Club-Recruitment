@@ -1,5 +1,6 @@
 const { NetworkConnection, Referral } = require("../models/Network");
 const User = require("../models/User");
+const createNotification = require("../utils/createNotification");
 
 exports.getConnections = async (req, res) => {
   try {
@@ -21,6 +22,19 @@ exports.sendConnectionRequest = async (req, res) => {
     });
     if (existing) return res.status(400).json({ success: false, message: "Connection already exists" });
     const connection = await NetworkConnection.create({ user: req.user.id, connectedUser: userId });
+
+    // Notify user
+    const avatarName = encodeURIComponent(req.user.name || "User");
+    await createNotification({
+      user: userId,
+      type: "network",
+      title: "New Connection Request",
+      message: `${req.user.name} wants to connect with you.`,
+      link: `/network`,
+      actorName: req.user.name,
+      actorAvatar: `https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`
+    });
+
     res.status(201).json({ success: true, data: connection });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
