@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
-import ThemeToggle from "../common/ThemeToggle";
 import { Link } from "react-router-dom";
 
 export default function PublicNavbar() {
@@ -81,7 +80,6 @@ export default function PublicNavbar() {
 
                 {/* Right side: Actions */}
                 <div className="flex items-center gap-5">
-                    <ThemeToggle />
                     
                     <Link to="/register" className="hidden lg:flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 text-xs font-bold px-5 py-2.5 rounded-full relative overflow-hidden group">
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>

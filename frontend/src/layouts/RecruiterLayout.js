@@ -1,6 +1,5 @@
 import { LayoutDashboard, Users, MessageSquare, Calendar, PlusCircle, Settings, Bell, Search, Network } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
 export default function RecruiterLayout({ children }) {
@@ -14,7 +13,7 @@ export default function RecruiterLayout({ children }) {
         { name: 'Dashboard', icon: LayoutDashboard, path: '/recruiter' },
         { name: 'Candidates', icon: Users, path: '/recruiter/search' },
         { name: 'Post a Job', icon: PlusCircle, path: '/recruiter/post-job' },
-        { name: 'Community', icon: Network, path: '/community-feed' }
+        //{ name: 'Community', icon: Network, path: '/community-feed' }
     ];
 
     const actionsMenu = [
@@ -79,7 +78,12 @@ export default function RecruiterLayout({ children }) {
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Settings</span>
                     </Link>
 
-                    <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition mt-2">
+                    <Link to="/recruiter/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full mb-2">
+                        <Bell className="w-5 h-5 text-slate-400" />
+                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Notifications</span>
+                    </Link>
+
+                    <Link to="/recruiter/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition mt-2">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                             <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
@@ -107,12 +111,6 @@ export default function RecruiterLayout({ children }) {
                         </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
-                            <ThemeToggle />
-                            
-                            <button className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
-                                <Bell className="w-5 h-5" />
-                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                            </button>
                         </div>
                     </header>
 

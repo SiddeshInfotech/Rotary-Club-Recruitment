@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import CandidateDashboard from "./pages/candidate/Dashboard";
@@ -8,7 +9,8 @@ import JobSearch from "./pages/candidate/JobSearch";
 import JobDetail from "./pages/candidate/JobDetail";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
 import CandidateSettings from "./pages/candidate/Settings";
-import RecruiterProfile from "./pages/candidate/RecruiterProfile";
+import CandidateMessages from "./pages/candidate/Messages";
+import CandidateNotifications from "./pages/candidate/Notifications";
 
 import Home from "./pages/Home";
 import Register from "./pages/Register";
@@ -28,6 +30,8 @@ import RecruiterPostJob from "./pages/recruiter/PostJob";
 import RecruiterMessages from "./pages/recruiter/Messages";
 import RecruiterSettings from "./pages/recruiter/Settings";
 import RecruiterInterviews from "./pages/recruiter/Interviews";
+import RecruiterMyProfile from "./pages/recruiter/MyProfile";
+import RecruiterNotifications from "./pages/recruiter/Notifications";
 
 import CommunityFeed from "./pages/CommunityFeed";
 import ContactSupport from "./pages/ContactSupport";
@@ -47,6 +51,15 @@ import FAQ from "./pages/shared/FAQ";
 
 import NotFound from "./pages/NotFound";
 function App() {
+  useEffect(() => {
+    // Initialize dark mode based on localStorage or system preference
+    if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -58,6 +71,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/candidate" element={<CandidateDashboard />} />
           <Route path="/job-search" element={<JobSearch />} />
+          <Route path="/candidate/messages" element={<CandidateMessages />} />
+          <Route path="/candidate/notifications" element={<CandidateNotifications />} />
           <Route path="/job/:id" element={<JobDetail />} />
           <Route path="/profile" element={<CandidateProfile />} />
           <Route path="/settings" element={<CandidateSettings />} />
@@ -67,11 +82,12 @@ function App() {
           <Route path="/insights" element={<Insights />} />
           <Route path="/eq-journey" element={<EQJourney />} />
           <Route path="/eq-assessment" element={<EQAssessment />} />
-          <Route path="/recruiter/id" element={<RecruiterProfile />} />
           <Route path="/recruiter" element={<RecruiterDashboard />} />
           <Route path="/recruiter/interviews" element={<RecruiterInterviews />} />
           <Route path="/recruiter/search" element={<RecruiterCandidateSearch />} />
           <Route path="/recruiter/post-job" element={<RecruiterPostJob />} />
+          <Route path="/recruiter/profile" element={<RecruiterMyProfile />} />
+          <Route path="/recruiter/notifications" element={<RecruiterNotifications />} />
           <Route path="/recruiter/messages" element={<RecruiterMessages />} />
           <Route path="/recruiter/settings" element={<RecruiterSettings />} />
           <Route path="/community-feed" element={<CommunityFeed />} />

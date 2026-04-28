@@ -1,74 +1,173 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import RecruiterLayout from "../../layouts/RecruiterLayout";
-import { User, Bell, Shield, Key, Briefcase } from "lucide-react";
+import { User, Shield, Sliders, Bell } from "lucide-react";
 
-export default function Settings() {
+export default function RecruiterSettings() {
+    const [activeTab, setActiveTab] = useState("Account Basics");
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setIsDarkMode(true);
+            document.documentElement.classList.add('dark');
+        } else {
+            setIsDarkMode(false);
+            document.documentElement.classList.remove('dark');
+        }
+    }, []);
+
+    const toggleDarkMode = () => {
+        setIsDarkMode((prev) => {
+            const newMode = !prev;
+            if (newMode) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+            return newMode;
+        });
+    };
+
+    const tabs = [
+        { icon: User, label: "Account Basics" },
+        { icon: Shield, label: "Security" },
+        { icon: Sliders, label: "Preferences" },
+        { icon: Bell, label: "Notifications" }
+    ];
+
     return (
         <RecruiterLayout>
-            <div className="max-w-4xl">
-                <div className="mb-10">
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Platform Settings</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Manage your recruiter preferences and company details.</p>
+            <div className="max-w-4xl mx-auto space-y-8">
+                <div>
+                    <h1 className="text-2xl font-bold text-[#1a2b4b] dark:text-white font-serif tracking-tight">Settings</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your account settings and preferences.</p>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-8">
-                    {/* Settings Navigation Sidebar */}
+                    {/* Sidebar */}
                     <div className="w-full md:w-64 shrink-0 space-y-1">
-                        {[
-                            { icon: User, label: "Personal Info", active: true },
-                            { icon: Briefcase, label: "Company Details", active: false },
-                            { icon: Bell, label: "Notifications", active: false },
-                            { icon: Shield, label: "Privacy & Security", active: false },
-                            { icon: Key, label: "API Connections", active: false }
-                        ].map((item, i) => (
-                            <button key={i} className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-bold rounded-xl transition-colors ${item.active ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/20" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}>
+                        {tabs.map((item, i) => (
+                            <button 
+                                key={i} 
+                                onClick={() => setActiveTab(item.label)}
+                                className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-bold rounded-xl transition-colors ${activeTab === item.label ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                            >
                                 <item.icon className="w-4 h-4" />
                                 {item.label}
                             </button>
                         ))}
                     </div>
 
-                    {/* Active Settings Panel */}
-                    <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Personal Information</h2>
+                    {/* Content */}
+                    <div className="flex-1 bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                        <h2 className="text-xl font-bold text-[#1a2b4b] dark:text-white mb-6">{activeTab}</h2>
                         
-                        <div className="mb-8 flex items-center gap-6">
-                            <div className="relative w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex-shrink-0">
-                                <img 
-                                    src="https://ui-avatars.com/api/?name=Rotary+Admin&background=0F172A&color=67e8f9" 
-                                    alt="Profile" 
-                                    className="w-full h-full object-cover"
-                                />
+                        {activeTab === "Account Basics" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+                                    <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
+                                        <img src={`https://ui-avatars.com/api/?name=Recruiter&background=0F172A&color=fff`} className="w-full h-full object-cover" alt="Profile" />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button className="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition shadow-sm">Upload New</button>
+                                        <button className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700">Remove</button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-500">First Name</label>
+                                        <input type="text" defaultValue="Saurav" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Last Name</label>
+                                        <input type="text" defaultValue="Punjabi" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Email Address</label>
+                                        <input type="email" defaultValue="sauravpunjabi123@gmail.com" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Company / Organization</label>
+                                        <input type="text" defaultValue="NexCore Intelligence" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4">
+                                    <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Save Changes</button>
+                                </div>
                             </div>
-                            <div className="flex gap-3">
-                                <button className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl shadow-sm text-sm">Upload New</button>
-                                <button className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-sm hover:bg-slate-200 dark:hover:bg-slate-700">Remove</button>
-                            </div>
-                        </div>
+                        )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">First Name</label>
-                                <input type="text" defaultValue="Rotary" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-cyan-500 font-medium dark:text-white" />
+                        {activeTab === "Security" && (
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Current Password</label>
+                                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">New Password</label>
+                                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                </div>
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <button className="text-red-500 text-sm font-bold hover:underline">Deactivate Account</button>
+                                </div>
+                                <div className="flex justify-end pt-4">
+                                    <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Update Password</button>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Last Name</label>
-                                <input type="text" defaultValue="Admin" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-cyan-500 font-medium dark:text-white" />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Email Address (Primary Login)</label>
-                                <input type="email" defaultValue="admin@rotaryclub.org" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-cyan-500 font-medium dark:text-white" />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Role/Title</label>
-                                <input type="text" defaultValue="Senior Technical Recruiter" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-cyan-500 font-medium dark:text-white" />
-                            </div>
-                        </div>
+                        )}
 
-                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
-                            <button className="px-6 py-3 border border-transparent rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition">Cancel</button>
-                            <button className="px-8 py-3 bg-cyan-600 text-white font-bold rounded-xl shadow-sm hover:bg-cyan-700 transition">Save Changes</button>
-                        </div>
+                        {activeTab === "Preferences" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-[#1a2b4b] dark:text-white">Dark Mode</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Toggle dark mode interface.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" checked={isDarkMode} onChange={toggleDarkMode} />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-[#1a2b4b] dark:text-white">Public Recruiter Profile</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Allow candidates to view your profile.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "Notifications" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-[#1a2b4b] dark:text-white">Email Notifications</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Receive alerts for new applicants via email.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-800 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-bold text-[#1a2b4b] dark:text-white">In-App Notifications</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Show alerts inside the platform.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import ThemeToggle from "../../components/common/ThemeToggle";
 
 export default function EQJourney() {
     const navigate = useNavigate();
@@ -10,7 +9,6 @@ export default function EQJourney() {
                 <div className="text-2xl font-bold tracking-tight">
                     <span className="text-blue-600">EQ</span>-Hire
                 </div>
-                <ThemeToggle />
             </header>
 
             <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">

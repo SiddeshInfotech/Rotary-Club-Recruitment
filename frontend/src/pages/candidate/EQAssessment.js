@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Brain, AlertCircle, CheckCircle } from 'lucide-react';
-import ThemeToggle from "../../components/common/ThemeToggle";
 
 const SCENARIOS = [
     {
@@ -101,7 +100,6 @@ export default function EQAssessment() {
                     <div className="text-xs uppercase tracking-widest font-bold text-slate-500">
                         Scenario {currentStep + 1} of {SCENARIOS.length}
                     </div>
-                    <ThemeToggle />
                 </div>
             </header>
 

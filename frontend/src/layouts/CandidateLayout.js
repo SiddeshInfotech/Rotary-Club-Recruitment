@@ -1,6 +1,5 @@
-import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Bell, Search } from 'lucide-react';
+import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Bell, Search, MessageSquare } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
 export default function CandidateLayout({ children }) {
@@ -14,7 +13,8 @@ export default function CandidateLayout({ children }) {
         { name: 'Dashboard', icon: LayoutDashboard, path: '/candidate' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'Network', icon: Network, path: '/network' },
-        { name: 'Growth', icon: TrendingUp, path: '/growth' }
+        { name: 'Growth', icon: TrendingUp, path: '/growth' },
+        { name: 'Messages', icon: MessageSquare, path: '/candidate/messages' }
     ];
 
     const insightsMenu = [
@@ -75,15 +75,15 @@ export default function CandidateLayout({ children }) {
 
                 <div className="pt-6 mt-6">
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            <a href="#" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
+                            <Link to="/settings" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
                                 <Settings className="w-5 h-5 text-slate-400" />
                                 Settings
-                            </a>
+                            </Link>
                         </div>
-                        <a href="#" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">
+                        <Link to="/candidate/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">
                             <Bell className="w-5 h-5 text-slate-400" />
                             Notifications
-                        </a>
+                        </Link>
 
                     <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
@@ -94,10 +94,6 @@ export default function CandidateLayout({ children }) {
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>
-
-                    <button className="w-full bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white rounded-xl py-3.5 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm">
-                        UPGRADE STATUS
-                    </button>
                 </div>
             </aside>
 
@@ -117,9 +113,6 @@ export default function CandidateLayout({ children }) {
                         </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
-                            <ThemeToggle />
-                            
-
                         </div>
                     </header>
 
