@@ -1,6 +1,5 @@
-import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Search, Bookmark } from 'lucide-react';
+import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Search, Bookmark, MessageSquare, Bell } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
 export default function CandidateLayout({ children }) {
@@ -15,17 +14,11 @@ export default function CandidateLayout({ children }) {
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'My Jobs', icon: Bookmark, path: '/my-jobs' },
         { name: 'Network', icon: Network, path: '/network' },
-        { name: 'Growth', icon: TrendingUp, path: '/growth' }
+        { name: 'Growth', icon: TrendingUp, path: '/growth' },
+        { name: 'Messages', icon: MessageSquare, path: '/candidate/messages' }
     ];
-
-    const isJobRelated = location.pathname.includes('/job') || location.pathname === '/matches';
     
-    const mainMenu = isJobRelated ? [
-        baseMainMenu[0],
-        baseMainMenu[1],
-        baseMainMenu[2],
-        { name: 'Matches', icon: Star, path: '/matches' }
-    ] : baseMainMenu;
+    const mainMenu = baseMainMenu;
 
     const insightsMenu = [
         { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
@@ -33,7 +26,7 @@ export default function CandidateLayout({ children }) {
     ];
 
     return (
-        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
+        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -84,12 +77,14 @@ export default function CandidateLayout({ children }) {
                 </div>
 
                 <div className="pt-6 mt-6">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            <button className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full focus:outline-none">
-                                <Settings className="w-5 h-5 text-slate-400" />
-                                Settings
-                            </button>
-                        </div>
+                    <Link to="/settings" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">
+                        <Settings className="w-5 h-5 text-slate-400" />
+                        Settings
+                    </Link>
+                    <Link to="/candidate/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 mb-6">
+                        <Bell className="w-5 h-5 text-slate-400" />
+                        Notifications
+                    </Link>
 
                     <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
@@ -100,10 +95,6 @@ export default function CandidateLayout({ children }) {
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>
-
-                    <button className="w-full bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white rounded-xl py-3.5 text-xs uppercase font-bold tracking-widest hover:bg-slate-800 dark:hover:bg-slate-700 transition shadow-sm">
-                        UPGRADE STATUS
-                    </button>
                 </div>
             </aside>
 
@@ -113,9 +104,16 @@ export default function CandidateLayout({ children }) {
                         <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
                             <span className="text-blue-600">EQ</span>-Hire
                         </div>
+                        <div className="hidden lg:flex flex-1 max-w-md relative">
+                            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                                type="text"
+                                placeholder="Search..."
+                                className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full text-sm font-medium text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm transition-all"
+                            />
+                        </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
-                            <ThemeToggle />
                         </div>
                     </header>
 

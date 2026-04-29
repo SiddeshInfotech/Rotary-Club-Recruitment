@@ -18,14 +18,14 @@ export default function RecruiterDashboard() {
                     <div className="bg-[#124a73] rounded-[20px] p-10 text-white shadow-sm flex flex-col gap-6" style={{ background: 'linear-gradient(135deg, #1b283b 0%, #0d62a6 100%)' }}>
                         <div>
                             <h1 className="text-[32px] font-bold mb-4">Welcome back, {firstName}</h1>
-                            <p className="text-white/90 text-[17px] max-w-2xl leading-relaxed">
+                            {/* <p className="text-white/90 text-[17px] max-w-2xl leading-relaxed">
                                 Here is the overview of your active candidates and recent EQ matches across your open roles. You have 12 new matches waiting for review.
-                            </p>
+                            </p>*/}
                         </div>
                         <div className="flex gap-4 mt-2">
-                            <Link to="/recruiter/search" className="bg-white text-[#0d62a6] px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-center inline-block">
+                            {/* <Link to="/recruiter/search" className="bg-white text-[#0d62a6] px-6 py-2.5 rounded-lg font-semibold hover:bg-slate-50 transition-colors text-center inline-block">
                                 View Matches
-                            </Link>
+                            </Link> */}
                             <Link to="/recruiter/post-job" className="bg-transparent border border-white/30 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-white/10 transition-colors text-center flex items-center justify-center gap-2">
                                 <Plus className="w-4 h-4" /> Post a Job
                             </Link>
@@ -35,8 +35,8 @@ export default function RecruiterDashboard() {
                     {/* Active Job Listings */}
                     <div>
                         <div className="flex justify-between items-center mb-6 px-1">
-                            <h2 className="text-[13px] font-bold tracking-widest text-slate-900 uppercase">ACTIVE JOB LISTINGS</h2>
-                            <Link to="/recruiter/jobs" className="text-xs font-bold text-[#0070f3] uppercase tracking-widest hover:underline">
+                            <h2 className="text-[13px] font-bold tracking-widest text-slate-900 dark:text-white uppercase">ACTIVE JOB LISTINGS</h2>
+                            <Link to="/recruiter/jobs" className="text-xs font-bold text-[#0070f3] dark:text-[#3b82f6] uppercase tracking-widest hover:underline">
                                 VIEW ALL
                             </Link>
                         </div>
@@ -47,19 +47,19 @@ export default function RecruiterDashboard() {
                                 { title: "UX Designer", company: "AIRBNB", days: 2, apps: 18, match: 82, type: "Full-time · Hybrid" },
                                 { title: "Full Stack Developer", company: "META", days: 12, apps: 42, match: 76, type: "Full-time · On-site" }
                             ].map((job, idx) => (
-                                <div key={idx} className="bg-white rounded-[20px] p-8 shadow-sm border border-slate-100 flex flex-col gap-8">
+                                <div key={idx} className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-8">
                                     {/* Header */}
                                     <div className="flex justify-between items-start">
                                         <div className="flex gap-5 items-center">
-                                            <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-slate-400 tracking-wider">
+                                            <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-[20px] flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
                                                 {job.company}
                                             </div>
                                             <div>
-                                                <h3 className="text-[22px] font-bold text-slate-900 mb-1">{job.title}</h3>
-                                                <p className="text-[15px] text-slate-500">{job.type} • Posted {job.days} days ago</p>
+                                                <h3 className="text-[22px] font-bold text-slate-900 dark:text-white mb-1">{job.title}</h3>
+                                                <p className="text-[15px] text-slate-500 dark:text-slate-400">{job.type} • Posted {job.days} days ago</p>
                                             </div>
                                         </div>
-                                        <span className="bg-[#eef5fe] text-[#0070f3] text-xs font-bold px-4 py-2 rounded-full tracking-wider uppercase">
+                                        <span className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-[#3b82f6] text-xs font-bold px-4 py-2 rounded-full tracking-wider uppercase">
                                             ACTIVE
                                         </span>
                                     </div>
@@ -67,16 +67,16 @@ export default function RecruiterDashboard() {
                                     {/* Status */}
                                     <div>
                                         <div className="flex justify-between items-center mb-4">
-                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">APPLICANT QUALITY</span>
-                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">{job.match}% AVG MATCH</span>
+                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">APPLICANT QUALITY</span>
+                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">{job.match}% AVG MATCH</span>
                                         </div>
-                                        <div className="w-full bg-slate-100 rounded-full h-2 mb-8">
+                                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-8">
                                             <div className="bg-[#0070f3] h-2 rounded-full" style={{ width: `${job.match}%` }}></div>
                                         </div>
                                         
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-500">{job.apps} Total Applications</span>
-                                            <Link to="/recruiter/search" className="bg-[#eef5fe] text-[#0070f3] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e1edfd] transition-colors inline-block">
+                                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{job.apps} Total Applications</span>
+                                            <Link to="/recruiter/search" className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-[#3b82f6] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e1edfd] dark:hover:bg-[#0070f3]/20 transition-colors inline-block">
                                                 Review Candidates
                                             </Link>
                                         </div>
@@ -92,43 +92,43 @@ export default function RecruiterDashboard() {
                 <div className="flex flex-col gap-10">
                     
                     {/* Pipeline Overview */}
-                    <div className="bg-white rounded-[20px] p-8 shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-[13px] font-bold tracking-widest text-slate-500 uppercase">PIPELINE OVERVIEW</h2>
-                            <span className="text-[32px] text-[#0070f3]">48</span>
+                            <h2 className="text-[13px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">PIPELINE OVERVIEW</h2>
+                            <span className="text-[32px] text-[#0070f3] dark:text-[#3b82f6]">48</span>
                         </div>
                         
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-center">
-                                <span className="text-[13px] text-slate-500 font-medium">Active Jobs</span>
-                                <span className="font-bold text-slate-800">6</span>
+                                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Active Jobs</span>
+                                <span className="font-bold text-slate-800 dark:text-white">6</span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
                                 <div className="bg-[#0070f3] h-1.5 rounded-full" style={{ width: '100%' }}></div>
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <span className="text-[13px] text-slate-500 font-medium">Total Apps</span>
-                                <span className="font-bold text-slate-800">48</span>
+                                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Total Apps</span>
+                                <span className="font-bold text-slate-800 dark:text-white">48</span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
                                 <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: '100%' }}></div>
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <span className="text-[13px] text-slate-500 font-medium">Shortlisted</span>
-                                <span className="font-bold text-slate-800">12</span>
+                                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Shortlisted</span>
+                                <span className="font-bold text-slate-800 dark:text-white">12</span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
                                 <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: '25%' }}></div>
                             </div>
                         </div>
 
-                        <p className="text-[13px] text-slate-500 leading-relaxed mb-6 mt-6 font-medium">
+                        <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 mt-6 font-medium">
                             Your pipeline is healthy with an average EQ match rate of 74% across all positions.
                         </p>
 
-                        <Link to="/recruiter/search" className="text-sm font-bold text-[#0070f3] hover:underline flex items-center gap-2">
+                        <Link to="/recruiter/search" className="text-sm font-bold text-[#0070f3] dark:text-[#3b82f6] hover:underline flex items-center gap-2">
                             View Pipeline Analytics
                             <span className="text-lg leading-none">&rarr;</span>
                         </Link>
@@ -137,7 +137,7 @@ export default function RecruiterDashboard() {
                     {/* Top Matches */}
                     <div>
                         <div className="flex items-center gap-3 mb-4 px-1">
-                            <h2 className="text-[13px] font-bold tracking-widest text-slate-500 uppercase">TOP MATCHES</h2>
+                            <h2 className="text-[13px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">TOP MATCHES</h2>
                             <span className="text-[9px] font-bold text-white tracking-widest uppercase bg-[#0070f3] px-2 py-0.5 rounded-md">NEW</span>
                         </div>
                         <div className="flex flex-col gap-3 mb-6">
@@ -146,25 +146,25 @@ export default function RecruiterDashboard() {
                                 { name: "Marcus Johnson", type: "Strategic Thinker", match: 82, avatarName: "Marcus+Johnson" },
                                 { name: "Emily Rodriguez", type: "Creative Innovator", match: 76, avatarName: "Emily+Rodriguez" }
                             ].map((candidate, idx) => (
-                                <div key={idx} className="bg-white rounded-[16px] p-5 shadow-sm border border-slate-100 flex justify-between items-center">
+                                <div key={idx} className="bg-white dark:bg-[#131b2f] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
-                                            <img src={`https://ui-avatars.com/api/?name=${candidate.avatarName}&background=f1f5f9&color=0f172a&bold=true`} alt="User" className="w-full h-full object-cover" />
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                                            <img src={`https://ui-avatars.com/api/?name=${candidate.avatarName}&background=f1f5f9&color=0f172a&bold=true`} alt="User" className="w-full h-full object-cover dark:opacity-80" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-[14px] text-slate-900 mb-0.5">{candidate.name}</h3>
-                                            <p className="text-[12px] text-slate-500">{candidate.type}</p>
+                                            <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">{candidate.name}</h3>
+                                            <p className="text-[12px] text-slate-500 dark:text-slate-400">{candidate.type}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-[#0070f3] text-sm">{candidate.match}%</span>
+                                        <span className="font-bold text-[#0070f3] dark:text-[#3b82f6] text-sm">{candidate.match}%</span>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="text-center">
-                            <Link to="/recruiter/search" className="text-[11px] font-bold tracking-widest text-slate-500 uppercase hover:text-slate-800 transition-colors">
+                            <Link to="/recruiter/search" className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase hover:text-slate-800 dark:hover:text-white transition-colors">
                                 VIEW FULL DIRECTORY
                             </Link>
                         </div>

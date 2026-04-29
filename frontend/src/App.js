@@ -11,6 +11,8 @@ import JobDetail from "./pages/candidate/JobDetail";
 import MyJobs from "./pages/candidate/MyJobs";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
 import CandidateSettings from "./pages/candidate/Settings";
+import CandidateMessages from "./pages/candidate/Messages";
+import CandidateNotifications from "./pages/candidate/Notifications";
 import RecruiterProfile from "./pages/candidate/RecruiterProfile";
 
 import Home from "./pages/Home";
@@ -33,6 +35,7 @@ import RecruiterPostJob from "./pages/recruiter/PostJob";
 import RecruiterMessages from "./pages/recruiter/Messages";
 import RecruiterSettings from "./pages/recruiter/Settings";
 import RecruiterInterviews from "./pages/recruiter/Interviews";
+import RecruiterNotifications from "./pages/recruiter/Notifications";
 
 import CommunityFeed from "./pages/CommunityFeed";
 import ContactSupport from "./pages/ContactSupport";
@@ -74,6 +77,8 @@ function App() {
           <Route path="/my-jobs" element={<ProtectedRoute allowedRoles={["candidate"]}><MyJobs /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><CandidateProfile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><CandidateSettings /></ProtectedRoute>} />
+          <Route path="/candidate/messages" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateMessages /></ProtectedRoute>} />
+          <Route path="/candidate/notifications" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateNotifications /></ProtectedRoute>} />
           <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
           <Route path="/growth" element={<ProtectedRoute><Growth /></ProtectedRoute>} />
@@ -89,6 +94,7 @@ function App() {
           <Route path="/recruiter/post-job" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterPostJob /></ProtectedRoute>} />
           <Route path="/recruiter/messages" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterMessages /></ProtectedRoute>} />
           <Route path="/recruiter/settings" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterSettings /></ProtectedRoute>} />
+          <Route path="/recruiter/notifications" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterNotifications /></ProtectedRoute>} />
 
           {/* Protected Community Routes */}
           <Route path="/community-feed" element={<ProtectedRoute><CommunityFeed /></ProtectedRoute>} />

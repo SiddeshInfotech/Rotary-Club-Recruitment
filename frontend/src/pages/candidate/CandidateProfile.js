@@ -12,47 +12,10 @@ import {
     Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock, X, Save, Trash2, Edit2,
     Phone, Mail, FileText, Lock, Eye, EyeOff, Key, Link as LinkIcon
 } from "lucide-react";
-import api from "../../services/api";
 
 
-const EQ_SCORES = {
-    Leadership: 88,
-    Loyalty: 75,
-    Adaptability: 82,
-    "Growth Mindset": 94,
-    Reliability: 78,
-    Teamwork: 65,
-    Collaboration: 70,
-    "Problem Solving": 73,
-};
-
-const EQ_METRICS = [
-    { label: "Top Attribute",  value: "Growth Mindset" },
-    { label: "Percentile",     value: "Top 2% Globally" },
-    { label: "Reliability",    value: "High (9.4/10)" },
-    { label: "Last Tested",    value: "Just Now" },
-];
 
 const MEMBERSHIPS = [];
-
-const GROWTH_JOURNEY = [
-    {
-        label: "Latest Milestone",
-        title: "Advanced Leadership Certification",
-        body: "Verified through Rotary Club Professional Excellence Program.",
-    },
-    {
-        label: "Current Focus",
-        title: "Adaptability Optimization",
-        body: "Working on cross-functional pivots and stress-resilience metrics.",
-    },
-    {
-        label: "Recognition",
-        title: "Reliability Master",
-        body: "Endorsed by 12 BNI chapter members in the last 90 days.",
-        highlight: true,
-    },
-];
 
 
 
@@ -109,6 +72,84 @@ export default function CandidateProfile() {
     const candidateName = user?.fullName || "Guest User";
     const formattedName = candidateName.replace(/sauravpunjabi/i, 'Saurav Punjabi').replace(/([a-z])([A-Z])/g, '$1 $2');
 
+    // Dynamically map backend database scores to Display Traits
+    const dynamicEqScores = user?.eqScores ? {
+        Leadership: user.eqScores.leadership || 0,
+        Loyalty: user.eqScores.loyalty || 0,
+        Adaptability: user.eqScores.adaptability || 0,
+        "Growth Mindset": user.eqScores.growthMindset || 0,
+        Reliability: user.eqScores.reliability || 0,
+        Teamwork: user.eqScores.teamwork || 0,
+        Collaboration: user.eqScores.collaboration || 0,
+        "Problem Solving": user.eqScores.problemSolving || 0,
+    } : {
+        Leadership: 0, Loyalty: 0, Adaptability: 0, "Growth Mindset": 0,
+        Reliability: 0, Teamwork: 0, Collaboration: 0, "Problem Solving": 0
+    };
+
+    // Dynamically calculate Top and Lowest Attribute
+    let topAttribute = "Pending";
+    let lowestAttribute = "Pending";
+    if (user?.eqScores) {
+        let maxScore = -1;
+        let minScore = 999;
+        Object.entries(dynamicEqScores).forEach(([trait, score]) => {
+            if (score > maxScore) {
+                maxScore = score;
+                topAttribute = trait;
+            }
+            if (score < minScore) {
+                minScore = score;
+                lowestAttribute = trait;
+            }
+        });
+    }
+
+    // Count how many traits scored above 70
+    const strongTraitCount = user?.eqScores
+        ? Object.entries(dynamicEqScores).filter(([_, score]) => score >= 70).length
+        : 0;
+
+    // Calculate "Last Tested" from updatedAt timestamp
+    let lastTestedLabel = "Pending";
+    if (user?.eqScores?.aggregate && user?.updatedAt) {
+        const diffMs = Date.now() - new Date(user.updatedAt).getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        if (diffMins < 5) lastTestedLabel = "Just Now";
+        else if (diffMins < 60) lastTestedLabel = `${diffMins}m ago`;
+        else if (diffHours < 24) lastTestedLabel = `${diffHours}h ago`;
+        else if (diffDays < 7) lastTestedLabel = `${diffDays}d ago`;
+        else lastTestedLabel = new Date(user.updatedAt).toLocaleDateString();
+    }
+
+    const dynamicEqMetrics = [
+        { label: "Top Attribute",  value: topAttribute },
+        { label: "Strong Traits",  value: user?.eqScores?.aggregate ? `${strongTraitCount}/8 Above 70` : "Pending" },
+        { label: "Growth Area",    value: lowestAttribute },
+        { label: "Last Tested",    value: lastTestedLabel },
+    ];
+
+    const dynamicGrowthJourney = [
+        {
+            label: "Top Strength",
+            title: topAttribute !== "Pending" ? `${topAttribute} Mastery` : "Awaiting Assessment",
+            body: topAttribute !== "Pending" ? `Your instinctual responses showcase high maturity and capability in ${topAttribute.toLowerCase()}.` : "Complete the assessment to unlock.",
+        },
+        {
+            label: "Current Focus",
+            title: lowestAttribute !== "Pending" ? `${lowestAttribute} Optimization` : "Awaiting Assessment",
+            body: lowestAttribute !== "Pending" ? `Your AI analysis suggests a growth opportunity by focusing on workplace ${lowestAttribute.toLowerCase()}.` : "Complete the assessment to unlock.",
+        },
+        {
+            label: "Cognitive Potential",
+            title: user?.eqScores?.aggregate ? `Aggregate Rating: ${user.eqScores.aggregate}/100` : "Not Available",
+            body: "Analyzed continuously scaling to real-world corporate demands.",
+            highlight: true,
+        },
+    ];
+
     const candidate = {
         name: formattedName,
         legalName: formattedName,
@@ -121,13 +162,6 @@ export default function CandidateProfile() {
     };
 
     const hasTakenTest = !!user?.eqScores;
-
-    const QUICK_STATS = [
-        { icon: Shield,     label: "Privacy",     value: "Protected" },
-        { icon: Target,     label: "Match Rate",  value: hasTakenTest ? "94%" : "Pending" },
-        { icon: TrendingUp, label: "EQ Trend",    value: hasTakenTest ? "+3.2%" : "N/A" },
-        { icon: Clock,      label: "Last Active", value: "Today" },
-    ];
 
     const handleEditSave = async () => {
         setEditError("");
@@ -148,8 +182,6 @@ export default function CandidateProfile() {
                 payload.currentPassword = editForm.currentPassword;
                 payload.newPassword = editForm.newPassword;
             }
-
-            const res = await api.put('/auth/me', payload);
             
             // Update Context user
             updateUser({
@@ -185,7 +217,6 @@ export default function CandidateProfile() {
             }
             
             try {
-                await api.put('/auth/me', { experience: updatedExperiences });
                 setExperiences(updatedExperiences);
                 updateUser({ experience: updatedExperiences });
                 setExpForm({ title: "", company: "", duration: "", startDate: "", endDate: "", currentlyWorking: false });
@@ -200,7 +231,7 @@ export default function CandidateProfile() {
     const handleDeleteExperience = async (indexToDelete) => {
         const updatedExperiences = experiences.filter((_, idx) => idx !== indexToDelete);
         try {
-            await api.put('/auth/me', { experience: updatedExperiences });
+            
             setExperiences(updatedExperiences);
             updateUser({ experience: updatedExperiences });
         } catch (error) {
@@ -221,9 +252,16 @@ export default function CandidateProfile() {
                     <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
                         CANDIDATE PORTFOLIO
                     </p>
-                    <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight mb-2">
-                        {candidate.name}
-                    </h1>
+                    <div className="flex items-center gap-4 mb-2 flex-wrap">
+                        <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                            {candidate.name}
+                        </h1>
+                        {user?.eqScores?.aggregate >= 90 && (
+                            <span className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md animate-pulse">
+                                <Award className="w-4 h-4" /> Elite Placement Status Unlocked
+                            </span>
+                        )}
+                    </div>
                     <div className="flex items-center gap-3 mt-3 flex-wrap">
                         <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                             <MapPin className="w-3 h-3" />
@@ -235,13 +273,43 @@ export default function CandidateProfile() {
                     </p>
                 </div>
 
-                <button 
-                    onClick={() => navigate('/eq-journey')}
-                    className="flex items-center gap-2 self-start sm:self-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest hover:opacity-80 transition shadow-sm"
-                >
-                    <Sparkles className="w-4 h-4" />
-                    Start EQ Test
-                </button>
+                {(() => {
+                    const hasScores = user?.eqScores?.aggregate > 0;
+                    const hasSkills = user?.skills && user.skills.trim().length > 0;
+                    
+                    let cooldownDaysLeft = 0;
+                    if (hasScores && user?.updatedAt) {
+                        const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+                        const timeSince = Date.now() - new Date(user.updatedAt).getTime();
+                        if (timeSince < cooldownMs) {
+                            cooldownDaysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+                        }
+                    }
+                    const isOnCooldown = hasScores && cooldownDaysLeft > 0;
+                    const isDisabled = isOnCooldown || !hasSkills;
+
+                    return (
+                        <button 
+                            onClick={() => !isDisabled && navigate('/eq-journey')}
+                            disabled={isDisabled}
+                            className={`flex items-center gap-2 self-start sm:self-auto rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm ${
+                                isDisabled 
+                                    ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed' 
+                                    : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-80'
+                            }`}
+                            title={!hasSkills ? 'You must add skills to your profile first' : (isOnCooldown ? `Next retake available in ${cooldownDaysLeft} days` : '')}
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            {!hasSkills 
+                                ? 'Add Skills to Unlock Test' 
+                                : !hasScores 
+                                ? 'Start EQ Test' 
+                                : isOnCooldown 
+                                    ? `Retake in ${cooldownDaysLeft} day${cooldownDaysLeft !== 1 ? 's' : ''}` 
+                                    : 'Retake EQ Test'}
+                        </button>
+                    );
+                })()}
             </div>
 
             <div className="flex gap-1 mb-8 border-b border-slate-200 dark:border-slate-800">
@@ -267,7 +335,7 @@ export default function CandidateProfile() {
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8">
                 <div className="flex flex-col gap-8">
                     {/* Conditionally rendering based on activeTab */}
-                    {(activeTab === "overview" || activeTab === "eq-details") && (
+                    {(activeTab === "overview") && (
                         <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm relative overflow-hidden">
                             <div className="flex items-end justify-between mb-6">
                                 <div>
@@ -305,10 +373,10 @@ export default function CandidateProfile() {
                             ) : (
                                 <>
                                     <div className="flex items-center justify-center h-[320px] w-full">
-                                        <EQRadarChart scores={EQ_SCORES} />
+                                        <EQRadarChart scores={dynamicEqScores} />
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                                        {EQ_METRICS.map((m) => (
+                                        {dynamicEqMetrics.map((m) => (
                                             <StatChip key={m.label} label={m.label} value={m.value} />
                                         ))}
                                     </div>
@@ -317,15 +385,12 @@ export default function CandidateProfile() {
                         </div>
                     )}
 
-                    {(activeTab === "overview" || activeTab === "growth-journey") && (
+                    {(activeTab === "growth-journey") && (
                         <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
                                     Growth Journey
                                 </p>
-                                <button className="flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                                    View All <ChevronRight className="w-3.5 h-3.5" />
-                                </button>
                             </div>
 
                             {!hasTakenTest ? (
@@ -335,7 +400,7 @@ export default function CandidateProfile() {
                             ) : (
                                 <>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                        {GROWTH_JOURNEY.map(({ label, title, body, highlight }) => (
+                                        {dynamicGrowthJourney.map(({ label, title, body, highlight }) => (
                                             <div key={label}>
                                                 <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-2">
                                                     {label}
@@ -349,13 +414,23 @@ export default function CandidateProfile() {
                                     </div>
 
                                     <div className="mt-8">
-                                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                            <div className="h-full w-[62%] bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" />
+                                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-1000" 
+                                                style={{ width: `${user?.eqScores?.aggregate || 0}%` }}
+                                            />
                                         </div>
                                         <div className="flex justify-between mt-2">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foundation</span>
-                                            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">62% to Elite</span>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Elite Tier</span>
+                                            {user?.eqScores?.aggregate !== undefined && user.eqScores.aggregate < 90 && (
+                                                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                                                    {user.eqScores.aggregate}% to Elite
+                                                </span>
+                                            )}
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${user?.eqScores?.aggregate >= 90 ? 'text-amber-500 animate-pulse' : 'text-slate-400'}`}>
+                                                {user?.eqScores?.aggregate >= 90 && <Sparkles className="w-3 h-3" />}
+                                                Elite Tier
+                                            </span>
                                         </div>
                                     </div>
                                 </>
@@ -374,7 +449,7 @@ export default function CandidateProfile() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
-                                    {Object.entries(EQ_SCORES).map(([trait, score]) => (
+                                    {Object.entries(dynamicEqScores).map(([trait, score]) => (
                                         <TraitBar key={trait} trait={trait} score={score} />
                                     ))}
                                 </div>
@@ -518,32 +593,6 @@ export default function CandidateProfile() {
                             Edit Profile Details
                             <ChevronRight className="w-3.5 h-3.5" />
                         </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        {QUICK_STATS.map((s) => (
-                            <QuickStatCard key={s.label} {...s} />
-                        ))}
-                    </div>
-
-                    <div className="bg-slate-900 dark:bg-slate-800 rounded-2xl p-6 flex flex-col gap-3 relative overflow-hidden">
-                        <div className="flex items-center gap-2 relative z-10">
-                            <Award className="w-5 h-5 text-yellow-400" />
-                            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                                COGNITIVE AGILITY
-                            </p>
-                        </div>
-                        <p className="text-3xl font-black text-white relative z-10">
-                            {hasTakenTest ? "98%" : "N/A"}
-                        </p>
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-blue-400 relative z-10">
-                            RESONANCE MATCH
-                        </p>
-                        {!hasTakenTest && (
-                            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-20 flex items-center justify-center">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">PENDING</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

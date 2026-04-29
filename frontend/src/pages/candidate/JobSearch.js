@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote } from 'lucide-react';
+import { Search, Briefcase, MapPin, Building2, Filter, ChevronDown, Clock, Banknote, Star } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from "../../services/api";
 
@@ -19,6 +19,7 @@ export default function JobSearch() {
     const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
     const [skillsFilter, setSkillsFilter] = useState(searchParams.get('skills') || '');
     const [remoteOnly, setRemoteOnly] = useState(searchParams.get('remote') === 'true');
+    const [matchesOnly, setMatchesOnly] = useState(searchParams.get('matchesOnly') === 'true');
 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ export default function JobSearch() {
             if (experienceFilter && experienceFilter !== 'All') params.append('experience', experienceFilter);
             if (skillsFilter) params.append('skills', skillsFilter);
             if (remoteOnly) params.append('remote', 'true');
+            if (matchesOnly) params.append('matchesOnly', 'true');
             if (sortOrder) params.append('sort', sortOrder);
             params.append('page', currentPage);
 
@@ -58,7 +60,7 @@ export default function JobSearch() {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [keyword, locationFilter, jobTypeFilter, experienceFilter, skillsFilter, remoteOnly, sortOrder]);
+    }, [keyword, locationFilter, jobTypeFilter, experienceFilter, skillsFilter, remoteOnly, sortOrder, matchesOnly]);
 
     // Fetch jobs when dependencies change securely
     useEffect(() => {
@@ -76,6 +78,7 @@ export default function JobSearch() {
         if (experienceFilter !== 'All') params.append('experience', experienceFilter);
         if (skillsFilter) params.append('skills', skillsFilter);
         if (remoteOnly) params.append('remote', 'true');
+        if (matchesOnly) params.append('matchesOnly', 'true');
         if (sortOrder !== 'Most Recent') params.append('sort', sortOrder);
         setSearchParams(params);
         
@@ -160,6 +163,14 @@ export default function JobSearch() {
 
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex flex-wrap gap-3">
+                        <button 
+                            type="button"
+                            onClick={() => setMatchesOnly(!matchesOnly)}
+                            className={`flex items-center gap-2 px-4 py-2 border rounded-[16px] text-xs font-bold transition ${matchesOnly ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        >
+                            <Star className={`w-3.5 h-3.5 ${matchesOnly ? 'fill-current' : ''}`} />
+                            Matches Only
+                        </button>
                         <div className="relative">
                             <select 
                                 value={jobTypeFilter}
