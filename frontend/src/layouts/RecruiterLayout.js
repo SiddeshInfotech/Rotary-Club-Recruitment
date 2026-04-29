@@ -1,30 +1,10 @@
 import { LayoutDashboard, Users, MessageSquare, Calendar, PlusCircle, Settings, Bell, Search, Network } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import ThemeToggle from '../components/common/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
 
 export default function RecruiterLayout({ children }) {
     const location = useLocation();
     const { user } = useAuth();
-    const [unreadNotifications, setUnreadNotifications] = useState(0);
-
-    useEffect(() => {
-        const fetchNotificationsCount = async () => {
-            try {
-                const notifRes = await api.get('/notifications');
-                if (notifRes.data.success) {
-                    setUnreadNotifications(notifRes.data.unreadCount || 0);
-                }
-            } catch (err) {
-                console.error("Failed to fetch notifications count", err);
-            }
-        };
-        if (user) {
-            fetchNotificationsCount();
-        }
-    }, [user]);
 
     const displayName = user?.fullName || 'Recruiter';
     const avatarName = encodeURIComponent(displayName);
@@ -33,7 +13,7 @@ export default function RecruiterLayout({ children }) {
         { name: 'Dashboard', icon: LayoutDashboard, path: '/recruiter' },
         { name: 'Candidates', icon: Users, path: '/recruiter/search' },
         { name: 'Post a Job', icon: PlusCircle, path: '/recruiter/post-job' },
-        { name: 'Community', icon: Network, path: '/community-feed' }
+        //{ name: 'Community', icon: Network, path: '/community-feed' }
     ];
 
     const actionsMenu = [
@@ -42,7 +22,7 @@ export default function RecruiterLayout({ children }) {
     ];
 
     return (
-        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-[#0b1121]">
+        <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -98,7 +78,12 @@ export default function RecruiterLayout({ children }) {
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Settings</span>
                     </Link>
 
-                    <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition mt-2">
+                    <Link to="/recruiter/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full mb-2">
+                        <Bell className="w-5 h-5 text-slate-400" />
+                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Notifications</span>
+                    </Link>
+
+                    <Link to="/recruiter/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition mt-2">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                             <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
@@ -126,16 +111,6 @@ export default function RecruiterLayout({ children }) {
                         </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
-                            <ThemeToggle />
-                            
-                            <Link to="/notifications" className="relative p-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition shadow-sm">
-                                <Bell className="w-5 h-5" />
-                                {unreadNotifications > 0 && (
-                                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-[10px] font-bold text-white flex items-center justify-center border-2 border-white dark:border-slate-900 rounded-full">
-                                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                                    </span>
-                                )}
-                            </Link>
                         </div>
                     </header>
 

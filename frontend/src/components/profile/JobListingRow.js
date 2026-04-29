@@ -17,10 +17,12 @@ export default function JobListingRow({ title, type, location, match }) {
                 </div>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="text-right">
-                    <p className="text-xs font-black text-blue-600 dark:text-blue-400">{match}%</p>
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">match</p>
-                </div>
+                {match && (
+                    <div className="text-right">
+                        <p className="text-xs font-black text-blue-600 dark:text-blue-400">{match}%</p>
+                        <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">match</p>
+                    </div>
+                )}
                 <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition" />
             </div>
         </div>

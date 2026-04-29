@@ -1,5 +1,4 @@
 import { Bell, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
 
 // Glassmorphism nav with backdrop blur
 export default function Navbar() {
@@ -10,12 +9,12 @@ export default function Navbar() {
                 {/* Left side: Logo & Links */}
                 <div className="flex items-center gap-12">
                     {/* Logo flex section */}
-                    <Link to="/" className="flex items-center gap-2 group cursor-pointer no-underline">
+                    <div className="flex items-center gap-2 group cursor-pointer">
                         <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-md w-8 h-8 flex items-center justify-center font-bold text-sm tracking-tight shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
                             EQ
                         </div>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 font-bold text-lg tracking-tight">EQ-Hire</span>
-                    </Link>
+                    </div>
 
                     {/* Links */}
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium">

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import ThemeToggle from "../../components/common/ThemeToggle";
 
 export default function EQJourney() {
     const navigate = useNavigate();
@@ -10,7 +9,6 @@ export default function EQJourney() {
                 <div className="text-2xl font-bold tracking-tight">
                     <span className="text-blue-600">EQ</span>-Hire
                 </div>
-                <ThemeToggle />
             </header>
 
             <main className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
@@ -30,13 +28,13 @@ export default function EQJourney() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button 
                             onClick={() => navigate('/eq-assessment')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl text-sm uppercase tracking-widest font-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-[20px] text-sm uppercase tracking-widest font-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
                         >
                             Start My Assessment
                         </button>
                         <button 
                             onClick={() => navigate('/candidate')}
-                            className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-10 py-5 rounded-2xl text-sm uppercase tracking-widest font-black transition-all shadow-sm w-full sm:w-auto"
+                            className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-[#1e293b] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-10 py-5 rounded-[20px] text-sm uppercase tracking-widest font-black transition-all shadow-sm w-full sm:w-auto"
                         >
                             Skip to Dashboard
                         </button>

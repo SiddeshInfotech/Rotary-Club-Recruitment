@@ -1,27 +1,18 @@
 import { useState } from 'react';
-import { ArrowLeft, Briefcase, UserRound, Sparkles, Building2, Globe, FileText, Upload, CheckCircle2, MapPin, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Briefcase, UserRound, Sparkles, Building2, Globe, FileText, Upload, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
 
 export default function Register() {
     const [role, setRole] = useState('candidate');
     const navigate = useNavigate();
     const { login } = useAuth();
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [showOtp, setShowOtp] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [otpEmail, setOtpEmail] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
 
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
         email: '',
         phone: '',
-        location: '',
         skills: '',
         resumeLink: '',
         company: '',
@@ -34,96 +25,27 @@ export default function Register() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            const fullName = `${form.firstName} ${form.lastName}`.trim();
-            
-            // Register user with the backend
-            const res = await api.post('/auth/register', {
-                name: fullName,
-                email: form.email,
-                password: form.password,
-                role: role,
-                phone: form.phone,
-                location: form.location,
-                ...(role === 'candidate' && {
-                    skills: form.skills,
-                    resumeLink: form.resumeLink,
-                }),
-                ...(role === 'recruiter' && {
-                    company: form.company,
-                    website: form.website,
-                    hiringNeeds: form.hiringNeeds,
-                }),
-            });
-
-            if (res.data.requiresOtp) {
-                setOtpEmail(form.email);
-                setShowOtp(true);
-                setSuccessMessage(res.data.message || 'Please check your email for the OTP.');
-                return;
-            }
-
-            if (res.data.success && !res.data.requiresOtp) {
-                const { user: userData, token } = res.data;
-                login({
-                    ...userData,
-                    fullName,
-                }, token);
-
-                navigate(role === 'recruiter' ? '/recruiter' : '/candidate');
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            const res = await api.post('/auth/verify-otp', {
-                email: otpEmail,
-                otp: otp
-            });
-
-            if (res.data.success) {
-                const { user: userData, token } = res.data;
-                // Add fullName for context consistency
-                const fullName = `${form.firstName} ${form.lastName}`.trim();
-                
-                login({
-                    ...userData,
-                    fullName,
-                }, token);
-
-                navigate(role === 'recruiter' ? '/recruiter' : '/candidate');
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleResendOtp = async () => {
-        setError('');
-        setSuccessMessage('');
-        try {
-            const res = await api.post('/auth/resend-otp', { email: otpEmail });
-            if (res.data.success) {
-                setSuccessMessage('A new verification code has been sent to your email.');
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to resend code.');
-        }
+        const userData = {
+            firstName: form.firstName,
+            lastName: form.lastName,
+            fullName: `${form.firstName} ${form.lastName}`,
+            email: form.email,
+            phone: form.phone,
+            role: role,
+            ...(role === 'candidate' && {
+                skills: form.skills,
+                resumeLink: form.resumeLink,
+            }),
+            ...(role === 'recruiter' && {
+                company: form.company,
+                website: form.website,
+                hiringNeeds: form.hiringNeeds,
+            }),
+        };
+        login(userData);
+        navigate('/verify-email');
     };
 
     return (
@@ -192,20 +114,7 @@ export default function Register() {
                         <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">Join a platform that connects talent, recruiters, and opportunities powered by AI.</p>
                     </div>
 
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
-                            {error}
-                        </div>
-                    )}
-                    {successMessage && (
-                        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm font-bold">
-                            {successMessage}
-                        </div>
-                    )}
-
-                    {!showOtp ? (
-                        <>
-                            <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl mb-10 border border-slate-200 dark:border-slate-800">
+                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl mb-10 border border-slate-200 dark:border-slate-800">
                         <button 
                             onClick={() => setRole('candidate')}
                             className={`flex flex-1 justify-center items-center gap-2 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${role === 'candidate' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/50 dark:border-slate-600/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -240,17 +149,9 @@ export default function Register() {
                             <input type="email" name="email" value={form.email} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="jane.doe@example.com" required />
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Phone Number</label>
-                                <input type="tel" name="phone" value={form.phone} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="+1 (555) 000-0000" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">
-                                    <MapPin className="w-3.5 h-3.5" /> Location
-                                </label>
-                                <input type="text" name="location" value={form.location} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="City, Country (e.g. London, UK)" />
-                            </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Phone Number</label>
+                            <input type="tel" name="phone" value={form.phone} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="+1 (555) 000-0000" />
                         </div>
 
                         {role === 'candidate' && (
@@ -300,82 +201,19 @@ export default function Register() {
 
                         <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-4">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Password</label>
-                            <div className="relative">
-                                <input 
-                                    type={showPassword ? "text" : "password"} 
-                                    name="password" 
-                                    value={form.password} 
-                                    onChange={handleChange} 
-                                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-4 pr-12 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" 
-                                    placeholder="••••••••" 
-                                    required 
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
+                            <input type="password" name="password" value={form.password} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="••••••••" required />
                         </div>
 
                         <div className="pt-6">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60"
-                            >
-                                {loading ? 'Creating Account...' : 'Create Account'}
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
+                                Create Account
                             </button>
                         </div>
                     </form>
-                    </>
-                    ) : (
-                        <form className="space-y-6" onSubmit={handleVerifyOtp}>
-                            <div className="mb-8">
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Verify Your Email</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">We've sent a 6-digit code to <strong className="text-blue-600 dark:text-blue-400">{otpEmail}</strong>.</p>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Verification Code</label>
-                                <input 
-                                    type="text" 
-                                    value={otp} 
-                                    onChange={(e) => setOtp(e.target.value)} 
-                                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-bold" 
-                                    placeholder="000000" 
-                                    maxLength={6}
-                                    required 
-                                />
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading || otp.length < 6}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60 mt-6"
-                            >
-                                {loading ? 'Verifying...' : 'Verify Email'}
-                            </button>
-
-                            <div className="pt-4 text-center">
-                                <button
-                                    type="button"
-                                    onClick={handleResendOtp}
-                                    className="text-sm text-blue-600 dark:text-blue-400 font-bold hover:underline"
-                                >
-                                    Didn't receive the code? Resend
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {!showOtp && (
-                        <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400 font-medium">
-                            Already have an account? <Link to="/login" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Log in</Link>
-                        </p>
-                    )}
+                    <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        Already have an account? <Link to="/login" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">Log in</Link>
+                    </p>
 
                 </div>
             </div>

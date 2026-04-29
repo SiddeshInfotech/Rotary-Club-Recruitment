@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
-import ThemeToggle from "../common/ThemeToggle";
 import { Link } from "react-router-dom";
 
 export default function PublicNavbar() {
@@ -44,14 +43,14 @@ export default function PublicNavbar() {
             <div className="flex justify-between items-center w-full px-6 lg:px-8 py-3 lg:py-4 max-w-7xl mx-auto h-16">
                 
                 {/* Left side: Logo */}
-                <Link to="/" className="flex items-center gap-2 group cursor-pointer no-underline">
+                <div className="flex items-center gap-2 group cursor-pointer">
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-md w-8 h-8 flex items-center justify-center font-bold text-sm tracking-tight shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
                         EQ
                     </div>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400 font-bold text-lg tracking-tight">
                         EQ HIRE
                     </span>
-                </Link>
+                </div>
 
                 {/* Center: Links */}
                 <div className="hidden md:flex items-center space-x-8 relative">
@@ -81,7 +80,6 @@ export default function PublicNavbar() {
 
                 {/* Right side: Actions */}
                 <div className="flex items-center gap-5">
-                    <ThemeToggle />
                     
                     <Link to="/register" className="hidden lg:flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 text-xs font-bold px-5 py-2.5 rounded-full relative overflow-hidden group">
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, AlertCircle, Loader } from 'lucide-react';
+import { ArrowRight, Brain, AlertCircle, CheckCircle } from 'lucide-react';
 import ThemeToggle from "../../components/common/ThemeToggle";
 import api, { aiApi } from "../../services/api";
 import { useAuth } from '../../context/AuthContext';
@@ -41,11 +41,11 @@ export default function EQAssessment() {
         };
 
         initAssessment();
-    }, []);
+    }, [user]);
 
     const currentScenario = scenarios[currentStep];
 
-    const handleAnswerChange = (optionId) => {
+    const handleSelect = (optionId) => {
         setAnswers(prev => ({ ...prev, [currentScenario?.id]: optionId }));
     };
 
@@ -75,7 +75,7 @@ export default function EQAssessment() {
                 
                 setTimeout(() => {
                     navigate('/candidate'); // Redirect once scores are saved (dashboard)
-                }, 1000);
+                }, 3000);
             } catch (error) {
                 console.error("Evaluation failed", error);
                 setIsSubmitting(false);
@@ -95,12 +95,12 @@ export default function EQAssessment() {
     if (isSubmitting) {
         return (
             <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#0b1121] text-slate-900 dark:text-white items-center justify-center">
-                <Brain className="w-16 h-16 text-blue-600 mb-6" />
-                <h2 className="text-3xl font-black mb-2">Calculating Core DNA...</h2>
-                <p className="text-slate-500 font-medium tracking-wide">Mapping your traits based on your situational responses.</p>
+                <Brain className="w-16 h-16 text-blue-600 animate-pulse mb-6" />
+                <h2 className="text-3xl font-black mb-2">Analyzing Cognitive Footprint...</h2>
+                <p className="text-slate-500 font-medium tracking-wide">Mapping your traits to elite profiles</p>
                 
                 <div className="mt-10 w-64 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className="w-full h-full bg-blue-600 rounded-full animate-[progress_1s_ease-in-out]" />
+                    <div className="w-full h-full bg-blue-600 rounded-full animate-[progress_3s_ease-in-out]" />
                 </div>
                 
                 <style>{`
@@ -135,76 +135,78 @@ export default function EQAssessment() {
                     EQ-Assessment
                 </div>
                 <div className="flex items-center gap-6">
-                    <div className="text-xs uppercase tracking-widest font-bold text-slate-500 bg-slate-200/50 dark:bg-slate-800/50 px-4 py-1.5 rounded-full">
+                    <div className="text-xs uppercase tracking-widest font-bold text-slate-500">
                         Scenario {currentStep + 1} of {scenarios.length}
                     </div>
                     <ThemeToggle />
                 </div>
             </header>
 
-            <main className="flex-1 max-w-5xl w-full mx-auto p-6 pt-12 xl:pt-20">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-20">
+            <main className="flex-1 max-w-4xl w-full mx-auto p-6 pt-12 xl:pt-20">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                     {/* Left Column: Context */}
                     <div className="md:col-span-5 flex flex-col pt-4">
                         <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full mb-6 self-start">
                             <AlertCircle className="w-3.5 h-3.5" />
                             Behavioral Engine Active
                         </div>
-                        <h2 className="text-3xl lg:text-4xl font-black leading-tight mb-4 tracking-tight capitalize break-words pr-4">
-                            {currentScenario.dimension ? currentScenario.dimension.replace(/([A-Z])/g, ' $1').trim() : "Scenario"} Focus
+                        <h2 className="text-4xl lg:text-5xl font-black leading-tight mb-4 tracking-tight">
+                            {currentScenario.dimension ? currentScenario.dimension.replace(/([A-Z])/g, ' $1').trim() : "Scenario Focus"}
                         </h2>
                         <div className="h-1 w-12 bg-blue-600 rounded-full mb-6"></div>
-                        <p className="text-lg text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                            {currentScenario.context || "Consider the following situation carefully."}
+                        <p className="text-lg text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic">
+                            "{currentScenario.context}"
                         </p>
                     </div>
 
-                    {/* Right Column: MCQ Options */}
+                    {/* Right Column: Interactive Questions */}
                     <div className="md:col-span-7 flex flex-col">
-                        <h3 className="text-xl font-bold mb-8 text-slate-900 dark:text-white leading-relaxed">
+                        <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">
                             {currentScenario.question}
                         </h3>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3">
                             {currentScenario.options?.map((option) => {
                                 const isSelected = answers[currentScenario.id] === option.id;
                                 return (
                                     <button
                                         key={option.id}
-                                        onClick={() => handleAnswerChange(option.id)}
-                                        className={`flex items-start gap-4 p-5 rounded-2xl border-2 text-left transition-all duration-200 ${
+                                        onClick={() => handleSelect(option.id)}
+                                        className={`group relative w-full text-left p-5 rounded-[20px] border transition-all duration-200 ${
                                             isSelected 
-                                                ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-500 shadow-sm' 
-                                                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131b2f] hover:border-slate-300 dark:hover:border-slate-700'
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 shadow-md ring-1 ring-blue-600' 
+                                                : 'bg-white dark:bg-[#131b2f] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
                                         }`}
                                     >
-                                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                                            isSelected 
-                                                ? 'bg-blue-600 text-white' 
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                                        }`}>
-                                            {option.id}
-                                        </div>
-                                        <div className={`pt-1 font-medium leading-relaxed ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {option.text}
+                                        <div className="flex items-start gap-4">
+                                            <div className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors ${
+                                                isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 dark:border-slate-600'
+                                            }`}>
+                                                {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
+                                            </div>
+                                            <div>
+                                                <p className={`text-[15px] font-semibold leading-snug ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                    {option.text}
+                                                </p>
+                                            </div>
                                         </div>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <div className="mt-10 flex justify-end">
+                        <div className="mt-8 flex justify-end">
                             <button
                                 disabled={!answers[currentScenario.id]}
                                 onClick={handleNext}
-                                className={`flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${
-                                    answers[currentScenario.id]
-                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md transform hover:-translate-y-0.5' 
-                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed hidden'
+                                className={`flex items-center gap-2 px-8 py-4 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all ${
+                                    answers[currentScenario.id] 
+                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 shadow-md transform hover:-translate-y-0.5' 
+                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                                 }`}
                             >
-                                {currentStep === scenarios.length - 1 ? 'Complete Assessment' : 'Next Scenario'}
-                                <ArrowRight className="w-5 h-5" />
+                                {currentStep === scenarios.length - 1 ? 'Calculate Profile' : 'Next Scenario'}
+                                <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>

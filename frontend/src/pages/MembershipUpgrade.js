@@ -27,6 +27,7 @@ export default function MembershipUpgrade() {
 
                     {/* Premium */}
                     <div className="bg-[#1a2b4b] rounded-3xl p-8 border-2 border-cyan-400 shadow-xl relative transform md:-translate-y-4">
+                        <div className="absolute -top-4 inset-x-0 flex justify-center"><span className="bg-cyan-400 text-[#0d1b2a] text-xs font-black px-4 py-1 rounded-full uppercase tracking-widest">Recommended</span></div>
                         <h3 className="text-xl font-bold text-white mb-2">Professional</h3>
                         <p className="text-sm text-cyan-100 mb-6">Advanced metrics and premium matching.</p>
                         <div className="mb-6"><span className="text-4xl font-black text-white">$12</span><span className="text-cyan-200">/month</span></div>

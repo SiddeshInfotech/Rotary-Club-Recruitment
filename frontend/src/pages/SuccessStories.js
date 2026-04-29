@@ -6,7 +6,7 @@ export default function SuccessStories() {
     return (
         <div className="bg-[#f0f4f8] min-h-screen font-sans">
             <PublicNavbar />
-            
+
             <div className="bg-[#1a2b4b] py-16 text-center text-white">
                 <h1 className="text-4xl font-bold mb-4">Success Stories</h1>
                 <p className="text-cyan-100 max-w-2xl mx-auto px-6">See how EQ-Hire is connecting Rotary values with exceptional talent around the world.</p>
@@ -14,7 +14,7 @@ export default function SuccessStories() {
 
             <div className="max-w-7xl mx-auto px-6 py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {[1,2,3,4,5,6].map((i) => (
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
                         <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                             <div className="h-48 bg-gray-200 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
@@ -24,7 +24,7 @@ export default function SuccessStories() {
                             </div>
                             <div className="p-6">
                                 <div className="flex text-amber-400 mb-3 block">
-                                    {[1,2,3,4,5].map(s => <Star key={s} fill="currentColor" className="w-4 h-4" />)}
+                                    {[1, 2, 3, 4, 5].map(s => <Star key={s} fill="currentColor" className="w-4 h-4" />)}
                                 </div>
                                 <h3 className="font-bold text-xl text-[#1a2b4b] mb-3 leading-tight group-hover:text-cyan-600 transition-colors">
                                     Finding the Perfect Fit: How empathy transformed leadership.
