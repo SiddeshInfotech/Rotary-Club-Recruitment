@@ -68,7 +68,8 @@ export default function EQAssessment() {
                         eqScores: {
                             ...res.data.data.dimensionScores,
                             aggregate: res.data.data.overallScore
-                        }
+                        },
+                        lastAssessedAt: new Date().toISOString()
                     });
                 }
                 

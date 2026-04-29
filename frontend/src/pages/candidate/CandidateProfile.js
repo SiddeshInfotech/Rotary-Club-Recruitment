@@ -111,10 +111,11 @@ export default function CandidateProfile() {
         ? Object.entries(dynamicEqScores).filter(([_, score]) => score >= 70).length
         : 0;
 
-    // Calculate "Last Tested" from updatedAt timestamp
+    // Calculate "Last Tested" from lastAssessedAt timestamp (fallback to updatedAt for existing users)
     let lastTestedLabel = "Pending";
-    if (user?.eqScores?.aggregate && user?.updatedAt) {
-        const diffMs = Date.now() - new Date(user.updatedAt).getTime();
+    const assessedTimestamp = user?.lastAssessedAt || (user?.eqScores?.aggregate ? user?.updatedAt : null);
+    if (user?.eqScores?.aggregate && assessedTimestamp) {
+        const diffMs = Date.now() - new Date(assessedTimestamp).getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
@@ -122,7 +123,7 @@ export default function CandidateProfile() {
         else if (diffMins < 60) lastTestedLabel = `${diffMins}m ago`;
         else if (diffHours < 24) lastTestedLabel = `${diffHours}h ago`;
         else if (diffDays < 7) lastTestedLabel = `${diffDays}d ago`;
-        else lastTestedLabel = new Date(user.updatedAt).toLocaleDateString();
+        else lastTestedLabel = new Date(assessedTimestamp).toLocaleDateString();
     }
 
     const dynamicEqMetrics = [
@@ -282,9 +283,10 @@ export default function CandidateProfile() {
                     const hasSkills = user?.skills && user.skills.trim().length > 0;
                     
                     let cooldownDaysLeft = 0;
-                    if (hasScores && user?.updatedAt) {
+                    const cooldownTimestamp = user?.lastAssessedAt || (hasScores ? user?.updatedAt : null);
+                    if (hasScores && cooldownTimestamp) {
                         const cooldownMs = 30 * 24 * 60 * 60 * 1000;
-                        const timeSince = Date.now() - new Date(user.updatedAt).getTime();
+                        const timeSince = Date.now() - new Date(cooldownTimestamp).getTime();
                         if (timeSince < cooldownMs) {
                             cooldownDaysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
                         }

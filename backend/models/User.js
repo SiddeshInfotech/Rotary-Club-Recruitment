@@ -58,6 +58,9 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpires: { type: Date },
 
+    // EQ Assessment tracking
+    lastAssessedAt: { type: Date },
+
     // reset password fields
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date }

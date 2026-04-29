@@ -83,7 +83,7 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
   finalScores.aggregate = overallScore;
 
   // Write scores back to BOTH collections to ensure everything stays in sync
-  await User.findByIdAndUpdate(candidateId, { eqScores: finalScores });
+  await User.findByIdAndUpdate(candidateId, { eqScores: finalScores, lastAssessedAt: new Date() });
   await CandidateProfile.findOneAndUpdate(
     { user: candidateId },
     { eqScores: finalScores },

@@ -42,6 +42,7 @@ const candidateRefSchema = new mongoose.Schema(
       problemSolving: { type: Number, min: 0, max: 100, default: 0 },
       aggregate: { type: Number, min: 0, max: 100, default: 0 },
     },
+    lastAssessedAt: { type: Date },
   },
   {
     timestamps: true,

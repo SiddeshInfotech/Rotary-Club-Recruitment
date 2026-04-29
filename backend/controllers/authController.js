@@ -164,6 +164,7 @@ exports.login = async (req, res) => {
         company: user.company,
         website: user.website,
         hiringNeeds: user.hiringNeeds,
+        lastAssessedAt: user.lastAssessedAt,
         updatedAt: user.updatedAt
       },
     });
@@ -314,7 +315,8 @@ exports.verifyOtp = async (req, res) => {
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
-        hiringNeeds: user.hiringNeeds
+        hiringNeeds: user.hiringNeeds,
+        lastAssessedAt: user.lastAssessedAt
       },
     });
   } catch (error) {
