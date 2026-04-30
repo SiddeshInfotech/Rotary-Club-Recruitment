@@ -2,10 +2,46 @@ import RecruiterLayout from "../../layouts/RecruiterLayout";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from "react";
+import api from "../../services/api";
 
 export default function RecruiterDashboard() {
     const { user } = useAuth();
     const firstName = user?.firstName || 'there';
+
+    const [activeJobs, setActiveJobs] = useState([]);
+    const [loadingJobs, setLoadingJobs] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const jobsRes = await api.get("/dashboard/jobs");
+                if (jobsRes.data.success) {
+                    setActiveJobs(jobsRes.data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch dashboard jobs:", error);
+            } finally {
+                setLoadingJobs(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    // Helper to calculate days ago
+    const getDaysAgo = (dateString) => {
+        if (!dateString) return 0;
+        const diffTime = Math.abs(new Date() - new Date(dateString));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    };
+
+    // Helper to get company initials
+    const getCompanyInitials = (name) => {
+        if (!name) return "CO";
+        return name.substring(0, 2).toUpperCase();
+    };
 
     return (
         <RecruiterLayout>
@@ -42,25 +78,27 @@ export default function RecruiterDashboard() {
                         </div>
                         
                         <div className="flex flex-col gap-6">
-                            {[
-                                { title: "Senior Product Manager", company: "LINEAR", days: 4, apps: 24, match: 89, type: "Full-time · Remote" },
-                                { title: "UX Designer", company: "AIRBNB", days: 2, apps: 18, match: 82, type: "Full-time · Hybrid" },
-                                { title: "Full Stack Developer", company: "META", days: 12, apps: 42, match: 76, type: "Full-time · On-site" }
-                            ].map((job, idx) => (
-                                <div key={idx} className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-8">
+                            {loadingJobs ? (
+                                <div className="text-center py-10 text-slate-500">Loading active jobs...</div>
+                            ) : activeJobs.length === 0 ? (
+                                <div className="text-center py-10 text-slate-500">No active jobs found. Post a job to get started!</div>
+                            ) : activeJobs.map((job) => (
+                                <div key={job._id} className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-8">
                                     {/* Header */}
                                     <div className="flex justify-between items-start">
                                         <div className="flex gap-5 items-center">
-                                            <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-[20px] flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                                                {job.company}
+                                            <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-[20px] flex items-center justify-center text-[18px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                                                {getCompanyInitials(job.companyName || user?.companyName)}
                                             </div>
                                             <div>
                                                 <h3 className="text-[22px] font-bold text-slate-900 dark:text-white mb-1">{job.title}</h3>
-                                                <p className="text-[15px] text-slate-500 dark:text-slate-400">{job.type} • Posted {job.days} days ago</p>
+                                                <p className="text-[15px] text-slate-500 dark:text-slate-400">
+                                                    {job.type} · {job.locationType} • Posted {getDaysAgo(job.createdAt)} days ago
+                                                </p>
                                             </div>
                                         </div>
                                         <span className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-[#3b82f6] text-xs font-bold px-4 py-2 rounded-full tracking-wider uppercase">
-                                            ACTIVE
+                                            {job.status}
                                         </span>
                                     </div>
 
@@ -68,15 +106,15 @@ export default function RecruiterDashboard() {
                                     <div>
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">APPLICANT QUALITY</span>
-                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">{job.match}% AVG MATCH</span>
+                                            <span className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">{job.topEqMatch}% TOP MATCH</span>
                                         </div>
                                         <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-8">
-                                            <div className="bg-[#0070f3] h-2 rounded-full" style={{ width: `${job.match}%` }}></div>
+                                            <div className="bg-[#0070f3] h-2 rounded-full transition-all duration-1000" style={{ width: `${job.topEqMatch}%` }}></div>
                                         </div>
                                         
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{job.apps} Total Applications</span>
-                                            <Link to="/recruiter/search" className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-[#3b82f6] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e1edfd] dark:hover:bg-[#0070f3]/20 transition-colors inline-block">
+                                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{job.applications} Total Applications</span>
+                                            <Link to={`/recruiter/search?jobId=${job._id}`} className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-[#3b82f6] px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e1edfd] dark:hover:bg-[#0070f3]/20 transition-colors inline-block">
                                                 Review Candidates
                                             </Link>
                                         </div>

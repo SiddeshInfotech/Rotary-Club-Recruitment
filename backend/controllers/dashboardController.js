@@ -74,8 +74,11 @@ exports.getActiveJobListings = async (req, res) => {
           _id: job._id,
           title: job.title,
           type: job.type,
+          locationType: job.locationType,
           location: job.location,
           status: job.status,
+          companyName: job.companyName,
+          createdAt: job.createdAt,
           applications: applicationCount,
           topEqMatch: topMatch ? topMatch.eqMatchScore : 0,
         };
