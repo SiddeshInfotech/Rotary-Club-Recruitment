@@ -29,18 +29,45 @@ export default function RecruiterDashboard() {
         fetchDashboardData();
     }, []);
 
-    // Helper to calculate days ago
-    const getDaysAgo = (dateString) => {
-        if (!dateString) return 0;
-        const diffTime = Math.abs(new Date() - new Date(dateString));
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
+    // Helper to format time ago
+    const getTimeAgo = (dateString, objectId) => {
+        let date;
+        if (dateString) {
+            date = new Date(dateString);
+        } else if (objectId) {
+            // Extract timestamp from MongoDB ObjectId
+            date = new Date(parseInt(objectId.substring(0, 8), 16) * 1000);
+        } else {
+            return '1 day ago'; // Fallback
+        }
+
+        const diffInSeconds = Math.floor((new Date() - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        
+        const diffMinutes = Math.floor(diffInSeconds / 60);
+        if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes > 1 ? 's' : ''} ago`;
+        
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
+        
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays === 1) return '1 day ago';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        if (diffDays < 14) return '1 week ago';
+        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+        if (diffDays < 60) return '1 month ago';
+        return `${Math.floor(diffDays / 30)} months ago`;
     };
 
-    // Helper to get company initials
-    const getCompanyInitials = (name) => {
-        if (!name) return "CO";
-        return name.substring(0, 2).toUpperCase();
+    // Helper to get initials (Prioritizes Job Title so each job looks unique!)
+    const getInitials = (title) => {
+        const text = title || "Job";
+        const words = text.split(' ').filter(w => w.length > 0);
+        if (words.length >= 2) {
+            return (words[0][0] + words[1][0]).toUpperCase();
+        }
+        return text.substring(0, 2).toUpperCase();
     };
 
     return (
@@ -82,18 +109,18 @@ export default function RecruiterDashboard() {
                                 <div className="text-center py-10 text-slate-500">Loading active jobs...</div>
                             ) : activeJobs.length === 0 ? (
                                 <div className="text-center py-10 text-slate-500">No active jobs found. Post a job to get started!</div>
-                            ) : activeJobs.map((job) => (
+                            ) : activeJobs.slice(0, 3).map((job) => (
                                 <div key={job._id} className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col gap-8">
                                     {/* Header */}
                                     <div className="flex justify-between items-start">
                                         <div className="flex gap-5 items-center">
                                             <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-[20px] flex items-center justify-center text-[18px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                                                {getCompanyInitials(job.companyName || user?.companyName)}
+                                                {getInitials(job.title)}
                                             </div>
                                             <div>
                                                 <h3 className="text-[22px] font-bold text-slate-900 dark:text-white mb-1">{job.title}</h3>
                                                 <p className="text-[15px] text-slate-500 dark:text-slate-400">
-                                                    {job.type} · {job.locationType} • Posted {getDaysAgo(job.createdAt)} days ago
+                                                    {job.type} · {job.locationType} • Posted {getTimeAgo(job.createdAt, job._id)}
                                                 </p>
                                             </div>
                                         </div>

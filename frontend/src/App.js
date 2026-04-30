@@ -32,6 +32,8 @@ import EQAssessment from "./pages/candidate/EQAssessment";
 
 import RecruiterCandidateSearch from "./pages/recruiter/CandidateSearch";
 import RecruiterPostJob from "./pages/recruiter/PostJob";
+import EditJob from "./pages/recruiter/EditJob";
+import ActiveJobsList from "./pages/recruiter/ActiveJobsList";
 import RecruiterMessages from "./pages/recruiter/Messages";
 import RecruiterSettings from "./pages/recruiter/Settings";
 import RecruiterInterviews from "./pages/recruiter/Interviews";
@@ -89,9 +91,11 @@ function App() {
           {/* Protected Recruiter Routes */}
           <Route path="/recruiter/profile" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterMyProfile /></ProtectedRoute>} />
           <Route path="/recruiter" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></ProtectedRoute>} />
+          <Route path="/recruiter/jobs" element={<ProtectedRoute allowedRoles={["recruiter"]}><ActiveJobsList /></ProtectedRoute>} />
           <Route path="/recruiter/interviews" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterInterviews /></ProtectedRoute>} />
           <Route path="/recruiter/search" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterCandidateSearch /></ProtectedRoute>} />
           <Route path="/recruiter/post-job" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterPostJob /></ProtectedRoute>} />
+          <Route path="/recruiter/edit-job/:id" element={<ProtectedRoute allowedRoles={["recruiter"]}><EditJob /></ProtectedRoute>} />
           <Route path="/recruiter/messages" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterMessages /></ProtectedRoute>} />
           <Route path="/recruiter/settings" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterSettings /></ProtectedRoute>} />
           <Route path="/recruiter/notifications" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterNotifications /></ProtectedRoute>} />
