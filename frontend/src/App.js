@@ -13,7 +13,7 @@ import CandidateProfile from "./pages/candidate/CandidateProfile";
 import CandidateSettings from "./pages/candidate/Settings";
 import CandidateMessages from "./pages/candidate/Messages";
 import CandidateNotifications from "./pages/candidate/Notifications";
-import RecruiterProfile from "./pages/candidate/RecruiterProfile";
+import RecruiterMyProfile from "./pages/recruiter/MyProfile";
 
 import Home from "./pages/Home";
 import Register from "./pages/Register";
@@ -87,7 +87,7 @@ function App() {
           <Route path="/eq-assessment" element={<ProtectedRoute><EQAssessment /></ProtectedRoute>} />
 
           {/* Protected Recruiter Routes */}
-          <Route path="/recruiter/id" element={<ProtectedRoute><RecruiterProfile /></ProtectedRoute>} />
+          <Route path="/recruiter/profile" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterMyProfile /></ProtectedRoute>} />
           <Route path="/recruiter" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterDashboard /></ProtectedRoute>} />
           <Route path="/recruiter/interviews" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterInterviews /></ProtectedRoute>} />
           <Route path="/recruiter/search" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterCandidateSearch /></ProtectedRoute>} />
