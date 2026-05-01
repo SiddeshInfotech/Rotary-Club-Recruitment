@@ -27,19 +27,27 @@ const assessmentSchema = new mongoose.Schema(
         question: { type: String, required: true },
         dimension: {
           type: String,
-          enum: ["emotionalIntelligence", "collaboration", "adaptability"],
           required: true,
         },
-        context: { type: String, default: "" },
-        answer: { type: String, default: "" },
-        score: { type: Number, min: 0, max: 10, default: 0 },
-        feedback: { type: String, default: "" },
+        options: [
+          {
+            id: { type: String, required: true },
+            text: { type: String, required: true },
+            score: { type: Number, required: true },
+          }
+        ],
+        selectedOption: { type: String, default: null },
       },
     ],
     finalScores: {
-      emotionalIntelligence: { type: Number, min: 0, max: 100, default: 0 },
-      collaboration: { type: Number, min: 0, max: 100, default: 0 },
+      leadership: { type: Number, min: 0, max: 100, default: 0 },
+      loyalty: { type: Number, min: 0, max: 100, default: 0 },
       adaptability: { type: Number, min: 0, max: 100, default: 0 },
+      growthMindset: { type: Number, min: 0, max: 100, default: 0 },
+      reliability: { type: Number, min: 0, max: 100, default: 0 },
+      teamwork: { type: Number, min: 0, max: 100, default: 0 },
+      collaboration: { type: Number, min: 0, max: 100, default: 0 },
+      problemSolving: { type: Number, min: 0, max: 100, default: 0 },
       overall: { type: Number, min: 0, max: 100, default: 0 },
     },
     summary: {

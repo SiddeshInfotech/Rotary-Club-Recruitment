@@ -1,7 +1,7 @@
 const { generateJSON } = require("./aiClient");
 
 /**
- * Generate 30 EQ assessment questions tailored to the candidate's skills and profile.
+ * Generate 40 EQ assessment questions tailored to the candidate's skills and profile.
  *
  * The questions are distributed across 3 EQ dimensions:
  * - Emotional Intelligence (10 questions): self-awareness, empathy, emotional regulation
@@ -12,7 +12,7 @@ const { generateJSON } = require("./aiClient");
  * @param {string} candidate.name
  * @param {string} candidate.title
  * @param {string[]} candidate.skills
- * @returns {object[]} Array of 30 question objects
+ * @returns {object[]} Array of 40 question objects
  */
 const generateQuestions = async (candidate) => {
   const { name, title, skills } = candidate;
@@ -30,35 +30,40 @@ A candidate has the following profile:
 - Title: ${title || "Not specified"}
 - Skills: ${skills.join(", ")}
 
-Generate exactly 30 situational and behavioral assessment questions to evaluate this candidate's Emotional Quotient (EQ). The questions must be:
+Generate exactly 40 situational Multiple Choice Questions (MCQs) to evaluate this candidate's Emotional Quotient (EQ). The questions must be:
 
 1. **Relevant** to the candidate's skills and professional domain
-2. **Scenario-based** — present realistic workplace situations the candidate might face given their skills
-3. **Open-ended** — requiring thoughtful, detailed responses (not yes/no)
-4. **Evenly distributed** across these 3 EQ dimensions (10 questions each):
-   - **emotionalIntelligence**: Self-awareness, empathy, emotional regulation, motivation
-   - **collaboration**: Teamwork, communication, conflict resolution, leadership
-   - **adaptability**: Flexibility, learning agility, handling change, problem-solving under pressure
+2. **Scenario-based** — present realistic workplace situations the candidate might face
+3. **Distributed** across these 8 EQ dimensions (distribute them so that each dimension gets exactly 5 questions, totaling exactly 40):
+   - "leadership", "loyalty", "adaptability", "growthMindset", "reliability", "teamwork", "collaboration", "problemSolving"
 
-For each question, provide:
-- "id": a sequential number (1-30)
-- "question": the full question text
-- "dimension": one of "emotionalIntelligence", "collaboration", or "adaptability"
-- "context": a brief note on what this question is specifically assessing
+Each question MUST have a populated 'options' array containing EXACTLY 4 JSON objects (A, B, C, D). DO NOT return empty options [].
 
-Return ONLY a valid JSON object in this exact format:
+Assign a score to each option based on emotional maturity:
+- 10 = Highly emotionally intelligent response
+- 7 = Good, but could be better
+- 4 = Suboptimal but understandable
+- 1 = Poor EQ or flawed approach
+
+Return ONLY a valid JSON object. DO NOT include introductory or concluding text. 
+Here is the exact JSON structure you MUST follow:
 {
   "questions": [
     {
       "id": 1,
-      "question": "...",
-      "dimension": "emotionalIntelligence",
-      "context": "Assessing self-awareness in ..."
+      "dimension": "leadership",
+      "question": "Your scenario-based question here...",
+      "options": [
+        { "id": "A", "text": "Take charge and dictate...", "score": 1 },
+        { "id": "B", "text": "Ask the team for input before deciding...", "score": 10 },
+        { "id": "C", "text": "Wait to see what happens...", "score": 4 },
+        { "id": "D", "text": "Delegate but monitor closely...", "score": 7 }
+      ]
     }
   ]
 }
 
-Do not include any text outside the JSON object.`;
+Ensure all 40 questions are in the array. Do not include any text outside the JSON object.`;
 
   const result = await generateJSON(prompt);
 
@@ -67,9 +72,9 @@ Do not include any text outside the JSON object.`;
     throw new Error("AI response missing 'questions' array");
   }
 
-  if (result.questions.length < 25) {
+  if (result.questions.length < 40) {
     throw new Error(
-      `AI generated only ${result.questions.length} questions, expected 30. Please retry.`
+      `AI generated only ${result.questions.length} questions, expected 40. Please retry.`
     );
   }
 

@@ -1,12 +1,66 @@
+import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import EQProfileCard from "../../components/cards/EQProfileCard";
+import api from "../../services/api";
 
 export default function Dashboard() {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [savedJobs, setSavedJobs] = useState([]);
+    const [activeApps, setActiveApps] = useState([]);
     const firstName = user?.firstName || 'Smith';
     const lastName = user?.lastName || 'Patel';
     const fullName = `${firstName} ${lastName}`;
     const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    const hasEqScores = user?.eqScores && user.eqScores.aggregate > 0;
+
+    useEffect(() => {
+        if (!user?._id) return;
+        const fetchDashboardData = async () => {
+            try {
+                const [savedRes, appsRes] = await Promise.all([
+                    api.get('/jobs/saved'),
+                    api.get(`/applications?candidateId=${user._id}`)
+                ]);
+                
+                if (savedRes.data && savedRes.data.success) {
+                    setSavedJobs(savedRes.data.data.reverse());
+                }
+                
+                if (appsRes.data && appsRes.data.success) {
+                    const uniqueAppsMap = new Map();
+                    appsRes.data.data.forEach(app => {
+                        const jId = app.jobId?._id || app.jobId?.toString() || app.jobId;
+                        if (jId && !uniqueAppsMap.has(jId) && app.status !== 'Rejected') {
+                            uniqueAppsMap.set(jId, app);
+                        }
+                    });
+                    
+                    const activeAppsList = Array.from(uniqueAppsMap.values())
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        
+                    setActiveApps(activeAppsList);
+                }
+            } catch (err) {
+                console.error("Failed to fetch dashboard data:", err);
+            }
+        };
+        fetchDashboardData();
+    }, [user]);
+
+    const timeAgo = (date) => {
+        if (!date) return '';
+        const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+        let interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval === 1 ? "1 day ago" : `${interval} days ago`;
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval === 1 ? "1 hour ago" : `${interval} hours ago`;
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval === 1 ? "1 minute ago" : `${interval} minutes ago`;
+        return "Just now";
+    };
 
     return (
         <CandidateLayout>
@@ -102,114 +156,126 @@ export default function Dashboard() {
                 {/* Right Sidebar */}
                 <div className="flex flex-col gap-8">
 
-                    {/* Profile Strength */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[16px] p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div className="flex justify-between items-center mb-5">
-                            <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">PROFILE STRENGTH</h2>
-                            <span className="text-[24px] font-semibold text-[#0070f3] dark:text-blue-400">80%</span>
-                        </div>
-
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-5">
-                            <div className="bg-[#0070f3] dark:bg-blue-500 h-2 rounded-full" style={{ width: '80%' }}></div>
-                        </div>
-
-                        <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-5 font-medium">
-                            Your profile is in the top 5% of design leadership roles in North America.
-                        </p>
-
-                        <a href="#" className="text-sm font-bold text-[#0070f3] dark:text-blue-400 hover:underline flex items-center gap-1.5">
-                            Complete Profile
-                            <span className="text-lg leading-none">&rarr;</span>
-                        </a>
+                    {/* EQ Profile Section */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[16px] p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                        {hasEqScores ? (
+                            <>
+                                <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-4 w-full text-left">Your EQ DNA</h2>
+                                <EQProfileCard eqScores={user.eqScores} />
+                                <button className="mt-4 text-sm font-bold text-[#0070f3] dark:text-blue-400 hover:underline" onClick={() => navigate('/eq-assessment')}>
+                                    Retake Assessment (If Eligible)
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-[14px] font-black tracking-tight text-slate-900 dark:text-white mb-2">Unlock Your True Potential</h2>
+                                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 font-medium">
+                                    Take our scientifically-backed EQ Assessment to map your 8 core emotional dimensions and stand out to top recruiters!
+                                </p>
+                                <button onClick={() => navigate('/eq-assessment')} className="w-full bg-[#0070f3] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">
+                                    Take EQ Assessment
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Saved Opportunities */}
                     <div>
                         <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-4 px-1">SAVED OPPORTUNITIES</h2>
                         <div className="flex flex-col gap-3 mb-5">
-                            {/* Item 1 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Product Lead</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Framer</p>
+                            {savedJobs.length > 0 ? (
+                                savedJobs.slice(0, 3).map((job) => (
+                                    <div key={job._id} className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors" onClick={() => navigate('/my-jobs')}>
+                                        <div>
+                                            <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">{job.title}</h3>
+                                            <p className="text-[12px] text-slate-500 dark:text-slate-400">{job.companyName || job.company}</p>
+                                        </div>
+                                        <button className="text-[#0070f3] dark:text-blue-400 p-1 hover:opacity-80">
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-[12px] bg-slate-50 dark:bg-slate-900/50">
+                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">No saved opportunities yet.</p>
                                 </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
-                            {/* Item 2 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Systems Designer</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Airbnb</p>
-                                </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
-                            {/* Item 3 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Visual Designer</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Meta</p>
-                                </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
+                            )}
                         </div>
 
-                        <div className="text-center">
-                            <button className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
-                                MANAGE ALL SAVED (14)
-                            </button>
-                        </div>
+                        {savedJobs.length > 0 && (
+                            <div className="text-center">
+                                <button onClick={() => navigate('/my-jobs')} className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                                    MANAGE ALL SAVED ({savedJobs.length})
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Active Applications */}
                     <div>
                         <div className="flex justify-between items-center mb-4 px-1">
                             <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">ACTIVE APPLICATIONS</h2>
-                            <a href="#" className="text-[10px] font-bold text-[#0070f3] dark:text-blue-400 uppercase tracking-widest hover:underline">
+                            <button onClick={() => navigate('/my-jobs')} className="text-[10px] font-bold text-[#0070f3] dark:text-blue-400 uppercase tracking-widest hover:underline">
                                 VIEW ALL
-                            </a>
+                            </button>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-900 rounded-[16px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-6">
-                            {/* Header */}
-                            <div className="flex justify-between items-start">
-                                <div className="flex gap-4 items-center">
-                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[12px] flex items-center justify-center text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                                        LINEAR
-                                    </div>
-                                    <div>
-                                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-0.5">Senior Product Designer</h3>
-                                        <p className="text-[12px] text-slate-500 dark:text-slate-400">Linear • Applied 4 days ago</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="flex flex-col gap-4">
+                            {activeApps.length > 0 ? (
+                                activeApps.slice(0, 2).map((app) => {
+                                    const job = app.jobId;
+                                    if (!job) return null;
+                                    const companyName = job.companyName || job.company || "Company";
+                                    const isShortlisted = app.status === 'Shortlisted';
+                                    
+                                    return (
+                                        <div key={app._id} className="bg-white dark:bg-slate-900 rounded-[16px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors" onClick={() => navigate(`/job/${job._id}`)}>
+                                            {/* Header */}
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex gap-4 items-center">
+                                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[12px] flex items-center justify-center text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider overflow-hidden">
+                                                        {companyName.substring(0, 6).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-0.5 line-clamp-1">{job.title}</h3>
+                                                        <p className="text-[12px] text-slate-500 dark:text-slate-400 line-clamp-1">{companyName} • Applied {timeAgo(app.createdAt)}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                            {/* Badge */}
-                            <div>
-                                <span className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase">
-                                    INTERVIEWING
-                                </span>
-                            </div>
+                                            {/* Badge */}
+                                            <div>
+                                                <span className={`${isShortlisted ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400'} text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase inline-flex items-center gap-1.5`}>
+                                                    {isShortlisted && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                                    {app.status || 'APPLIED'}
+                                                </span>
+                                            </div>
 
-                            {/* Status */}
-                            <div>
-                                <div className="flex justify-between items-center mb-3">
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">STATUS</span>
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">STEP 3 OF 5</span>
-                                </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-5">
-                                    <div className="bg-[#0070f3] dark:bg-blue-500 h-1.5 rounded-full" style={{ width: '60%' }}></div>
-                                </div>
+                                            {/* Status */}
+                                            <div>
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">STATUS</span>
+                                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">{isShortlisted ? 'STEP 2 OF 3' : 'STEP 1 OF 3'}</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-5 overflow-hidden">
+                                                    <div className={`${isShortlisted ? 'bg-emerald-500' : 'bg-[#0070f3] dark:bg-blue-500'} h-1.5 rounded-full transition-all duration-1000`} style={{ width: isShortlisted ? '66%' : '33%' }}></div>
+                                                </div>
 
-                                <button className="w-full bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 py-2 rounded-lg text-sm font-semibold hover:bg-[#e1edfd] dark:hover:bg-[#0070f3]/20 transition-colors">
-                                    Prepare for Interview
-                                </button>
-                            </div>
+                                                <button className={`w-full ${isShortlisted ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40' : 'bg-[#eef5fe] text-[#0070f3] hover:bg-[#e1edfd] dark:bg-[#0070f3]/10 dark:text-blue-400 dark:hover:bg-[#0070f3]/20'} py-2 rounded-lg text-sm font-semibold transition-colors`} onClick={(e) => { e.stopPropagation(); navigate(`/job/${job._id}`); }}>
+                                                    {isShortlisted ? 'Prepare for Interview' : 'View Application'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center py-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-[16px] bg-slate-50 dark:bg-slate-900/50">
+                                    <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 mb-2">No active applications found.</p>
+                                    <button onClick={() => navigate('/job-search')} className="text-[#0070f3] dark:text-blue-400 text-sm font-bold hover:underline">
+                                        Find jobs to apply for &rarr;
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 

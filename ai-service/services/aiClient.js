@@ -63,6 +63,7 @@ const generateJSON = async (prompt) => {
     ],
     model: "llama-3.3-70b-versatile",
     temperature: 0.3,
+    max_tokens: 6000,
     response_format: { type: "json_object" },
   });
 

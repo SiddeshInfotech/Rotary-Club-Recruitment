@@ -31,6 +31,30 @@ exports.generateAssessment = async (req, res) => {
       });
     }
 
+    // 2.5. Enforce 30-day cooldown between assessments
+    const lastCompleted = await Assessment.findOne({
+      candidateId,
+      status: "completed",
+    }).sort({ completedAt: -1 });
+
+    if (lastCompleted && lastCompleted.completedAt) {
+      const cooldownMs = 15 * 24 * 60 * 60 * 1000; // 15 days
+      const timeSince = Date.now() - new Date(lastCompleted.completedAt).getTime();
+      if (timeSince < cooldownMs) {
+        const nextEligible = new Date(new Date(lastCompleted.completedAt).getTime() + cooldownMs);
+        const daysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+        return res.status(429).json({
+          success: false,
+          message: `You can retake the assessment in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Next eligible date: ${nextEligible.toLocaleDateString()}.`,
+          data: {
+            daysRemaining: daysLeft,
+            nextEligibleDate: nextEligible.toISOString(),
+            lastCompletedAt: lastCompleted.completedAt,
+          },
+        });
+      }
+    }
+
     // 2. Generate questions using Gemini AI
     console.log(
       `Generating EQ questions for candidate: ${candidate.name} (${candidateId})`
@@ -44,6 +68,7 @@ exports.generateAssessment = async (req, res) => {
         id: q.id,
         question: q.question,
         dimension: q.dimension,
+        options: q.options,
         context: q.context || "",
       })),
       status: "pending",
@@ -126,6 +151,7 @@ exports.evaluateAssessment = async (req, res) => {
         id: q.id,
         question: q.question,
         dimension: q.dimension,
+        options: q.options,
         answer: userAnswer ? userAnswer.answer : "No answer provided",
       };
     });
@@ -159,9 +185,7 @@ exports.evaluateAssessment = async (req, res) => {
     });
 
     assessment.finalScores = {
-      emotionalIntelligence: evaluation.dimensionScores.emotionalIntelligence,
-      collaboration: evaluation.dimensionScores.collaboration,
-      adaptability: evaluation.dimensionScores.adaptability,
+      ...evaluation.dimensionScores,
       overall: evaluation.overallScore,
     };
     assessment.summary = evaluation.summary;

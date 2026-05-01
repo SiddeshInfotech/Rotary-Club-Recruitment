@@ -11,16 +11,29 @@ export default function RecruiterDashboard() {
 
     const [activeJobs, setActiveJobs] = useState([]);
     const [loadingJobs, setLoadingJobs] = useState(true);
+    const [pipelineStats, setPipelineStats] = useState({
+        activeJobs: 0,
+        totalApplications: 0,
+        shortlisted: 0,
+        avgEqMatch: 0
+    });
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const jobsRes = await api.get("/dashboard/jobs");
+                const [jobsRes, statsRes] = await Promise.all([
+                    api.get("/dashboard/jobs"),
+                    api.get("/dashboard/stats")
+                ]);
+                
                 if (jobsRes.data.success) {
                     setActiveJobs(jobsRes.data.data);
                 }
+                if (statsRes.data.success) {
+                    setPipelineStats(statsRes.data.data);
+                }
             } catch (error) {
-                console.error("Failed to fetch dashboard jobs:", error);
+                console.error("Failed to fetch dashboard data:", error);
             } finally {
                 setLoadingJobs(false);
             }
@@ -160,13 +173,13 @@ export default function RecruiterDashboard() {
                     <div className="bg-white dark:bg-[#131b2f] rounded-[20px] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-[13px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">PIPELINE OVERVIEW</h2>
-                            <span className="text-[32px] text-[#0070f3] dark:text-[#3b82f6]">48</span>
+                            <span className="text-[32px] text-[#0070f3] dark:text-[#3b82f6]">{pipelineStats.totalApplications}</span>
                         </div>
                         
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Active Jobs</span>
-                                <span className="font-bold text-slate-800 dark:text-white">6</span>
+                                <span className="font-bold text-slate-800 dark:text-white">{pipelineStats.activeJobs}</span>
                             </div>
                             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
                                 <div className="bg-[#0070f3] h-1.5 rounded-full" style={{ width: '100%' }}></div>
@@ -174,7 +187,7 @@ export default function RecruiterDashboard() {
 
                             <div className="flex justify-between items-center">
                                 <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Total Apps</span>
-                                <span className="font-bold text-slate-800 dark:text-white">48</span>
+                                <span className="font-bold text-slate-800 dark:text-white">{pipelineStats.totalApplications}</span>
                             </div>
                             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
                                 <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: '100%' }}></div>
@@ -182,15 +195,15 @@ export default function RecruiterDashboard() {
 
                             <div className="flex justify-between items-center">
                                 <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Shortlisted</span>
-                                <span className="font-bold text-slate-800 dark:text-white">12</span>
+                                <span className="font-bold text-slate-800 dark:text-white">{pipelineStats.shortlisted}</span>
                             </div>
                             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2">
-                                <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: '25%' }}></div>
+                                <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${pipelineStats.totalApplications > 0 ? (pipelineStats.shortlisted / pipelineStats.totalApplications) * 100 : 0}%` }}></div>
                             </div>
                         </div>
 
                         <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 mt-6 font-medium">
-                            Your pipeline is healthy with an average EQ match rate of 74% across all positions.
+                            Your pipeline is healthy with an average EQ match rate of {pipelineStats.avgEqMatch}% across all positions.
                         </p>
 
                         <Link to="/recruiter/search" className="text-sm font-bold text-[#0070f3] dark:text-[#3b82f6] hover:underline flex items-center gap-2">
