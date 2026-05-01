@@ -31,6 +31,7 @@ import EQJourney from "./pages/candidate/EQJourney";
 import EQAssessment from "./pages/candidate/EQAssessment";
 
 import RecruiterCandidateSearch from "./pages/recruiter/CandidateSearch";
+import CandidateProfileView from "./pages/recruiter/CandidateProfileView";
 import RecruiterPostJob from "./pages/recruiter/PostJob";
 import EditJob from "./pages/recruiter/EditJob";
 import ActiveJobsList from "./pages/recruiter/ActiveJobsList";
@@ -94,6 +95,7 @@ function App() {
           <Route path="/recruiter/jobs" element={<ProtectedRoute allowedRoles={["recruiter"]}><ActiveJobsList /></ProtectedRoute>} />
           <Route path="/recruiter/interviews" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterInterviews /></ProtectedRoute>} />
           <Route path="/recruiter/search" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterCandidateSearch /></ProtectedRoute>} />
+          <Route path="/recruiter/candidate/:id" element={<ProtectedRoute allowedRoles={["recruiter"]}><CandidateProfileView /></ProtectedRoute>} />
           <Route path="/recruiter/post-job" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterPostJob /></ProtectedRoute>} />
           <Route path="/recruiter/edit-job/:id" element={<ProtectedRoute allowedRoles={["recruiter"]}><EditJob /></ProtectedRoute>} />
           <Route path="/recruiter/messages" element={<ProtectedRoute allowedRoles={["recruiter"]}><RecruiterMessages /></ProtectedRoute>} />

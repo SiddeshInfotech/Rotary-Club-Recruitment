@@ -12,4 +12,7 @@ router
 // PATCH /api/applications/:id/shortlist — Mark as shortlisted
 router.patch("/:id/shortlist", applicationController.shortlistApplication);
 
+// PATCH /api/applications/:id/reject — Mark as rejected
+router.patch("/:id/reject", applicationController.rejectApplication);
+
 module.exports = router;

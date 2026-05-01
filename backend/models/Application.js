@@ -9,7 +9,7 @@ const applicationSchema = new mongoose.Schema(
     },
     candidateId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Candidate",
+      ref: "User",
       required: [true, "Candidate ID is required"],
     },
     eqMatchScore: {
@@ -17,6 +17,22 @@ const applicationSchema = new mongoose.Schema(
       min: 0,
       max: 100,
       default: 0,
+    },
+    technicalScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    eqScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    matchReasoning: {
+      type: String,
+      default: "",
     },
     status: {
       type: String,

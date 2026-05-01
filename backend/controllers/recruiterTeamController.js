@@ -1,5 +1,6 @@
 const RecruiterProfileTeam = require("../models/RecruiterProfileTeam");
 const CandidateProfile = require("../models/CandidateProfile");
+const User = require("../models/User");
 
 // CREATE or UPDATE recruiter profile
 exports.createOrUpdateRecruiterProfile = async (req, res) => {
@@ -82,13 +83,13 @@ exports.getCandidateProfileById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const profile = await CandidateProfile.findOne({ user: id }).populate("user", "name email role");
+    const user = await User.findById(id).select("-password -otp -resetPasswordToken -otpExpires -resetPasswordExpires");
 
-    if (!profile) {
-      return res.status(404).json({ success: false, message: "Candidate profile not found" });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Candidate not found" });
     }
 
-    res.status(200).json({ success: true, data: profile });
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

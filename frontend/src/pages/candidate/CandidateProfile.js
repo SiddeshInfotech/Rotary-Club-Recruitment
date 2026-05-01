@@ -7,11 +7,11 @@ import StatChip from "../../components/profile/StatChip";
 import MembershipBadge from "../../components/profile/MembershipBadge";
 import QuickStatCard from "../../components/profile/QuickStatCard";
 import { useAuth } from "../../context/AuthContext";
-import {
-    CheckCircle, MapPin, Sparkles, Star, Award, Briefcase,
+import { CheckCircle, MapPin, Sparkles, Star, Award, Briefcase,
     Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock, X, Save, Trash2, Edit2,
     Phone, Mail, FileText, Lock, Eye, EyeOff, Key, Link as LinkIcon
 } from "lucide-react";
+import api from "../../services/api";
 
 
 
@@ -183,17 +183,13 @@ export default function CandidateProfile() {
                 payload.newPassword = editForm.newPassword;
             }
             
+            // Send to backend
+            const res = await api.put("/auth/me", payload);
+            
             // Update Context user
-            updateUser({
-                name: editForm.name || candidate.name,
-                currentTitle: editForm.currentTitle || candidate.currentTitle,
-                location: editForm.location || candidate.location,
-                bio: editForm.bio || candidate.bio,
-                email: editForm.email || candidate.email,
-                phone: editForm.phone,
-                skills: editForm.skills,
-                resumeLink: editForm.resumeLink,
-            });
+            if (res.data && res.data.data) {
+                updateUser(res.data.data);
+            }
             
             setEditSuccess("Profile updated successfully!");
             setTimeout(() => {
@@ -217,6 +213,7 @@ export default function CandidateProfile() {
             }
             
             try {
+                await api.put("/auth/me", { experience: updatedExperiences });
                 setExperiences(updatedExperiences);
                 updateUser({ experience: updatedExperiences });
                 setExpForm({ title: "", company: "", duration: "", startDate: "", endDate: "", currentlyWorking: false });
@@ -231,7 +228,7 @@ export default function CandidateProfile() {
     const handleDeleteExperience = async (indexToDelete) => {
         const updatedExperiences = experiences.filter((_, idx) => idx !== indexToDelete);
         try {
-            
+            await api.put("/auth/me", { experience: updatedExperiences });
             setExperiences(updatedExperiences);
             updateUser({ experience: updatedExperiences });
         } catch (error) {

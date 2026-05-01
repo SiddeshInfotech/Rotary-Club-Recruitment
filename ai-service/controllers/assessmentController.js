@@ -321,3 +321,63 @@ exports.getAssessmentById = async (req, res) => {
     });
   }
 };
+
+const { generateJSON } = require("../services/aiClient");
+
+/**
+ * POST /api/assessment/evaluate-match
+ * 
+ * Dynamically calculates a Total Fit Score based on Technical (60%) and EQ (40%) match.
+ */
+exports.evaluateMatch = async (req, res) => {
+  try {
+    const { candidate, job } = req.body;
+
+    if (!candidate || !job) {
+      return res.status(400).json({ success: false, message: "Missing candidate or job data" });
+    }
+
+    const prompt = `
+You are an expert technical and behavioral recruiter.
+Your task is to evaluate a candidate's fit for a specific job.
+
+The fit must be calculated as a Weighted Total Fit Score (out of 100).
+- Technical Match (60% weight): Compare the candidate's skills, experience, and current title against the job's title, description, skills required, and experience level.
+- EQ Match (40% weight): Compare the candidate's emotional intelligence scores (8 traits) against the psychological demands of the job.
+
+Candidate Profile:
+- Name: ${candidate.name || 'Candidate'}
+- Current Title: ${candidate.currentTitle || 'N/A'}
+- Skills: ${candidate.skills || 'N/A'}
+- EQ Scores: ${JSON.stringify(candidate.eqScores || {})}
+
+Job Profile:
+- Title: ${job.title || 'Job'}
+- Skills Required: ${job.skillsRequired && job.skillsRequired.length > 0 ? job.skillsRequired.join(', ') : 'Not specified'}
+- Experience Level: ${job.experienceLevel || 'Not specified'}
+- Description: ${job.description || 'Not specified'}
+
+Analyze the match and provide your evaluation as a valid JSON object with the following structure:
+{
+  "technicalScore": <0-100 number>,
+  "eqScore": <0-100 number>,
+  "totalMatchScore": <0-100 number (60% tech + 40% eq)>,
+  "reasoning": "<A 2-3 sentence explanation of why this score was given>"
+}
+`;
+
+    const evaluation = await generateJSON(prompt);
+
+    res.json({
+      success: true,
+      data: {
+        matchScore: evaluation.totalMatchScore || 0,
+        details: evaluation
+      }
+    });
+
+  } catch (error) {
+    console.error("Error evaluating match:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

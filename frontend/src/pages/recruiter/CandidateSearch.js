@@ -1,20 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RecruiterLayout from "../../layouts/RecruiterLayout";
-import { Search, Filter, MapPin, Briefcase, Star, ChevronDown } from "lucide-react";
+import { Search, Filter, MapPin, Briefcase, Star, ChevronDown, CheckCircle, Target, Sparkles } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 export default function CandidateSearch() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const jobId = searchParams.get("jobId");
+    
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const candidates = [
-        { id: 1, name: "Sarah Chen", role: "Product Manager", location: "San Francisco, CA", eqMatch: 89, avatar: "https://ui-avatars.com/api/?name=Sarah+Chen&background=0d1b2a&color=67e8f9", traits: ["Empathetic Leader", "Strategic Thinker"] },
-        { id: 2, name: "Marcus Johnson", role: "Senior Developer", location: "Remote", eqMatch: 82, avatar: "https://ui-avatars.com/api/?name=Marcus+Johnson&background=0d1b2a&color=67e8f9", traits: ["Analytical Mind", "Problem Solving"] },
-        { id: 3, name: "Emily Rodriguez", role: "UX Designer", location: "New York, NY", eqMatch: 76, avatar: "https://ui-avatars.com/api/?name=Emily+Rodriguez&background=0d1b2a&color=67e8f9", traits: ["Creative Innovator", "Team Player"] },
-        { id: 4, name: "David Kim", role: "Data Scientist", location: "Seattle, WA", eqMatch: 91, avatar: "https://ui-avatars.com/api/?name=David+Kim&background=0d1b2a&color=67e8f9", traits: ["Detail Oriented", "Critical Thinker"] },
-        { id: 5, name: "Anna Smith", role: "Marketing Lead", location: "Austin, TX", eqMatch: 85, avatar: "https://ui-avatars.com/api/?name=Anna+Smith&background=0d1b2a&color=67e8f9", traits: ["Excellent Communicator", "Visionary"] },
-        { id: 6, name: "James Wilson", role: "Financial Analyst", location: "Chicago, IL", eqMatch: 72, avatar: "https://ui-avatars.com/api/?name=James+Wilson&background=0d1b2a&color=67e8f9", traits: ["Methodical", "Reliable"] },
-    ];
+    useEffect(() => {
+        const fetchApplications = async () => {
+            try {
+                const url = jobId ? `/applications?jobId=${jobId}` : `/applications`;
+                const res = await api.get(url);
+                if (res.data.success) {
+                    setApplications(res.data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch applications:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchApplications();
+    }, [jobId]);
 
-    const filteredCandidates = candidates.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.role.toLowerCase().includes(searchQuery.toLowerCase()));
+    // Use candidate name or job title for filtering
+    const filteredCandidates = applications.filter(app => {
+        const candidateName = app.candidateId?.name || "";
+        const role = app.jobId?.title || "";
+        return candidateName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               role.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     return (
         <RecruiterLayout>
@@ -51,50 +73,77 @@ export default function CandidateSearch() {
                 </div>
 
                 {/* Candidate Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCandidates.map(candidate => (
-                        <div key={candidate.id} className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5 hover:shadow-lg hover:border-cyan-200 dark:hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300">
-                            <div className="flex items-start justify-between">
-                                <div className="flex gap-4">
-                                    <img src={candidate.avatar} alt={candidate.name} className="w-14 h-14 rounded-full border-2 border-gray-100" />
-                                    <div>
-                                        <h3 className="font-bold text-[#1a2b4b] dark:text-white cursor-pointer hover:text-cyan-600 transition-colors">{candidate.name}</h3>
-                                        <p className="text-sm text-gray-600 dark:text-slate-400 font-medium">{candidate.role}</p>
+                {loading ? (
+                    <div className="text-center py-10 text-gray-500">Loading candidates...</div>
+                ) : filteredCandidates.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800">
+                        No candidates found for this job yet.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCandidates.map(app => {
+                            const candidate = app.candidateId;
+                            const job = app.jobId;
+                            if (!candidate || !job) return null;
+                            const avatarName = candidate.name ? candidate.name.replace(" ", "+") : "User";
+                            const avatarUrl = `https://ui-avatars.com/api/?name=${avatarName}&background=0d1b2a&color=67e8f9`;
+                            
+                            return (
+                                <div key={app._id} className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5 flex flex-col hover:shadow-lg hover:border-cyan-200 dark:hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex gap-4">
+                                            <img src={avatarUrl} alt={candidate.name} className="w-14 h-14 rounded-full border-2 border-gray-100" />
+                                            <div>
+                                                <h3 className="font-bold text-[#1a2b4b] dark:text-white cursor-pointer hover:text-cyan-600 transition-colors">{candidate.name || "Unknown Candidate"}</h3>
+                                                <p className="text-sm text-gray-600 dark:text-slate-400 font-medium line-clamp-1">Applied: {job.title}</p>
+                                            </div>
+                                        </div>
+                                        <div className="w-[42px] h-[42px] flex flex-col items-center justify-center rounded-full border-[2px] border-emerald-400 bg-emerald-50 dark:bg-emerald-400/10 shrink-0 shadow-sm" title="Total Fit Score">
+                                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 leading-none">{app.eqMatchScore}%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* AI Insights Section */}
+                                    <div className="bg-blue-50/50 dark:bg-blue-900/10 rounded-lg p-4 mb-4 flex-1 border border-blue-100/50 dark:border-blue-800/30">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Sparkles className="w-4 h-4 text-blue-500" />
+                                            <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">AI Match Insights</span>
+                                        </div>
+                                        
+                                        <div className="flex gap-4 mb-3">
+                                            <div className="flex-1 bg-white dark:bg-slate-800 rounded p-2 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center">
+                                                <Target className="w-4 h-4 text-slate-400 mb-1" />
+                                                <span className="text-[10px] uppercase font-bold text-slate-500">Tech Fit</span>
+                                                <span className="text-lg font-black text-slate-700 dark:text-white">{app.technicalScore}%</span>
+                                            </div>
+                                            <div className="flex-1 bg-white dark:bg-slate-800 rounded p-2 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center">
+                                                <CheckCircle className="w-4 h-4 text-purple-400 mb-1" />
+                                                <span className="text-[10px] uppercase font-bold text-slate-500">EQ Fit</span>
+                                                <span className="text-lg font-black text-slate-700 dark:text-white">{app.eqScore}%</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                                            "{app.matchReasoning || "Waiting for AI evaluation..."}"
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-auto flex gap-2">
+                                        <button 
+                                            onClick={() => navigate(`/recruiter/candidate/${candidate._id}?applicationId=${app._id}&status=${app.status || 'Pending'}`)}
+                                            className="flex-1 bg-[#1a2b4b] dark:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#243a5e] dark:hover:bg-blue-700 transition-colors shadow-sm"
+                                        >
+                                            View Full Profile
+                                        </button>
+                                        <button className="p-2 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors bg-white dark:bg-transparent shadow-sm">
+                                            <Star className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="w-[42px] h-[42px] flex flex-col items-center justify-center rounded-full border-[2px] border-emerald-400 bg-emerald-50 dark:bg-emerald-400/10">
-                                    <span className="text-xs font-bold text-emerald-600 leading-none">{candidate.eqMatch}%</span>
-                                </div>
-                            </div>
-                            
-                            <div className="mt-4 space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <MapPin className="w-4 h-4 text-gray-400" />
-                                    {candidate.location}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <Briefcase className="w-4 h-4 text-gray-400" />
-                                    Available immediately
-                                </div>
-                            </div>
-
-                            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800 flex gap-2 flex-wrap">
-                                {candidate.traits.map((trait, idx) => (
-                                    <span key={idx} className="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-500/20">
-                                        {trait}
-                                    </span>
-                                ))}
-                            </div>
-
-                            <div className="mt-5 flex gap-2">
-                                <button className="flex-1 bg-[#1a2b4b] dark:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#243a5e] dark:hover:bg-blue-700 transition-colors">View Profile</button>
-                                <button className="p-2 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-                                    <Star className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </RecruiterLayout>
     );

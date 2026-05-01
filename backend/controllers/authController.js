@@ -237,10 +237,18 @@ exports.getMe = async (req, res) => {
 //   }
 // };
 
+const applicationController = require("./applicationController");
+
 exports.updateMe = async (req, res) => {
   try {
     const { name, currentTitle, location, bio, experience, email, currentPassword, newPassword, phone, skills, resumeLink } = req.body;
     const user = req.user;
+    
+    // Check if skills, experience, or title changed to trigger re-evaluation
+    let needsReEvaluation = false;
+    if (skills !== undefined && skills !== user.skills) needsReEvaluation = true;
+    if (currentTitle !== undefined && currentTitle !== user.currentTitle) needsReEvaluation = true;
+    if (experience !== undefined && JSON.stringify(experience) !== JSON.stringify(user.experience)) needsReEvaluation = true;
 
     // --- Basic profile fields ---
     if (name) user.name = name;
@@ -276,6 +284,13 @@ exports.updateMe = async (req, res) => {
     }
 
     await user.save();
+
+    // Trigger AI re-evaluation in the background
+    if (needsReEvaluation) {
+        applicationController.reEvaluateCandidateApplications(user._id).catch(err => {
+            console.error("Background re-evaluation failed:", err);
+        });
+    }
 
     res.json({
       success: true,

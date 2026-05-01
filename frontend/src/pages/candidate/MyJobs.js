@@ -165,9 +165,20 @@ export default function MyJobs() {
                                     
                                     {isAppliedTab ? (
                                         <div className="flex flex-col items-center md:items-end w-full">
-                                            <span className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 w-max mt-3 mb-2 justify-center shadow-sm border border-emerald-100 dark:border-emerald-800">
-                                                Status: {item.status || "Applied"}
-                                            </span>
+                                            {(() => {
+                                                const status = item.status || "Applied";
+                                                const statusConfig = {
+                                                    "Applied": { bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600 dark:text-blue-400", border: "border-blue-100 dark:border-blue-800" },
+                                                    "Shortlisted": { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-100 dark:border-emerald-800" },
+                                                    "Rejected": { bg: "bg-red-50 dark:bg-red-900/20", text: "text-red-600 dark:text-red-400", border: "border-red-100 dark:border-red-800" }
+                                                };
+                                                const config = statusConfig[status] || statusConfig["Applied"];
+                                                return (
+                                                    <span className={`${config.bg} ${config.text} ${config.border} px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 w-max mt-3 mb-2 justify-center shadow-sm border`}>
+                                                        Status: {status}
+                                                    </span>
+                                                );
+                                            })()}
                                             <span className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-slate-400">
                                                 <Clock className="w-3 h-3" /> Applied {timeAgo(item.createdAt)}
                                             </span>
