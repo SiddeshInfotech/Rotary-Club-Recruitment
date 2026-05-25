@@ -11,9 +11,19 @@ exports.getInterviews = async (req, res) => {
 
 exports.createInterview = async (req, res) => {
   try {
-    const { candidateName, candidateEmail, jobTitle, date, time, duration, type, notes, meetingLink, candidate, job } = req.body;
+    const { candidateName, candidateEmail, jobTitle, date, time, duration, type, notes, meetingLink, candidate, job, recruiter } = req.body;
+    
+    let recruiterId = recruiter;
+    let candidateId = candidate;
+
+    if (req.user.role === "recruiter") {
+      recruiterId = req.user.id;
+    } else if (req.user.role === "candidate") {
+      candidateId = req.user.id;
+    }
+
     const interview = await Interview.create({
-      recruiter: req.user.id, candidate, candidateName, candidateEmail, job, jobTitle,
+      recruiter: recruiterId, candidate: candidateId, candidateName, candidateEmail, job, jobTitle,
       date, time, duration: duration || 30, type: type || "Video", notes, meetingLink,
     });
     res.status(201).json({ success: true, data: interview });

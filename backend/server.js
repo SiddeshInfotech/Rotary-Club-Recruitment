@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
+const { initSocket } = require("./utils/socket");
 require("dotenv").config();
 
 // Import routes — YOUR routes (recruiter dashboard)
@@ -124,11 +126,14 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/eq-hire-recruiter";
 
+const server = http.createServer(app);
+initSocket(server);
+
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("MongoDB connected successfully");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   })

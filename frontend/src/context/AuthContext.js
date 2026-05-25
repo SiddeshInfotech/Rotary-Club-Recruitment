@@ -4,27 +4,27 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("eqhire_user");
+        const saved = sessionStorage.getItem("eqhire_user");
         return saved ? JSON.parse(saved) : null;
     });
 
     const [token, setToken] = useState(() => {
-        return localStorage.getItem("eqhire_token") || null;
+        return sessionStorage.getItem("eqhire_token") || null;
     });
 
     useEffect(() => {
         if (user) {
-            localStorage.setItem("eqhire_user", JSON.stringify(user));
+            sessionStorage.setItem("eqhire_user", JSON.stringify(user));
         } else {
-            localStorage.removeItem("eqhire_user");
+            sessionStorage.removeItem("eqhire_user");
         }
     }, [user]);
 
     useEffect(() => {
         if (token) {
-            localStorage.setItem("eqhire_token", token);
+            sessionStorage.setItem("eqhire_token", token);
         } else {
-            localStorage.removeItem("eqhire_token");
+            sessionStorage.removeItem("eqhire_token");
         }
     }, [token]);
 
@@ -36,8 +36,8 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         setToken(null);
-        localStorage.removeItem("eqhire_user");
-        localStorage.removeItem("eqhire_token");
+        sessionStorage.removeItem("eqhire_user");
+        sessionStorage.removeItem("eqhire_token");
     };
 
     const updateUser = (updates) => {

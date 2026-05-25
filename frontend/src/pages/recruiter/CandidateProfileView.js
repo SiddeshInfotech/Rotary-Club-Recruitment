@@ -192,9 +192,12 @@ export default function CandidateProfileView() {
                                     </button>
                                 )}
                                 
-                                <button className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl font-bold transition-colors opacity-50 cursor-not-allowed">
+                                <button 
+                                    onClick={() => navigate('/recruiter/messages', { state: { selectUser: candidate } })}
+                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold transition-colors shadow-sm shadow-cyan-600/20"
+                                >
                                     <Mail className="w-5 h-5" />
-                                    Message (Coming Soon)
+                                    Message Candidate
                                 </button>
 
                                 <div className="pt-3 border-t border-slate-200 dark:border-slate-800 mt-3">

@@ -12,7 +12,7 @@ exports.getAllApplications = async (req, res) => {
     if (req.query.candidateId) filter.candidateId = req.query.candidateId;
 
     const applications = await Application.find(filter)
-      .populate("jobId", "title type location status company companyName description skillsRequired")
+      .populate("jobId", "title type location status company companyName description skillsRequired recruiter")
       .populate("candidateId", "name title eqScores")
       .sort({ createdAt: -1 });
 
