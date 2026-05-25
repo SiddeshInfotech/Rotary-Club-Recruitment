@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { ArrowLeft, Briefcase, UserRound, Sparkles, Building2, Globe, FileText, Upload, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function Register() {
     const [role, setRole] = useState('candidate');
     const navigate = useNavigate();
     const { login } = useAuth();
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const [form, setForm] = useState({
         firstName: '',
@@ -25,15 +28,17 @@ export default function Register() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
+
         const userData = {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            fullName: `${form.firstName} ${form.lastName}`,
+            name: `${form.firstName} ${form.lastName}`,
             email: form.email,
             phone: form.phone,
             role: role,
+            password: form.password,
             ...(role === 'candidate' && {
                 skills: form.skills,
                 resumeLink: form.resumeLink,
@@ -44,8 +49,19 @@ export default function Register() {
                 hiringNeeds: form.hiringNeeds,
             }),
         };
-        login(userData);
-        navigate('/verify-email');
+
+        try {
+            const res = await api.post('/auth/register', userData);
+            if (res.data.success) {
+                // If the backend automatically authenticates them before verification
+                // login(res.data.data.user); // or we wait until verification
+                navigate('/verify-email', { state: { email: form.email } });
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to register. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -113,6 +129,12 @@ export default function Register() {
                         <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-3 font-serif tracking-tight">Create Your EQ HIRE Account</h2>
                         <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">Join a platform that connects talent, recruiters, and opportunities powered by AI.</p>
                     </div>
+
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
+                            {error}
+                        </div>
+                    )}
 
                     <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl mb-10 border border-slate-200 dark:border-slate-800">
                         <button 
@@ -205,8 +227,8 @@ export default function Register() {
                         </div>
 
                         <div className="pt-6">
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
-                                Create Account
+                            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60">
+                                {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
                         </div>
                     </form>

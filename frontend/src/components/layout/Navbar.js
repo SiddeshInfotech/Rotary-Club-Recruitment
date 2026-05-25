@@ -1,7 +1,19 @@
-import { Bell, Sparkles } from "lucide-react";
+import { Bell, Sparkles, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 // Glassmorphism nav with backdrop blur
 export default function Navbar() {
+    const navigate = useNavigate();
+    const { logout } = useAuth();
+
+    const handleLogout = () => {
+        logout();
+        localStorage.removeItem('eqhire_token');
+        sessionStorage.removeItem('eqhire_token');
+        navigate('/login');
+    };
+
     return (
         <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -9,18 +21,18 @@ export default function Navbar() {
                 {/* Left side: Logo & Links */}
                 <div className="flex items-center gap-12">
                     {/* Logo flex section */}
-                    <div className="flex items-center gap-2 group cursor-pointer">
+                    <Link to="/candidate" className="flex items-center gap-2 group cursor-pointer">
                         <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-md w-8 h-8 flex items-center justify-center font-bold text-sm tracking-tight shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
                             EQ
                         </div>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700 font-bold text-lg tracking-tight">EQ-Hire</span>
-                    </div>
+                    </Link>
 
                     {/* Links */}
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-                        <a href="#" className="text-blue-600 border-b-2 border-blue-600 h-16 flex items-center pt-[2px]">
+                        <Link to="/candidate" className="text-blue-600 border-b-2 border-blue-600 h-16 flex items-center pt-[2px]">
                             Dashboard
-                        </a>
+                        </Link>
                         <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
                             Find Jobs
                         </a>
@@ -63,6 +75,15 @@ export default function Navbar() {
                             />
                         </div>
                     </div>
+
+                    {/* Logout */}
+                    <button
+                        onClick={handleLogout}
+                        title="Sign out"
+                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                    >
+                        <LogOut className="w-4.5 h-4.5" />
+                    </button>
                 </div>
 
             </div>

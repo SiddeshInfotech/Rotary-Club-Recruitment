@@ -4,23 +4,44 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem("eqhire_user");
-        return saved ? JSON.parse(saved) : null;
+        // Check localStorage first (remembered), then sessionStorage (session-only)
+        const remembered = localStorage.getItem("eqhire_user");
+        if (remembered) return JSON.parse(remembered);
+        const session = sessionStorage.getItem("eqhire_user");
+        if (session) return JSON.parse(session);
+        return null;
+    });
+
+    const [rememberMe, setRememberMe] = useState(() => {
+        return !!localStorage.getItem("eqhire_user");
     });
 
     useEffect(() => {
         if (user) {
-            localStorage.setItem("eqhire_user", JSON.stringify(user));
+            const data = JSON.stringify(user);
+            if (rememberMe) {
+                localStorage.setItem("eqhire_user", data);
+                sessionStorage.removeItem("eqhire_user");
+            } else {
+                sessionStorage.setItem("eqhire_user", data);
+                localStorage.removeItem("eqhire_user");
+            }
         } else {
             localStorage.removeItem("eqhire_user");
+            sessionStorage.removeItem("eqhire_user");
         }
-    }, [user]);
+    }, [user, rememberMe]);
 
-    const login = (userData) => setUser(userData);
+    const login = (userData, remember = false) => {
+        setRememberMe(remember);
+        setUser(userData);
+    };
 
     const logout = () => {
         setUser(null);
+        setRememberMe(false);
         localStorage.removeItem("eqhire_user");
+        sessionStorage.removeItem("eqhire_user");
     };
 
     const updateUser = (updates) => {

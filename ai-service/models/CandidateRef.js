@@ -42,7 +42,17 @@ const candidateRefSchema = new mongoose.Schema(
       problemSolving: { type: Number, min: 0, max: 100, default: 0 },
       aggregate: { type: Number, min: 0, max: 100, default: 0 },
     },
+    technicalScores: {
+      fundamentals: { type: Number, min: 0, max: 100, default: 0 },
+      architecture: { type: Number, min: 0, max: 100, default: 0 },
+      debugging: { type: Number, min: 0, max: 100, default: 0 },
+      bestPractices: { type: Number, min: 0, max: 100, default: 0 },
+      tooling: { type: Number, min: 0, max: 100, default: 0 },
+      aggregate: { type: Number, min: 0, max: 100, default: 0 },
+      proficiencyLevel: { type: String, default: "not_assessed" },
+    },
     lastAssessedAt: { type: Date },
+    lastTechAssessedAt: { type: Date },
   },
   {
     timestamps: true,

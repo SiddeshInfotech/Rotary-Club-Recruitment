@@ -17,13 +17,15 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
+import VerifyResetOtp from "./pages/VerifyResetOtp";
+import ResetPassword from "./pages/ResetPassword";
 
 import Network from "./pages/candidate/Network";
 import Referrals from "./pages/candidate/Referrals";
-import Growth from "./pages/candidate/Growth";
 import Insights from "./pages/candidate/Insights";
 import EQJourney from "./pages/candidate/EQJourney";
 import EQAssessment from "./pages/candidate/EQAssessment";
+import TechAssessment from "./pages/candidate/TechAssessment";
 
 import RecruiterCandidateSearch from "./pages/recruiter/CandidateSearch";
 import RecruiterPostJob from "./pages/recruiter/PostJob";
@@ -39,7 +41,8 @@ import ClubDirectory from "./pages/ClubDirectory";
 import SuccessStories from "./pages/SuccessStories";
 import SuccessStoryDetails from "./pages/SuccessStoryDetails";
 import MemberDirectory from "./pages/MemberDirectory";
-import MembershipUpgrade from "./pages/MembershipUpgrade";
+import PremiumPricing from "./pages/candidate/PremiumPricing";
+import PremiumCheckout from "./pages/candidate/PremiumCheckout";
 import ClubDetails from "./pages/ClubDetails";
 
 
@@ -69,6 +72,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-reset-otp" element={<VerifyResetOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/candidate" element={<CandidateDashboard />} />
           <Route path="/job-search" element={<JobSearch />} />
           <Route path="/candidate/messages" element={<CandidateMessages />} />
@@ -78,10 +83,10 @@ function App() {
           <Route path="/settings" element={<CandidateSettings />} />
           <Route path="/network" element={<Network />} />
           <Route path="/referrals" element={<Referrals />} />
-          <Route path="/growth" element={<Growth />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/eq-journey" element={<EQJourney />} />
           <Route path="/eq-assessment" element={<EQAssessment />} />
+          <Route path="/tech-assessment" element={<TechAssessment />} />
           <Route path="/recruiter" element={<RecruiterDashboard />} />
           <Route path="/recruiter/interviews" element={<RecruiterInterviews />} />
           <Route path="/recruiter/search" element={<RecruiterCandidateSearch />} />
@@ -95,7 +100,8 @@ function App() {
           <Route path="/clubs" element={<ClubDirectory />} />
           <Route path="/clubs/:id" element={<ClubDetails />} />
           <Route path="/members" element={<MemberDirectory />} />
-          <Route path="/membership/upgrade" element={<MembershipUpgrade />} />
+          <Route path="/premium/pricing" element={<PremiumPricing />} />
+          <Route path="/premium/checkout" element={<PremiumCheckout />} />
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/success-stories/:id" element={<SuccessStoryDetails />} />
 

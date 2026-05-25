@@ -3,22 +3,30 @@ const CandidateProfile = require("../models/CandidateProfileRef");
 const createNotification = require("../utils/createNotification");
 
 /**
- * Evaluate a candidate's answers to EQ assessment MCQs.
+ * Evaluate a candidate's answers to Technical Skills assessment MCQs.
  *
  * This function:
  * 1. Iterates over answered questions and finds the pre-assigned option score
- * 2. Computes dimension-level scores (0-100 scale)
- * 3. Writes the scores back to BOTH the User and CandidateProfile records
- * 4. Returns the detailed evaluation
+ * 2. Computes dimension-level scores (0-100 scale) for each technical dimension
+ * 3. Determines a proficiency level based on overall score
+ * 4. Writes the scores back to BOTH the User and CandidateProfile records
+ * 5. Returns the detailed evaluation
+ *
+ * Scoring is weighted by difficulty:
+ * - Easy questions: max 5 points each
+ * - Medium questions: max 8 points each
+ * - Hard questions: max 10 points each
  *
  * @param {string} candidateId - MongoDB ObjectId of the candidate
  * @param {object[]} answeredQuestions - Array of questions with selected 'answer' (option id)
- * @returns {object} Evaluation results with scores
+ * @returns {object} Evaluation results with scores and proficiency level
  */
-const evaluateAnswers = async (candidateId, answeredQuestions) => {
+const evaluateTechAnswers = async (candidateId, answeredQuestions) => {
   if (!answeredQuestions || answeredQuestions.length === 0) {
     throw new Error("No answered questions provided");
   }
+
+  const maxScoreByDifficulty = { easy: 5, medium: 8, hard: 10 };
 
   const dimensionTotals = {};
   const dimensionMax = {};
@@ -27,12 +35,15 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
   // Calculate scores directly from predefined MCQ weights
   for (const q of answeredQuestions) {
     const dim = q.dimension;
+    const difficulty = q.difficulty || "medium";
+
     if (!dimensionTotals[dim]) {
       dimensionTotals[dim] = 0;
       dimensionMax[dim] = 0;
     }
 
-    dimensionMax[dim] += 10; // Max possible score per question is 10
+    const maxForQuestion = maxScoreByDifficulty[difficulty] || 8;
+    dimensionMax[dim] += maxForQuestion;
 
     let score = 0;
     // q.answer contains the selected option ID (e.g., 'A', 'B')
@@ -48,21 +59,20 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
     individualScores.push({
       questionId: q.id,
       dimension: dim,
+      difficulty: difficulty,
       score: score,
-      feedback: `Selected option scored ${score}/10 points.`
+      maxScore: maxForQuestion,
+      feedback: `Selected option scored ${score}/${maxForQuestion} points (${difficulty} difficulty).`,
     });
   }
 
-  // Initialize all 8 traits
+  // Initialize all 5 technical dimensions
   const finalScores = {
-    leadership: 0,
-    loyalty: 0,
-    adaptability: 0,
-    growthMindset: 0,
-    reliability: 0,
-    teamwork: 0,
-    collaboration: 0,
-    problemSolving: 0,
+    fundamentals: 0,
+    architecture: 0,
+    debugging: 0,
+    bestPractices: 0,
+    tooling: 0,
   };
 
   let totalScore = 0;
@@ -75,7 +85,7 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
     if (finalScores[dim] !== undefined) {
       finalScores[dim] = Math.max(0, Math.min(100, percentage));
     }
-    
+
     totalScore += total;
     totalMax += max;
   }
@@ -83,34 +93,53 @@ const evaluateAnswers = async (candidateId, answeredQuestions) => {
   const overallScore = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0;
   finalScores.aggregate = overallScore;
 
+  // Determine proficiency level based on overall score
+  let proficiencyLevel = "beginner";
+  if (overallScore >= 90) {
+    proficiencyLevel = "expert";
+  } else if (overallScore >= 70) {
+    proficiencyLevel = "advanced";
+  } else if (overallScore >= 45) {
+    proficiencyLevel = "intermediate";
+  }
+
+  const technicalScores = {
+    ...finalScores,
+    proficiencyLevel,
+  };
+
   // Write scores back to BOTH collections to ensure everything stays in sync
-  await User.findByIdAndUpdate(candidateId, { eqScores: finalScores, lastAssessedAt: new Date() });
+  await User.findByIdAndUpdate(candidateId, {
+    technicalScores,
+    lastTechAssessedAt: new Date(),
+  });
   await CandidateProfile.findOneAndUpdate(
     { user: candidateId },
-    { eqScores: finalScores },
+    { technicalScores },
     { upsert: true, setDefaultsOnInsert: true }
   );
 
   await createNotification({
     user: candidateId,
     type: "success",
-    title: "EQ Assessment Completed",
-    message: `Your EQ Assessment has been analyzed. Aggregate Score: ${overallScore}/100.`,
+    title: "Technical Assessment Completed",
+    message: `Your Tech Assessment is complete. Overall Score: ${overallScore}/100. Proficiency: ${proficiencyLevel.charAt(0).toUpperCase() + proficiencyLevel.slice(1)}.`,
     link: "/profile",
   });
 
   console.log(
-    `EQ scores updated for candidate ${candidateId}:`,
+    `Technical scores updated for candidate ${candidateId}:`,
     finalScores,
-    `(overall: ${overallScore})`
+    `(overall: ${overallScore}, proficiency: ${proficiencyLevel})`
   );
 
   return {
     individualScores,
     dimensionScores: finalScores,
     overallScore,
-    summary: "Your EQ footprint has been successfully mapped based on your scenario responses.",
+    proficiencyLevel,
+    summary: "Your technical proficiency has been successfully mapped based on your assessment responses.",
   };
 };
 
-module.exports = { evaluateAnswers };
+module.exports = { evaluateTechAnswers };

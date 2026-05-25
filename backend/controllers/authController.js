@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/jwt");
 const sendEmail = require("../utils/emailService");
 const crypto = require("crypto");
+const createNotification = require("../utils/createNotification");
 
 // Register
 exports.register = async (req, res) => {
@@ -160,11 +161,16 @@ exports.login = async (req, res) => {
         skills: user.skills,
         experience: user.experience,
         eqScores: user.eqScores,
+        technicalScores: user.technicalScores,
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
         hiringNeeds: user.hiringNeeds,
         lastAssessedAt: user.lastAssessedAt,
+        lastTechAssessedAt: user.lastTechAssessedAt,
+        emailNotifications: user.emailNotifications,
+        inAppNotifications: user.inAppNotifications,
+        isPublicProfile: user.isPublicProfile,
         updatedAt: user.updatedAt
       },
     });
@@ -294,6 +300,17 @@ exports.verifyOtp = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
+    // Create welcome notification
+    await createNotification({
+      user: user._id,
+      type: "success",
+      title: "Welcome to EQ-Hire! 🎉",
+      message: user.role === "candidate"
+        ? "Your account is verified. Complete your profile and take the EQ Assessment to get matched with top roles."
+        : "Your recruiter account is verified. Start posting jobs and discovering high-EQ candidates.",
+      link: user.role === "candidate" ? "/profile" : "/recruiter",
+    });
+
     const token = generateToken(user);
 
     res.json({
@@ -312,11 +329,13 @@ exports.verifyOtp = async (req, res) => {
         skills: user.skills,
         experience: user.experience,
         eqScores: user.eqScores,
+        technicalScores: user.technicalScores,
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
         hiringNeeds: user.hiringNeeds,
-        lastAssessedAt: user.lastAssessedAt
+        lastAssessedAt: user.lastAssessedAt,
+        lastTechAssessedAt: user.lastTechAssessedAt
       },
     });
   } catch (error) {
@@ -364,7 +383,7 @@ exports.resendOtp = async (req, res) => {
 // Update Me
 exports.updateMe = async (req, res) => {
   try {
-    const { name, currentTitle, location, bio, experience, email, currentPassword, newPassword, phone, skills, resumeLink } = req.body;
+    const { name, currentTitle, location, bio, experience, email, currentPassword, newPassword, phone, skills, resumeLink, emailNotifications, inAppNotifications, isPublicProfile } = req.body;
     const user = req.user;
 
     // --- Basic profile fields ---
@@ -376,6 +395,9 @@ exports.updateMe = async (req, res) => {
     if (phone !== undefined) user.phone = phone;
     if (skills !== undefined) user.skills = skills;
     if (resumeLink !== undefined) user.resumeLink = resumeLink;
+    if (emailNotifications !== undefined) user.emailNotifications = emailNotifications;
+    if (inAppNotifications !== undefined) user.inAppNotifications = inAppNotifications;
+    if (isPublicProfile !== undefined) user.isPublicProfile = isPublicProfile;
 
     // --- Email change (check uniqueness) ---
     if (email && email !== user.email) {
@@ -416,10 +438,17 @@ exports.updateMe = async (req, res) => {
         bio: user.bio,
         experience: user.experience,
         skills: user.skills,
+        eqScores: user.eqScores,
+        technicalScores: user.technicalScores,
         resumeLink: user.resumeLink,
         company: user.company,
         website: user.website,
         hiringNeeds: user.hiringNeeds,
+        lastAssessedAt: user.lastAssessedAt,
+        lastTechAssessedAt: user.lastTechAssessedAt,
+        emailNotifications: user.emailNotifications,
+        inAppNotifications: user.inAppNotifications,
+        isPublicProfile: user.isPublicProfile,
         updatedAt: user.updatedAt
       }
     });

@@ -40,22 +40,27 @@ Here are their EQ Scores out of 100:
 - Problem Solving: ${eqScores.problemSolving || 0}
 - Overall Aggregate: ${eqScores.aggregate || 0}
 
-Based strictly on these scores, generate exactly:
-1. 3 key strengths (Focus on the highest scoring areas. Write a 1-sentence personalized explanation for each).
-2. 3 areas of improvement/weaknesses (Focus on the lowest scoring areas. Keep it constructive and empowering).
-3. 3 actionable recommendations (Specific, proactive steps they can take to boost their lower scores or leverage their strengths).
+Based strictly on these scores, generate a fully personalized insight profile:
+1. **Persona**: Give them a unique title (e.g. "The Agile Navigator") and a short 2-sentence description of their leadership style based on their highest traits.
+2. **Career Trajectory**: A 1-sentence recommendation for their ideal career path or roles.
+3. **Growth Plan**: 3 specific, actionable steps tailored to improving their lowest scores.
+4. **Blind Spot**: Detail their stress response based on their lowest trait. Include a 'trigger' (what causes it), their default 'response', and a tactical 'fix'.
 
 Return the response STRICTLY as a valid JSON object in the following format (do not include any markdown formatting like \`\`\`json):
 {
-  "strengths": [
+  "persona": {
+    "title": "string",
+    "desc": "string"
+  },
+  "careerTrajectory": "string",
+  "growthPlan": [
     "string", "string", "string"
   ],
-  "weaknesses": [
-    "string", "string", "string"
-  ],
-  "recommendations": [
-    "string", "string", "string"
-  ]
+  "blindSpot": {
+    "trigger": "string",
+    "response": "string",
+    "fix": "string"
+  }
 }
 `;
 
@@ -89,21 +94,21 @@ Return the response STRICTLY as a valid JSON object in the following format (do 
 
 const getMockInsights = (scores) => {
   return {
-    strengths: [
-      "Demonstrates solid baseline Emotional Intelligence, allowing for stable workplace interactions.",
-      "Shows a readiness to engage with team-oriented scenarios.",
-      "Exhibits a balanced approach to standard problem-solving challenges."
+    persona: {
+      title: "The Balanced Professional",
+      desc: "You possess a well-rounded emotional toolkit, allowing you to adapt your style to whatever the situation demands."
+    },
+    careerTrajectory: "Versatile roles requiring balanced interpersonal and technical skills.",
+    growthPlan: [
+      "Reflect on your recent challenges to identify hidden friction points.",
+      "Seek feedback from a trusted peer on your collaboration style.",
+      "Set one micro-goal for next week to stretch your comfort zone."
     ],
-    weaknesses: [
-      "May occasionally struggle to adapt rapidly to unexpected, high-stress changes.",
-      "Leadership presence might not always be felt during critical decision-making moments.",
-      "Could improve proactive collaboration outside of immediate comfort zones."
-    ],
-    recommendations: [
-      "Volunteer to lead minor project modules to build leadership confidence.",
-      "Actively seek feedback on adaptability during rapid transition periods.",
-      "Participate in cross-functional team discussions to enhance collaborative reach."
-    ]
+    blindSpot: {
+      trigger: "Under extreme stress or ambiguous situations",
+      response: "You may revert to isolated baseline behaviors instead of communicating.",
+      fix: "Take a tactical pause and proactively update your team on your status."
+    }
   };
 };
 

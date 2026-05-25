@@ -20,6 +20,12 @@ const TRAIT_LABELS = {
   teamwork: "Teamwork",
   collaboration: "Collaboration",
   problemSolving: "Problem Solving",
+  // Technical traits
+  fundamentals: "Fundamentals",
+  architecture: "Architecture",
+  debugging: "Debugging",
+  bestPractices: "Best Practices",
+  tooling: "Tooling",
 };
 
 // Descriptions keyed by trait
@@ -284,7 +290,7 @@ exports.getMatchScores = async (req, res) => {
  * Internal helper: generate AI insights and set isPremium on a profile.
  */
 async function applyPremiumUpgrade(profile, plan) {
-  const AISERVICE_URL = process.env.AISERVICE_URL || "http://localhost:5002";
+  const AISERVICE_URL = process.env.AISERVICE_URL || "http://localhost:5001";
   let insights = null;
 
   try {
@@ -466,6 +472,114 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (error) {
     console.error("Error verifying payment:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/candidate-dashboard/competitive-edge
+ * Premium feature: Returns anonymous benchmarking against other candidates in the same role.
+ */
+exports.getCompetitiveEdge = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const profile = await CandidateProfile.findOne({ user: userId });
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Profile not found." });
+    }
+
+    if (!profile.isPremium) {
+      return res.status(403).json({ success: false, message: "This feature is for Premium members only." });
+    }
+
+    const targetRole = profile.preferredJobRole || "General Professional";
+    
+    // Find all profiles (including free users) with a similar role, who have taken the assessment
+    // Case insensitive regex match on role
+    const peerProfiles = await CandidateProfile.find({
+      preferredJobRole: { $regex: new RegExp(targetRole, "i") },
+      "eqScores.aggregate": { $gt: 0 } // must have completed assessment
+    });
+
+    // If not enough data, just compare against everyone
+    let benchmarkGroup = peerProfiles;
+    let groupName = targetRole;
+    
+    if (peerProfiles.length < 3) {
+      benchmarkGroup = await CandidateProfile.find({ "eqScores.aggregate": { $gt: 0 } });
+      groupName = "All Candidates";
+    }
+
+    const myEqScores = profile.eqScores || {};
+    const myTechScores = profile.technicalScores || {};
+    
+    const eqTraits = ["leadership", "loyalty", "adaptability", "growthMindset", "reliability", "teamwork", "collaboration", "problemSolving"];
+    const techTraits = ["fundamentals", "architecture", "debugging", "bestPractices", "tooling"];
+    
+    const comparisons = [];
+
+    const processTraits = (traitList, type, myScores, groupScorePath) => {
+      traitList.forEach(trait => {
+        const myScore = myScores[trait] || 0;
+        
+        // Skip traits that were not actually evaluated
+        if (myScore === 0) return;
+        
+        // Calculate group average
+        const groupScores = benchmarkGroup.map(p => {
+          const scoresObj = groupScorePath === 'eq' ? p.eqScores : p.technicalScores;
+          return (scoresObj && scoresObj[trait]) || 0;
+        });
+        
+        const validGroupScores = groupScores.filter(s => s > 0);
+        const groupAvg = validGroupScores.length > 0
+          ? Math.round(validGroupScores.reduce((a, b) => a + b, 0) / validGroupScores.length)
+          : 0;
+        
+        // Calculate percentile
+        const belowCount = validGroupScores.filter(s => s < myScore).length;
+        const percentile = validGroupScores.length > 0 ? Math.round((belowCount / validGroupScores.length) * 100) : 99;
+        
+        // Mindful tagging logic
+        let verdict = "On Par";
+        if (myScore >= 80 && myScore > groupAvg + 10) {
+          verdict = "Exceptional";
+        } else if (myScore >= 60 && myScore > groupAvg) {
+          verdict = "Above Average";
+        } else if (myScore < 40 || (groupAvg > 0 && myScore < groupAvg - 10)) {
+          verdict = "Needs Focus";
+        }
+        
+        comparisons.push({
+          trait,
+          type,
+          label: TRAIT_LABELS[trait],
+          yourScore: myScore,
+          groupAverage: groupAvg,
+          percentile,
+          verdict
+        });
+      });
+    };
+
+    processTraits(eqTraits, 'EQ', myEqScores, 'eq');
+    processTraits(techTraits, 'Tech', myTechScores, 'tech');
+    
+    // Sort so best percentile is first
+    comparisons.sort((a, b) => b.percentile - a.percentile);
+
+    res.json({
+      success: true,
+      data: {
+        benchmarkGroup: groupName,
+        groupSize: benchmarkGroup.length,
+        comparisons
+      }
+    });
+
+  } catch (error) {
+    console.error("Error computing competitive edge:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };

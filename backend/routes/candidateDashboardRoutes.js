@@ -21,4 +21,7 @@ router.post("/create-order", protect, candidateDashboardController.createOrder);
 // POST /api/candidate-dashboard/verify-payment — Verify Razorpay signature & activate premium
 router.post("/verify-payment", protect, candidateDashboardController.verifyPayment);
 
+// GET /api/candidate-dashboard/competitive-edge — Premium feature: benchmarking
+router.get("/competitive-edge", protect, candidateDashboardController.getCompetitiveEdge);
+
 module.exports = router;

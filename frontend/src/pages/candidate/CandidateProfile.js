@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CandidateLayout from "../../layouts/CandidateLayout";
 import EQRadarChart from "../../components/profile/EQRadarChart";
+import TechRadarChart from "../../components/profile/TechRadarChart";
 import TraitBar from "../../components/profile/TraitBar";
 import StatChip from "../../components/profile/StatChip";
 import MembershipBadge from "../../components/profile/MembershipBadge";
@@ -10,7 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
     CheckCircle, MapPin, Sparkles, Star, Award, Briefcase,
     Plus, ChevronRight, Edit3, Target, TrendingUp, Shield, Clock, X, Save, Trash2, Edit2,
-    Phone, Mail, FileText, Lock, Eye, EyeOff, Key, Link as LinkIcon
+    Phone, Mail, FileText, Lock, Eye, EyeOff, Key, Link as LinkIcon, Code2, Cpu
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -20,7 +21,24 @@ const MEMBERSHIPS = [];
 
 
 
-const TABS = ["Overview", "EQ Details", "Growth Journey"];
+const TABS = ["Overview", "EQ Details", "Tech Details"];
+
+const techDimensionLabels = {
+    fundamentals: { label: 'Fundamentals', desc: 'Core concepts & syntax' },
+    architecture: { label: 'Architecture', desc: 'System design & patterns' },
+    debugging: { label: 'Debugging', desc: 'Bug identification & fixing' },
+    bestPractices: { label: 'Best Practices', desc: 'Idiomatic & secure code' },
+    tooling: { label: 'Tooling', desc: 'Dev tools & CI/CD' },
+};
+
+const getProficiencyColor = (level) => {
+    switch(level) {
+        case 'expert': return 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
+        case 'advanced': return 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800';
+        case 'intermediate': return 'text-blue-500 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+        default: return 'text-slate-500 bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-800';
+    }
+};
 
 const CompanyLogo = ({ company }) => {
     const [error, setError] = useState(false);
@@ -70,7 +88,7 @@ export default function CandidateProfile() {
     const [showCurrentPw, setShowCurrentPw] = useState(false);
     const [showNewPw, setShowNewPw] = useState(false);
 
-    const candidateName = user?.fullName || "Guest User";
+    const candidateName = user?.fullName || user?.name || "Guest User";
     const formattedName = candidateName.replace(/sauravpunjabi/i, 'Saurav Punjabi').replace(/([a-z])([A-Z])/g, '$1 $2');
 
     // Dynamically map backend database scores to Display Traits
@@ -133,24 +151,6 @@ export default function CandidateProfile() {
         { label: "Last Tested",    value: lastTestedLabel },
     ];
 
-    const dynamicGrowthJourney = [
-        {
-            label: "Top Strength",
-            title: topAttribute !== "Pending" ? `${topAttribute} Mastery` : "Awaiting Assessment",
-            body: topAttribute !== "Pending" ? `Your instinctual responses showcase high maturity and capability in ${topAttribute.toLowerCase()}.` : "Complete the assessment to unlock.",
-        },
-        {
-            label: "Current Focus",
-            title: lowestAttribute !== "Pending" ? `${lowestAttribute} Optimization` : "Awaiting Assessment",
-            body: lowestAttribute !== "Pending" ? `Your AI analysis suggests a growth opportunity by focusing on workplace ${lowestAttribute.toLowerCase()}.` : "Complete the assessment to unlock.",
-        },
-        {
-            label: "Cognitive Potential",
-            title: user?.eqScores?.aggregate ? `Aggregate Rating: ${user.eqScores.aggregate}/100` : "Not Available",
-            body: "Analyzed continuously scaling to real-world corporate demands.",
-            highlight: true,
-        },
-    ];
 
     const candidate = {
         name: formattedName,
@@ -164,6 +164,7 @@ export default function CandidateProfile() {
     };
 
     const hasTakenTest = !!user?.eqScores;
+    const hasTakenTechTest = user?.technicalScores?.aggregate > 0;
 
     const handleEditSave = async () => {
         setEditError("");
@@ -278,44 +279,88 @@ export default function CandidateProfile() {
                     </p>
                 </div>
 
-                {(() => {
-                    const hasScores = user?.eqScores?.aggregate > 0;
-                    const hasSkills = user?.skills && user.skills.trim().length > 0;
-                    
-                    let cooldownDaysLeft = 0;
-                    const cooldownTimestamp = user?.lastAssessedAt || (hasScores ? user?.updatedAt : null);
-                    if (hasScores && cooldownTimestamp) {
-                        const cooldownMs = 30 * 24 * 60 * 60 * 1000;
-                        const timeSince = Date.now() - new Date(cooldownTimestamp).getTime();
-                        if (timeSince < cooldownMs) {
-                            cooldownDaysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+                {/* Assessment Buttons */}
+                <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
+                    {/* EQ Test Button */}
+                    {(() => {
+                        const hasScores = user?.eqScores?.aggregate > 0;
+                        const hasSkills = user?.skills && user.skills.trim().length > 0;
+                        
+                        let cooldownDaysLeft = 0;
+                        const cooldownTimestamp = user?.lastAssessedAt || (hasScores ? user?.updatedAt : null);
+                        if (hasScores && cooldownTimestamp) {
+                            const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+                            const timeSince = Date.now() - new Date(cooldownTimestamp).getTime();
+                            if (timeSince < cooldownMs) {
+                                cooldownDaysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+                            }
                         }
-                    }
-                    const isOnCooldown = hasScores && cooldownDaysLeft > 0;
-                    const isDisabled = isOnCooldown || !hasSkills;
+                        const isOnCooldown = hasScores && cooldownDaysLeft > 0;
+                        const isDisabled = isOnCooldown || !hasSkills;
 
-                    return (
-                        <button 
-                            onClick={() => !isDisabled && navigate('/eq-journey')}
-                            disabled={isDisabled}
-                            className={`flex items-center gap-2 self-start sm:self-auto rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm ${
-                                isDisabled 
-                                    ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed' 
-                                    : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-80'
-                            }`}
-                            title={!hasSkills ? 'You must add skills to your profile first' : (isOnCooldown ? `Next retake available in ${cooldownDaysLeft} days` : '')}
-                        >
-                            <Sparkles className="w-4 h-4" />
-                            {!hasSkills 
-                                ? 'Add Skills to Unlock Test' 
-                                : !hasScores 
-                                ? 'Start EQ Test' 
-                                : isOnCooldown 
-                                    ? `Retake in ${cooldownDaysLeft} day${cooldownDaysLeft !== 1 ? 's' : ''}` 
-                                    : 'Retake EQ Test'}
-                        </button>
-                    );
-                })()}
+                        return (
+                            <button 
+                                onClick={() => !isDisabled && navigate('/eq-journey')}
+                                disabled={isDisabled}
+                                className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm ${
+                                    isDisabled 
+                                        ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed' 
+                                        : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-80'
+                                }`}
+                                title={!hasSkills ? 'You must add skills to your profile first' : (isOnCooldown ? `Next retake available in ${cooldownDaysLeft} days` : '')}
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                {!hasSkills 
+                                    ? 'Add Skills First' 
+                                    : !hasScores 
+                                    ? 'Start EQ Test' 
+                                    : isOnCooldown 
+                                        ? `Retake in ${cooldownDaysLeft}d` 
+                                        : 'Retake EQ Test'}
+                            </button>
+                        );
+                    })()}
+
+                    {/* Tech Test Button */}
+                    {(() => {
+                        const hasSkills = user?.skills && user.skills.trim().length > 0;
+                        const hasTechScores = user?.technicalScores?.aggregate > 0;
+                        
+                        let techCooldownDays = 0;
+                        const techTimestamp = user?.lastTechAssessedAt;
+                        if (hasTechScores && techTimestamp) {
+                            const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+                            const timeSince = Date.now() - new Date(techTimestamp).getTime();
+                            if (timeSince < cooldownMs) {
+                                techCooldownDays = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+                            }
+                        }
+                        const isOnCooldown = hasTechScores && techCooldownDays > 0;
+                        const isDisabled = isOnCooldown || !hasSkills;
+
+                        return (
+                            <button 
+                                onClick={() => !isDisabled && navigate('/tech-assessment')}
+                                disabled={isDisabled}
+                                className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm ${
+                                    isDisabled 
+                                        ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed' 
+                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                }`}
+                                title={!hasSkills ? 'You must add skills to your profile first' : (isOnCooldown ? `Next retake available in ${techCooldownDays} days` : '')}
+                            >
+                                <Code2 className="w-4 h-4" />
+                                {!hasSkills 
+                                    ? 'Add Skills First' 
+                                    : !hasTechScores 
+                                    ? 'Start Tech Test' 
+                                    : isOnCooldown 
+                                        ? `Retake in ${techCooldownDays}d` 
+                                        : 'Retake Tech Test'}
+                            </button>
+                        );
+                    })()}
+                </div>
             </div>
 
             <div className="flex gap-1 mb-8 border-b border-slate-200 dark:border-slate-800">
@@ -342,7 +387,8 @@ export default function CandidateProfile() {
                 <div className="flex flex-col gap-8">
                     {/* Conditionally rendering based on activeTab */}
                     {(activeTab === "overview") && (
-                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm relative overflow-hidden">
+                        <>
+                            <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm relative overflow-hidden">
                             <div className="flex items-end justify-between mb-6">
                                 <div>
                                     <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
@@ -389,60 +435,92 @@ export default function CandidateProfile() {
                                 </>
                             )}
                         </div>
-                    )}
-
-                    {(activeTab === "growth-journey") && (
-                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
-                                    Growth Journey
-                                </p>
+                        
+                        {/* Technical Scores Section in Overview */}
+                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm relative overflow-hidden mt-8">
+                            <div className="flex items-end justify-between mb-6">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-1">
+                                        Technical Proficiency DNA
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        {hasTakenTechTest ? "Based on your technical assessment" : "Waiting for assessment..."}
+                                    </p>
+                                </div>
+                                {hasTakenTechTest && (
+                                    <div className="text-right">
+                                        <p className="text-5xl font-black text-slate-900 dark:text-white leading-none">
+                                            {user.technicalScores.aggregate}
+                                        </p>
+                                        <div className="flex items-center justify-end gap-2 mt-1">
+                                            <span className={`text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border ${getProficiencyColor(user.technicalScores.proficiencyLevel)}`}>
+                                                {user.technicalScores.proficiencyLevel?.replace('_', ' ') || 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            {!hasTakenTest ? (
-                                <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 mt-4">
-                                    <p className="text-slate-500 font-medium">Your Growth Journey insights will become available after your first assessment.</p>
+                            {!hasTakenTechTest ? (
+                                <div className="flex flex-col items-center justify-center h-[240px] w-full text-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                    <Code2 className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
+                                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">Technical Profile Locked</h3>
+                                    <p className="text-sm font-medium text-slate-500 max-w-sm mb-6">
+                                        Take the AI-Driven Technical Assessment to unlock your skill matrix, proficiency level, and enhanced job matching.
+                                    </p>
+                                    <button 
+                                        onClick={() => navigate('/tech-assessment')}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm"
+                                    >
+                                        Start Tech Assessment
+                                    </button>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                        {dynamicGrowthJourney.map(({ label, title, body, highlight }) => (
-                                            <div key={label}>
-                                                <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-2">
-                                                    {label}
-                                                </p>
-                                                <p className={`text-sm font-bold leading-snug mb-1 ${highlight ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"}`}>
-                                                    {title}
-                                                </p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{body}</p>
-                                            </div>
-                                        ))}
+                                    <div className="flex items-center justify-center h-[320px] w-full">
+                                        <TechRadarChart scores={user.technicalScores} />
                                     </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                                        {(() => {
+                                            const scores = user.technicalScores;
+                                            const dims = Object.entries(techDimensionLabels);
+                                            const sorted = dims.sort((a, b) => (scores[b[0]] || 0) - (scores[a[0]] || 0));
+                                            const topSkill = sorted[0];
+                                            const growthArea = sorted[sorted.length - 1];
 
-                                    <div className="mt-8">
-                                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-1000" 
-                                                style={{ width: `${user?.eqScores?.aggregate || 0}%` }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between mt-2">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foundation</span>
-                                            {user?.eqScores?.aggregate !== undefined && user.eqScores.aggregate < 90 && (
-                                                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                                                    {user.eqScores.aggregate}% to Elite
-                                                </span>
-                                            )}
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${user?.eqScores?.aggregate >= 90 ? 'text-amber-500 animate-pulse' : 'text-slate-400'}`}>
-                                                {user?.eqScores?.aggregate >= 90 && <Sparkles className="w-3 h-3" />}
-                                                Elite Tier
-                                            </span>
-                                        </div>
+                                            let lastTechTestedLabel = "Pending";
+                                            const techAssessedTimestamp = user?.lastTechAssessedAt || (scores.aggregate ? user?.updatedAt : null);
+                                            if (scores.aggregate && techAssessedTimestamp) {
+                                                const diffMs = Date.now() - new Date(techAssessedTimestamp).getTime();
+                                                const diffMins = Math.floor(diffMs / 60000);
+                                                const diffHours = Math.floor(diffMs / 3600000);
+                                                const diffDays = Math.floor(diffMs / 86400000);
+                                                if (diffMins < 5) lastTechTestedLabel = "Just Now";
+                                                else if (diffMins < 60) lastTechTestedLabel = `${diffMins}m ago`;
+                                                else if (diffHours < 24) lastTechTestedLabel = `${diffHours}h ago`;
+                                                else if (diffDays < 7) lastTechTestedLabel = `${diffDays}d ago`;
+                                                else lastTechTestedLabel = new Date(techAssessedTimestamp).toLocaleDateString();
+                                            }
+
+                                            const dynamicTechMetrics = [
+                                                { label: "Top Skill", value: topSkill[1].label },
+                                                { label: "Proficiency", value: scores.proficiencyLevel ? scores.proficiencyLevel.charAt(0).toUpperCase() + scores.proficiencyLevel.slice(1).replace('_', ' ') : "N/A" },
+                                                { label: "Growth Area", value: growthArea[1].label },
+                                                { label: "Last Tested", value: lastTechTestedLabel },
+                                            ];
+                                            return dynamicTechMetrics.map((m) => (
+                                                <StatChip key={m.label} label={m.label} value={m.value} />
+                                            ));
+                                        })()}
                                     </div>
                                 </>
                             )}
                         </div>
+                        </>
                     )}
+
+
+
 
                     {activeTab === "eq-details" && (
                         <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
@@ -458,6 +536,72 @@ export default function CandidateProfile() {
                                     {Object.entries(dynamicEqScores).map(([trait, score]) => (
                                         <TraitBar key={trait} trait={trait} score={score} />
                                     ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tech Details Tab */}
+                    {activeTab === "tech-details" && (
+                        <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
+                                    Technical Dimension Breakdown
+                                </p>
+                                {hasTakenTechTest && (
+                                    <span className={`text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded border ${getProficiencyColor(user.technicalScores.proficiencyLevel)}`}>
+                                        {user.technicalScores.proficiencyLevel?.replace('_', ' ')}
+                                    </span>
+                                )}
+                            </div>
+                            {!hasTakenTechTest ? (
+                                <div className="text-center py-10">
+                                    <Code2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+                                    <p className="text-slate-500 font-medium mb-4">Technical Breakdown is locked until you complete the Technical Assessment.</p>
+                                    <button 
+                                        onClick={() => navigate('/tech-assessment')}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-widest transition shadow-sm"
+                                    >
+                                        Take Tech Assessment
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-5">
+                                    {Object.entries(techDimensionLabels).map(([key, dim]) => {
+                                        const score = user.technicalScores[key] || 0;
+                                        const color = score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-blue-500' : score >= 40 ? 'bg-amber-500' : 'bg-red-500';
+                                        const textColor = score >= 80 ? 'text-emerald-600 dark:text-emerald-400' : score >= 60 ? 'text-blue-600 dark:text-blue-400' : score >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
+                                        const level = score >= 90 ? 'Expert' : score >= 70 ? 'Advanced' : score >= 45 ? 'Intermediate' : 'Beginner';
+                                        return (
+                                            <div key={key} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div>
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{dim.label}</span>
+                                                        <span className="text-[11px] text-slate-400 ml-2 font-medium">{dim.desc}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${textColor}`}>{level}</span>
+                                                        <span className="text-sm font-black text-slate-900 dark:text-white">{score}%</span>
+                                                    </div>
+                                                </div>
+                                                <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${score}%` }}></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Overall Score Card */}
+                                    <div className="mt-2 p-5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Cpu className="w-6 h-6 text-emerald-200" />
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-widest text-emerald-200">Overall Technical Score</p>
+                                                <p className="text-xs text-emerald-100 mt-0.5 capitalize">Proficiency: {user.technicalScores.proficiencyLevel?.replace('_', ' ')}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-4xl font-black">{user.technicalScores.aggregate}<span className="text-lg text-emerald-200">%</span></p>
+                                    </div>
                                 </div>
                             )}
                         </div>

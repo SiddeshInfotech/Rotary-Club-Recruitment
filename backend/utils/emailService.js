@@ -20,11 +20,20 @@ const sendEmail = async (options) => {
     },
   });
 
+  // Append a no-reply footer to all outgoing emails
+  const htmlWithFooter = `${options.html}
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center;">
+      <p style="font-size: 12px; color: #9ca3af; font-family: Arial, sans-serif;">
+        This is an automated message from EQ Hire. Please do not reply to this email.
+      </p>
+    </div>`;
+
   const mailOptions = {
-    from: `"EQ Hire Platform" <${process.env.EMAIL_USER}>`,
+    from: `"EQ Hire Platform (No Reply)" <${process.env.EMAIL_USER}>`,
+    replyTo: "noreply@eqhire.com",
     to: options.email,
     subject: options.subject,
-    html: options.html,
+    html: htmlWithFooter,
   };
 
   await transporter.sendMail(mailOptions);

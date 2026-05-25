@@ -1,18 +1,122 @@
+import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
+
+import CreatePostBox from "../../components/candidate/CreatePostBox";
+import PostFeed from "../../components/candidate/PostFeed";
+import RecommendedMatches from "../../components/cards/JobCard";
+import ActiveApplications from "../../components/tables/ApplicationsTables";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
+import { Link } from "react-router-dom";
+import { Star, Zap, CheckCircle2, Crown, Code2 } from "lucide-react";
 
 export default function Dashboard() {
-    const { user } = useAuth();
-    const firstName = user?.firstName || 'Smith';
-    const lastName = user?.lastName || 'Patel';
-    const fullName = `${firstName} ${lastName}`;
-    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    const { user, updateUser } = useAuth();
+    const firstName = user?.firstName || user?.name?.split(' ')[0] || 'there';
+
+    const [dashboardData, setDashboardData] = useState(null);
+
+    const [jobs, setJobs] = useState([]);
+    const [matchScores, setMatchScores] = useState({});
+    const [loading, setLoading] = useState(true);
+
+    // Posts state
+    const [posts, setPosts] = useState([]);
+    const [postsLoading, setPostsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const res = await api.get('/jobs');
+                const data = res.data.data || res.data;
+                if (Array.isArray(data)) {
+                    const topJobs = data.slice(0, 2);
+                    setJobs(topJobs);
+
+                    // Get real match scores for these jobs
+                    if (topJobs.length > 0) {
+                        const ids = topJobs.map(j => j._id).join(',');
+                        try {
+                            const scoreRes = await api.get(`/candidate-dashboard/match-scores?jobIds=${ids}`);
+                            if (scoreRes.data.success) {
+                                setMatchScores(scoreRes.data.data);
+                            }
+                        } catch (scoreErr) {
+                            console.error("Failed to fetch match scores:", scoreErr);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch recommended jobs:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchDashboardInfo = async () => {
+            try {
+                const res = await api.get('/candidate-dashboard');
+                if (res.data && res.data.success) {
+                    setDashboardData(res.data.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch dashboard data:", err);
+            }
+        };
+
+        const fetchPosts = async () => {
+            try {
+                const res = await api.get('/community');
+                if (res.data.success) {
+                    setPosts(res.data.data || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch posts:", err);
+            } finally {
+                setPostsLoading(false);
+            }
+        };
+
+        // Refresh user data from server to pick up any scores updated by the AI service
+        const refreshUserData = async () => {
+            try {
+                const res = await api.get('/auth/me');
+                if (res.data.success && res.data.user) {
+                    const latest = res.data.user;
+                    updateUser({
+                        eqScores: latest.eqScores,
+                        technicalScores: latest.technicalScores,
+                        lastAssessedAt: latest.lastAssessedAt,
+                        lastTechAssessedAt: latest.lastTechAssessedAt,
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to refresh user data:", err);
+            }
+        };
+
+        fetchJobs();
+        fetchDashboardInfo();
+        fetchPosts();
+        refreshUserData();
+    }, []);
+
+    const handlePostCreated = (newPost) => {
+        // Add the new post to the top of the feed
+        setPosts([{ ...newPost, likesCount: 0, commentsCount: 0, isLiked: false, comments: [] }, ...posts]);
+    };
+
+    const handleDeletePost = (postId) => {
+        setPosts(posts.filter(p => p._id !== postId));
+    };
+
+    const isPremium = dashboardData?.isPremium;
+    const premiumInsights = dashboardData?.premiumInsights;
 
     return (
         <CandidateLayout>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
-
-                {/* Main Content (Left Column) - Posts Feed */}
+            <div>
+                {/* Main Content */}
                 <div className="flex flex-col gap-6">
 
                     {/* Welcome Banner */}
@@ -21,200 +125,186 @@ export default function Dashboard() {
                             <h1 className="text-[32px] font-bold mb-4">Welcome back, {firstName}</h1>
                         </div>
                         <div className="flex gap-4 mt-2">
-                            {/* <button className="bg-transparent border border-white/30 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-white/10 transition-colors">
-                                Update Resume
-                            </button> */}
-                            <button className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold hover:bg-yellow-300 transition-colors shadow-sm ml-auto">
-                                Try Premium
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Create Post */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[12px] p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div className="flex gap-4 mb-4">
-                            <div className="w-12 h-12 bg-[#0d2a45] rounded-full flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                                {initials}
-                            </div>
-                            <button className="flex-1 text-left bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-full px-5 text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
-                                Start a post
-                            </button>
-                        </div>
-                        <div className="flex justify-around items-center pt-2">
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                Video
-                            </button>
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Photo
-                            </button>
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-                                Write article
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Sort By */}
-                    <div className="flex justify-end items-center px-1 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Sort by: <strong className="text-slate-800 dark:text-slate-200">Top</strong></span>
-                    </div>
-
-                    {/* Feed Post */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[12px] p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex gap-3 items-center">
-                                <div className="w-12 h-12 bg-[#0d2a45] rounded-full flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                                    {initials}
+                            {!isPremium ? (
+                                <Link to="/premium/pricing" className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold hover:bg-yellow-300 transition-colors shadow-sm ml-auto inline-block text-center">
+                                    Try Premium
+                                </Link>
+                            ) : (
+                                <div className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold shadow-sm ml-auto inline-flex items-center gap-2">
+                                    <Crown className="w-5 h-5" /> Premium Active
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-[16px] text-slate-900 dark:text-white leading-tight">{fullName}</h3>
-                                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">1d • 🌍</p>
-                                </div>
-                            </div>
-                            <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-                            </button>
+                            )}
                         </div>
 
-                        {/* Repost info */}
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Reposted from {fullName}:
-                        </div>
-
-                        {/* Content */}
-                        <p className="text-[15px] text-slate-800 dark:text-slate-200 mb-4">
-                            What's Up???
-                        </p>
-
-                        {/* Image */}
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700">
-                            {/* Placeholder for the large image in the user's screenshot */}
-                            <img src="https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=1200&q=80" alt="Post attachment" className="w-full h-auto object-cover max-h-[500px]" />
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Right Sidebar */}
-                <div className="flex flex-col gap-8">
-
-                    {/* Profile Strength */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[16px] p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div className="flex justify-between items-center mb-5">
-                            <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">PROFILE STRENGTH</h2>
-                            <span className="text-[24px] font-semibold text-[#0070f3] dark:text-blue-400">80%</span>
-                        </div>
-
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-5">
-                            <div className="bg-[#0070f3] dark:bg-blue-500 h-2 rounded-full" style={{ width: '80%' }}></div>
-                        </div>
-
-                        <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-5 font-medium">
-                            Your profile is in the top 5% of design leadership roles in North America.
-                        </p>
-
-                        <a href="#" className="text-sm font-bold text-[#0070f3] dark:text-blue-400 hover:underline flex items-center gap-1.5">
-                            Complete Profile
-                            <span className="text-lg leading-none">&rarr;</span>
-                        </a>
-                    </div>
-
-                    {/* Saved Opportunities */}
-                    <div>
-                        <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-4 px-1">SAVED OPPORTUNITIES</h2>
-                        <div className="flex flex-col gap-3 mb-5">
-                            {/* Item 1 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Product Lead</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Framer</p>
-                                </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
-                            {/* Item 2 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Systems Designer</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Airbnb</p>
-                                </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
-                            {/* Item 3 */}
-                            <div className="bg-white dark:bg-slate-900 rounded-[12px] p-4 shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <div>
-                                    <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">Visual Designer</h3>
-                                    <p className="text-[12px] text-slate-500 dark:text-slate-400">Meta</p>
-                                </div>
-                                <button className="text-slate-400 dark:text-slate-500 hover:text-[#0070f3] dark:hover:text-blue-400">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="text-center">
-                            <button className="text-[11px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
-                                MANAGE ALL SAVED (14)
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Active Applications */}
-                    <div>
-                        <div className="flex justify-between items-center mb-4 px-1">
-                            <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">ACTIVE APPLICATIONS</h2>
-                            <a href="#" className="text-[10px] font-bold text-[#0070f3] dark:text-blue-400 uppercase tracking-widest hover:underline">
-                                VIEW ALL
-                            </a>
-                        </div>
-
-                        <div className="bg-white dark:bg-slate-900 rounded-[16px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-6">
-                            {/* Header */}
-                            <div className="flex justify-between items-start">
-                                <div className="flex gap-4 items-center">
-                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-[12px] flex items-center justify-center text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
-                                        LINEAR
+                        {/* Assessment CTAs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* EQ Assessment CTA */}
+                            {!user?.eqScores?.aggregate ? (
+                                <Link to="/eq-assessment" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-3.5 flex items-center gap-3 transition-all group">
+                                    <div className="w-9 h-9 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                        <Zap className="w-5 h-5 text-blue-300" />
                                     </div>
                                     <div>
-                                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-0.5">Senior Product Designer</h3>
-                                        <p className="text-[12px] text-slate-500 dark:text-slate-400">Linear • Applied 4 days ago</p>
+                                        <p className="text-sm font-bold text-white">EQ Assessment</p>
+                                        <p className="text-[11px] text-blue-200/70">Map your emotional intelligence</p>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-3.5 flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">EQ Score: {user.eqScores.aggregate}%</p>
+                                        <p className="text-[11px] text-blue-200/70">Assessment completed</p>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Badge */}
-                            <div>
-                                <span className="bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase">
-                                    INTERVIEWING
-                                </span>
-                            </div>
-
-                            {/* Status */}
-                            <div>
-                                <div className="flex justify-between items-center mb-3">
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">STATUS</span>
-                                    <span className="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">STEP 3 OF 5</span>
+                            {/* Tech Assessment CTA */}
+                            {!user?.technicalScores?.aggregate ? (
+                                <Link to="/tech-assessment" className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-3.5 flex items-center gap-3 transition-all group">
+                                    <div className="w-9 h-9 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                        <Code2 className="w-5 h-5 text-emerald-300" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Technical Assessment</p>
+                                        <p className="text-[11px] text-emerald-200/70">Prove your hard skills</p>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-3.5 flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Tech Score: {user.technicalScores.aggregate}%</p>
+                                        <p className="text-[11px] text-emerald-200/70 capitalize">{user.technicalScores.proficiencyLevel?.replace('_', ' ') || 'Completed'}</p>
+                                    </div>
                                 </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-5">
-                                    <div className="bg-[#0070f3] dark:bg-blue-500 h-1.5 rounded-full" style={{ width: '60%' }}></div>
-                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                                <button className="w-full bg-[#eef5fe] dark:bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 py-2 rounded-lg text-sm font-semibold hover:bg-[#e1edfd] dark:hover:bg-[#0070f3]/20 transition-colors">
-                                    Prepare for Interview
-                                </button>
+                    {/* Create Post Box */}
+                    <div className="mb-2">
+                        <CreatePostBox onPostCreated={handlePostCreated} />
+                    </div>
+
+                    {/* Sorting line (like LinkedIn) */}
+                    <div className="flex items-center gap-2 py-3 mb-1">
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
+                            Sort by: <button className="font-bold text-slate-700 dark:text-slate-300 hover:text-[#0a66c2] dark:hover:text-blue-400 transition-colors">Top</button>
+                        </span>
+                    </div>
+
+                    {/* Post Feed */}
+                    <div className="mb-8">
+                        {postsLoading ? (
+                            <div className="text-center py-8">
+                                <div className="w-8 h-8 border-3 border-slate-200 dark:border-slate-700 border-t-[#0a66c2] rounded-full animate-spin mx-auto" />
+                                <p className="text-xs text-slate-400 mt-3 font-medium">Loading feed...</p>
                             </div>
+                        ) : (
+                            <PostFeed posts={posts} onDeletePost={handleDeletePost} />
+                        )}
+                    </div>
+
+                    {/* Premium Insights Section (Only for Premium Users) */}
+                    {isPremium && premiumInsights && (
+                        <div className="mb-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl p-8 border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-400/30">
+                                    <Zap className="w-6 h-6 text-yellow-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">Deep AI EQ Insights</h2>
+                                    <p className="text-blue-200 text-sm">Personalized analysis generated by Gemini from your EQ footprint.</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-emerald-400 font-bold mb-4 uppercase tracking-wider text-xs">Top Strengths</h3>
+                                    <ul className="space-y-3">
+                                        {premiumInsights.strengths?.map((s, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                                                <span>{s}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-amber-400 font-bold mb-4 uppercase tracking-wider text-xs">Areas of Improvement</h3>
+                                    <ul className="space-y-3">
+                                        {premiumInsights.weaknesses?.map((w, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-2"></span>
+                                                <span>{w}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-blue-300 font-bold mb-4 uppercase tracking-wider text-xs">Actionable Recommendations</h3>
+                                    <ul className="space-y-3">
+                                        {premiumInsights.recommendations?.map((r, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <Zap className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
+                                                <span>{r}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Bottom Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div>
+                            <div className="flex items-center gap-4 mb-8">
+                                <h3 className="text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 uppercase">AI RECOMMENDED MATCHES</h3>
+                                {jobs.length > 0 && (
+                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 tracking-widest uppercase bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-md">{jobs.length} AVAILABLE</span>
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-6">
+                                {loading ? (
+                                    <div className="text-sm text-slate-400 font-medium p-6 text-center">Loading recommendations...</div>
+                                ) : jobs.length > 0 ? jobs.map((job) => (
+                                    <RecommendedMatches 
+                                        key={job._id}
+                                        title={job.title}
+                                        company={`${job.companyName || job.company || 'Company'} ΓÇó ${job.type || job.jobType || 'Full-time'} ΓÇó ${job.location || 'Remote'}`}
+                                        match={`${matchScores[job._id] || 'ΓÇö'}%`}
+                                        tags={job.skillsRequired?.slice(0, 2) || []}
+                                    />
+                                )) : (
+                                    <div className="text-sm text-slate-400 font-medium p-6 text-center border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
+                                        No job recommendations available yet.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 uppercase mb-8">ACTIVE APPLICATIONS</h3>
+                            <div className="flex flex-col gap-0 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+                                <ActiveApplications />
+                            </div>
+                            <button className="w-full mt-6 text-xs font-bold tracking-widest uppercase py-4 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white transition shadow-sm">
+                                VIEW ALL HISTORY
+                            </button>
                         </div>
                     </div>
 
                 </div>
+                {/* End Main Content */}
             </div>
+            {/* End Flex Wrapper */}
+
         </CandidateLayout>
     );
 }

@@ -1,40 +1,50 @@
 import { useState } from 'react';
-import { ArrowLeft, Mail, Lock } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Loader, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login, user } = useAuth();
-    const [email, setEmail] = useState('');
+    const { login } = useAuth();
 
-    const handleLogin = (e) => {
+    const savedCreds = JSON.parse(localStorage.getItem('eqhire_remembered_creds') || 'null');
+    const [email, setEmail] = useState(savedCreds?.email || '');
+    const [password, setPassword] = useState(savedCreds?.password || '');
+    const [rememberMe, setRememberMe] = useState(!!savedCreds);
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
+        setIsLoading(true);
 
-        const saved = localStorage.getItem("eqhire_user");
-        if (saved) {
-            const userData = JSON.parse(saved);
-            if (userData.email === email) {
-                login(userData);
-                navigate(userData.role === 'recruiter' ? '/recruiter' : '/candidate');
-                return;
+        try {
+            const res = await api.post('/auth/login', { email, password });
+
+            if (res.data.success) {
+                // Save JWT token
+                if (rememberMe) {
+                    localStorage.setItem('eqhire_token', res.data.token);
+                    // Remember credentials for next visit
+                    localStorage.setItem('eqhire_remembered_creds', JSON.stringify({ email, password }));
+                } else {
+                    sessionStorage.setItem('eqhire_token', res.data.token);
+                    localStorage.removeItem('eqhire_remembered_creds');
+                }
+
+                // Save user to context (AuthContext handles storage based on rememberMe)
+                login(res.data.user, rememberMe);
+                navigate(res.data.user.role === 'recruiter' ? '/recruiter' : '/candidate');
             }
+        } catch (err) {
+            const msg = err?.response?.data?.message || 'Login failed. Please try again.';
+            setError(msg);
+        } finally {
+            setIsLoading(false);
         }
-
-        const names = email.split('@')[0].split('.');
-        const firstName = names[0] ? names[0].charAt(0).toUpperCase() + names[0].slice(1) : 'User';
-        const lastName = names[1] ? names[1].charAt(0).toUpperCase() + names[1].slice(1) : '';
-
-        const fallbackUser = {
-            firstName,
-            lastName,
-            fullName: `${firstName} ${lastName}`.trim(),
-            email,
-            role: 'candidate',
-        };
-
-        login(fallbackUser);
-        navigate('/candidate');
     };
 
     return (
@@ -56,6 +66,12 @@ export default function Login() {
                     <p className="text-slate-600 dark:text-slate-400 font-medium">Please enter your details to sign in.</p>
                 </div>
 
+                {error && (
+                    <div className="mb-6 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-sm font-semibold">
+                        {error}
+                    </div>
+                )}
+
                 <form className="space-y-6" onSubmit={handleLogin}>
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Email Address</label>
@@ -74,16 +90,30 @@ export default function Login() {
 
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest pl-1">Password</label>
-                        <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input type="password" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" placeholder="••••••••" required />
-                        </div>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                <input 
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl pl-12 pr-12 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium" 
+                                    placeholder="••••••••" 
+                                    required 
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
                         <label className="flex items-center gap-2 cursor-pointer group">
                             <div className="relative flex items-center justify-center">
-                                <input type="checkbox" className="peer sr-only" />
+                                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="peer sr-only" />
                                 <div className="w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all"></div>
                                 <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
                                     <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -96,8 +126,19 @@ export default function Login() {
                     </div>
 
                     <div className="pt-4">
-                        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 dark:bg-white dark:text-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
-                            Sign In
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-500 dark:bg-white dark:text-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader className="w-4 h-4 animate-spin" />
+                                    Signing In...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
                         </button>
                     </div>
                 </form>

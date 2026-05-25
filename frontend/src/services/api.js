@@ -12,7 +12,7 @@ export const aiApi = axios.create({
 
 // Attach JWT token to every request automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('eqhire_token');
+  const token = localStorage.getItem('eqhire_token') || sessionStorage.getItem('eqhire_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -26,6 +26,8 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('eqhire_token');
       localStorage.removeItem('eqhire_user');
+      sessionStorage.removeItem('eqhire_token');
+      sessionStorage.removeItem('eqhire_user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

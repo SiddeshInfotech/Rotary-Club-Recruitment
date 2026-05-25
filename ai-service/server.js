@@ -5,7 +5,9 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const { initializeAI } = require("./services/aiClient");
 const assessmentRoutes = require("./routes/assessmentRoutes");
+const techAssessmentRoutes = require("./routes/techAssessmentRoutes");
 const jobSuggestionRoutes = require("./routes/jobSuggestionRoutes");
+const interviewPrepRoutes = require("./routes/interviewPrepRoutes");
 
 const app = express();
 
@@ -15,7 +17,9 @@ app.use(express.json({ limit: "10mb" })); // Larger limit for answer submissions
 
 // ── Routes ─────────────────────────────────────────────
 app.use("/api/assessment", assessmentRoutes);
+app.use("/api/tech-assessment", techAssessmentRoutes);
 app.use("/api/suggestions", jobSuggestionRoutes);
+app.use("/api/interview-prep", interviewPrepRoutes);
 
 // Root route — API documentation
 app.get("/", (req, res) => {
@@ -57,6 +61,32 @@ app.get("/", (req, res) => {
         method: "GET",
         path: "/api/suggestions/:candidateId",
         description: "Get top 5 AI-curated job suggestions for a candidate based on skills & EQ scores (jobs from last 48 hrs)",
+      },
+      generateTechQuestions: {
+        method: "POST",
+        path: "/api/tech-assessment/generate/:candidateId",
+        description: "Generate 25 technical assessment questions based on candidate skills",
+      },
+      evaluateTechAnswers: {
+        method: "POST",
+        path: "/api/tech-assessment/evaluate/:assessmentId",
+        description: "Submit answers and receive technical scores (also updates candidate profile)",
+        body: '{ "answers": [{ "questionId": 1, "answer": "B" }] }',
+      },
+      techAssessmentHistory: {
+        method: "GET",
+        path: "/api/tech-assessment/history/:candidateId",
+        description: "Get all past technical assessments for a candidate",
+      },
+      techAssessmentStatus: {
+        method: "GET",
+        path: "/api/tech-assessment/status/:candidateId",
+        description: "Check if candidate has completed a technical assessment",
+      },
+      techAssessmentDetails: {
+        method: "GET",
+        path: "/api/tech-assessment/:assessmentId",
+        description: "Get full details of a specific technical assessment",
       },
     },
   });

@@ -1,11 +1,19 @@
 import { useState, useRef } from 'react';
-import { Mail, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import api from '../services/api';
 
 export default function VerifyEmail() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const email = location.state?.email || '';
+
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const inputRefs = useRef([]);
+    const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [resendLoading, setResendLoading] = useState(false);
 
     const handleChange = (index, value) => {
         // Only allow numbers
@@ -42,13 +50,46 @@ export default function VerifyEmail() {
         }
     };
 
-    const handleVerify = () => {
-        // Example check: if all filled, redirect
+    const handleVerify = async () => {
         const otpString = otp.join('');
-        if (otpString.length === 6) {
-            navigate('/login');
-        } else {
-            alert("Please enter the full 6-digit OTP.");
+        if (otpString.length !== 6) {
+            return setError("Please enter the full 6-digit OTP.");
+        }
+        if (!email) {
+            return setError("Email not found. Please try registering again.");
+        }
+
+        setError('');
+        setLoading(true);
+        try {
+            const res = await api.post('/auth/verify-otp', { email, otp: otpString });
+            if (res.data.success) {
+                setSuccessMsg("Email verified successfully! Redirecting...");
+                setTimeout(() => navigate('/login'), 2000);
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || "Invalid OTP. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (!email) {
+            return setError("Email not found. Please try registering again.");
+        }
+        setError('');
+        setSuccessMsg('');
+        setResendLoading(true);
+        try {
+            const res = await api.post('/auth/resend-otp', { email });
+            if (res.data.success) {
+                setSuccessMsg("A new OTP has been sent to your email.");
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to resend OTP.");
+        } finally {
+            setResendLoading(false);
         }
     };
     
@@ -66,10 +107,22 @@ export default function VerifyEmail() {
                     
                     <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4 font-serif tracking-tight">Verify Your Email</h1>
                     
-                    <p className="text-slate-600 dark:text-slate-400 font-medium mb-10 leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-400 font-medium mb-6 leading-relaxed">
                         Enter the 6-digit OTP sent to your email address. 
-                        <br/><span className="font-bold text-slate-800 dark:text-slate-200 mt-2 block">user@example.com</span>
+                        <br/><span className="font-bold text-slate-800 dark:text-slate-200 mt-2 block">{email || "Unknown Email"}</span>
                     </p>
+
+                    {error && (
+                        <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
+                            {error}
+                        </div>
+                    )}
+
+                    {successMsg && (
+                        <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm font-bold flex items-center gap-2 justify-center">
+                            <CheckCircle2 className="w-4 h-4" /> {successMsg}
+                        </div>
+                    )}
 
                     {/* OTP Inputs */}
                     <div className="flex justify-between items-center gap-2 sm:gap-4 mb-10">
@@ -88,12 +141,12 @@ export default function VerifyEmail() {
                     </div>
                     
                     <div className="space-y-4">
-                        <button onClick={handleVerify} className="w-full bg-blue-600 hover:bg-blue-500 dark:bg-white dark:text-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2 group">
-                            Verify OTP <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <button onClick={handleVerify} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 dark:bg-white dark:text-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2 group disabled:opacity-60">
+                            {loading ? 'Verifying...' : 'Verify OTP'} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </button>
                         
-                        <button className="w-full bg-transparent border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl transition-all shadow-sm">
-                            Resend OTP
+                        <button onClick={handleResend} disabled={resendLoading} className="w-full bg-transparent border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl transition-all shadow-sm disabled:opacity-60">
+                            {resendLoading ? 'Sending...' : 'Resend OTP'}
                         </button>
                     </div>
                 </div>
