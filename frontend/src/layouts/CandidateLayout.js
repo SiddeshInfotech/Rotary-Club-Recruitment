@@ -18,8 +18,7 @@ export default function CandidateLayout({ children }) {
     ];
 
     const insightsMenu = [
-        { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
-        { name: 'Referrals', icon: Users, path: '/referrals' }
+        { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' }
     ];
 
     return (

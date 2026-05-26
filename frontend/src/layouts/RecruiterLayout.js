@@ -13,7 +13,7 @@ export default function RecruiterLayout({ children }) {
         { name: 'Dashboard', icon: LayoutDashboard, path: '/recruiter' },
         { name: 'Candidates', icon: Users, path: '/recruiter/search' },
         { name: 'Post a Job', icon: PlusCircle, path: '/recruiter/post-job' },
-        //{ name: 'Community', icon: Network, path: '/community-feed' }
+        { name: 'Referrals', icon: Users, path: '/recruiter/referrals' }
     ];
 
     const actionsMenu = [

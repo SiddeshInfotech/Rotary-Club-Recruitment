@@ -1,9 +1,9 @@
-import CandidateLayout from "../../layouts/CandidateLayout";
+import RecruiterLayout from "../../layouts/RecruiterLayout";
 import { Users, CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react';
 
 export default function Referrals() {
     return (
-        <CandidateLayout>
+        <RecruiterLayout>
              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-8">
                 <div className="max-w-[700px]">
                     <h3 className="text-[10px] tracking-widest font-bold text-slate-400 dark:text-slate-500 uppercase mb-3">REFERRAL PORTAL</h3>
@@ -71,8 +71,8 @@ export default function Referrals() {
                                      <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(ref.name)}&background=0F172A&color=fff&bold=true`} alt={ref.name} className="w-full h-full object-cover"/>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-slate-900 dark:text-white mb-1">{ref.name}</p>
-                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{ref.role}</p>
+                                     <p className="text-sm font-black text-slate-900 dark:text-white mb-1">{ref.name}</p>
+                                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{ref.role}</p>
                                 </div>
                             </div>
                             
@@ -88,6 +88,6 @@ export default function Referrals() {
                     ))}
                 </div>
             </div>
-        </CandidateLayout>
+        </RecruiterLayout>
     );
 }

@@ -19,7 +19,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 
 import Network from "./pages/candidate/Network";
-import Referrals from "./pages/candidate/Referrals";
+import Referrals from "./pages/recruiter/Referrals";
 import Growth from "./pages/candidate/Growth";
 import Insights from "./pages/candidate/Insights";
 import EQJourney from "./pages/candidate/EQJourney";
@@ -77,7 +77,7 @@ function App() {
           <Route path="/profile" element={<CandidateProfile />} />
           <Route path="/settings" element={<CandidateSettings />} />
           <Route path="/network" element={<Network />} />
-          <Route path="/referrals" element={<Referrals />} />
+          <Route path="/recruiter/referrals" element={<Referrals />} />
           <Route path="/growth" element={<Growth />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/eq-journey" element={<EQJourney />} />
