@@ -23,6 +23,35 @@ const candidateProfileRefSchema = new mongoose.Schema(
       collaboration: { type: Number, min: 0, max: 100, default: 0 },
       problemSolving: { type: Number, min: 0, max: 100, default: 0 },
     },
+    technicalScores: {
+      fundamentals: { type: Number, min: 0, max: 100, default: 0 },
+      architecture: { type: Number, min: 0, max: 100, default: 0 },
+      debugging: { type: Number, min: 0, max: 100, default: 0 },
+      bestPractices: { type: Number, min: 0, max: 100, default: 0 },
+      tooling: { type: Number, min: 0, max: 100, default: 0 },
+      aggregate: { type: Number, min: 0, max: 100, default: 0 },
+      proficiencyLevel: { type: String, default: "not_assessed" },
+    },
+    // Premium Features
+    isPremium: { type: Boolean, default: false },
+    premiumInsights: {
+      persona: {
+        title: String,
+        desc: String,
+      },
+      careerTrajectory: String,
+      growthPlan: [String],
+      blindSpot: {
+        trigger: String,
+        response: String,
+        fix: String,
+      },
+      strengths: [String],
+      weaknesses: [String],
+      recommendations: [String],
+      interviewPrep: mongoose.Schema.Types.Mixed,
+      interviewPrepGeneratedAt: Date,
+    },
   },
   {
     timestamps: true,

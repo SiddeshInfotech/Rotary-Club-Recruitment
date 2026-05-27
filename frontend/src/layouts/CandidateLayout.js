@@ -1,24 +1,64 @@
-import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Search, Bookmark, MessageSquare, Bell } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { LayoutDashboard, Star, Network, TrendingUp, BrainCircuit, Users, Settings, Bell, Search, MessageSquare, LogOut, Bookmark } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function CandidateLayout({ children }) {
     const location = useLocation();
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
-    const displayName = user?.fullName || 'Guest User';
+    const displayName = user?.fullName || user?.name || 'Guest User';
     const avatarName = encodeURIComponent(displayName);
 
-    const baseMainMenu = [
+    const handleLogout = () => {
+        logout();
+        localStorage.removeItem('eqhire_token');
+        sessionStorage.removeItem('eqhire_token');
+        navigate('/login');
+    };
+
+    const [isPremium, setIsPremium] = useState(false);
+    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+    const fetchUnreadCount = useCallback(async () => {
+        try {
+            const res = await api.get('/notifications');
+            if (res.data.success) {
+                setUnreadNotifCount(res.data.unreadCount || 0);
+            }
+        } catch { /* ignore */ }
+    }, []);
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const res = await api.get('/profile');
+                if (res.data.success) {
+                    setIsPremium(res.data.data.isPremium || false);
+                }
+            } catch (e) { /* ignore */ }
+        };
+        fetchStatus();
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, [fetchUnreadCount]);
+
+    useEffect(() => {
+        if (location.pathname === '/candidate/notifications') {
+            setUnreadNotifCount(0);
+        }
+    }, [location.pathname]);
+
+    const mainMenu = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/candidate' },
         { name: 'Job Search', icon: Search, path: '/job-search' },
         { name: 'My Jobs', icon: Bookmark, path: '/my-jobs' },
         { name: 'Network', icon: Network, path: '/network' },
-        { name: 'Growth', icon: TrendingUp, path: '/growth' },
         { name: 'Messages', icon: MessageSquare, path: '/candidate/messages' }
     ];
-    
-    const mainMenu = baseMainMenu;
 
     const insightsMenu = [
         { name: 'EQ Insights', icon: BrainCircuit, path: '/insights' },
@@ -29,9 +69,9 @@ export default function CandidateLayout({ children }) {
         <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <Link to="/candidate" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hover:opacity-80 transition-opacity inline-block">
                         <span className="text-blue-600">EQ</span>-Hire
-                    </h1>
+                    </Link>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -77,21 +117,30 @@ export default function CandidateLayout({ children }) {
                 </div>
 
                 <div className="pt-6 mt-6">
-                    <Link to="/settings" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">
-                        <Settings className="w-5 h-5 text-slate-400" />
-                        Settings
-                    </Link>
-                    <Link to="/candidate/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 mb-6">
-                        <Bell className="w-5 h-5 text-slate-400" />
-                        Notifications
-                    </Link>
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                            <Link to="/settings" className="flex items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 w-full">
+                                <Settings className="w-5 h-5 text-slate-400" />
+                                Settings
+                            </Link>
+                        </div>
+                        <Link to="/candidate/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 relative">
+                            <div className="relative">
+                                <Bell className="w-5 h-5 text-slate-400" />
+                                {unreadNotifCount > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 leading-none">
+                                        {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                                    </span>
+                                )}
+                            </div>
+                            Notifications
+                        </Link>
 
-                    <Link to="/profile" className="flex items-center gap-3 px-4 mb-6 group hover:opacity-80 transition" id="sidebar-profile-link">
+                    <Link to="/profile" className="flex items-center gap-3 px-4 mb-4 group hover:opacity-80 transition" id="sidebar-profile-link">
                         <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                             <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Premium Tier</p>
+                            <p className={`text-xs font-bold uppercase tracking-wide ${isPremium ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>{isPremium ? 'Premium Tier' : 'Basic'}</p>
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>
@@ -101,9 +150,9 @@ export default function CandidateLayout({ children }) {
             <main className="flex-1 flex flex-col h-full overflow-y-auto p-8 lg:p-12 relative">
                 <div className="max-w-[1240px] mx-auto w-full">
                     <header className="flex items-center justify-between mb-10">
-                        <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
+                        <Link to="/candidate" className="text-xl font-bold text-slate-900 dark:text-white lg:hidden hover:opacity-80 transition-opacity">
                             <span className="text-blue-600">EQ</span>-Hire
-                        </div>
+                        </Link>
                         <div className="hidden lg:flex flex-1 max-w-md relative">
                             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
@@ -114,6 +163,13 @@ export default function CandidateLayout({ children }) {
                         </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
+                            <button
+                                onClick={handleLogout}
+                                title="Sign out"
+                                className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
                         </div>
                     </header>
 

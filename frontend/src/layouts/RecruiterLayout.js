@@ -1,13 +1,46 @@
-import { LayoutDashboard, Users, MessageSquare, Calendar, PlusCircle, Settings, Bell, Search, Network } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { LayoutDashboard, Users, MessageSquare, Calendar, PlusCircle, Settings, Bell, Search, Network, LogOut } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function RecruiterLayout({ children }) {
     const location = useLocation();
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
-    const displayName = user?.fullName || 'Recruiter';
+    const displayName = user?.fullName || user?.name || 'Recruiter';
     const avatarName = encodeURIComponent(displayName);
+
+    const handleLogout = () => {
+        logout();
+        localStorage.removeItem('eqhire_token');
+        sessionStorage.removeItem('eqhire_token');
+        navigate('/login');
+    };
+
+    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+    const fetchUnreadCount = useCallback(async () => {
+        try {
+            const res = await api.get('/notifications');
+            if (res.data.success) {
+                setUnreadNotifCount(res.data.unreadCount || 0);
+            }
+        } catch { /* ignore */ }
+    }, []);
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, [fetchUnreadCount]);
+
+    useEffect(() => {
+        if (location.pathname === '/recruiter/notifications') {
+            setUnreadNotifCount(0);
+        }
+    }, [location.pathname]);
 
     const mainMenu = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/recruiter' },
@@ -25,9 +58,9 @@ export default function RecruiterLayout({ children }) {
         <div className="flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950">
             <aside className="w-[300px] h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col py-8 px-6 relative z-10 flex-shrink-0 hidden lg:flex">
                 <div className="mb-10 px-4">
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <Link to="/recruiter" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hover:opacity-80 transition-opacity inline-block">
                         <span className="text-blue-600">EQ</span>-Hire <span className="text-xs text-slate-400 font-medium ml-1">For Clubs</span>
-                    </h1>
+                    </Link>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -78,8 +111,15 @@ export default function RecruiterLayout({ children }) {
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Settings</span>
                     </Link>
 
-                    <Link to="/recruiter/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full mb-2">
-                        <Bell className="w-5 h-5 text-slate-400" />
+                    <Link to="/recruiter/notifications" className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full mb-2 relative">
+                        <div className="relative">
+                            <Bell className="w-5 h-5 text-slate-400" />
+                            {unreadNotifCount > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1 leading-none">
+                                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                                </span>
+                            )}
+                        </div>
                         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">Notifications</span>
                     </Link>
 
@@ -98,9 +138,9 @@ export default function RecruiterLayout({ children }) {
             <main className="flex-1 flex flex-col h-full overflow-y-auto p-8 lg:p-12 relative text-slate-900 dark:text-slate-200">
                 <div className="max-w-[1240px] mx-auto w-full">
                     <header className="flex items-center justify-between mb-10">
-                        <div className="text-xl font-bold text-slate-900 dark:text-white lg:hidden">
+                        <Link to="/recruiter" className="text-xl font-bold text-slate-900 dark:text-white lg:hidden hover:opacity-80 transition-opacity">
                             <span className="text-blue-600">EQ</span>-Hire
-                        </div>
+                        </Link>
                         <div className="hidden lg:flex flex-1 max-w-md relative">
                             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input 
@@ -111,6 +151,13 @@ export default function RecruiterLayout({ children }) {
                         </div>
                         
                         <div className="flex items-center gap-4 ml-auto">
+                            <button
+                                onClick={handleLogout}
+                                title="Sign out"
+                                className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
                         </div>
                     </header>
 

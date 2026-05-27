@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -25,10 +26,12 @@ import VerifyResetOtp from './pages/VerifyResetOtp';
 
 import Network from "./pages/candidate/Network";
 import Referrals from "./pages/candidate/Referrals";
-import Growth from "./pages/candidate/Growth";
 import Insights from "./pages/candidate/Insights";
 import EQJourney from "./pages/candidate/EQJourney";
 import EQAssessment from "./pages/candidate/EQAssessment";
+import TechAssessment from "./pages/candidate/TechAssessment";
+import PremiumPricing from "./pages/candidate/PremiumPricing";
+import PremiumCheckout from "./pages/candidate/PremiumCheckout";
 
 import RecruiterCandidateSearch from "./pages/recruiter/CandidateSearch";
 import CandidateProfileView from "./pages/recruiter/CandidateProfileView";
@@ -59,6 +62,15 @@ import FAQ from "./pages/shared/FAQ";
 import NotFound from "./pages/NotFound";
 
 function App() {
+  useEffect(() => {
+    // Initialize dark mode based on localStorage or system preference
+    if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -75,6 +87,9 @@ function App() {
           {/* Protected Candidate Routes */}
           <Route path="/candidate" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateDashboard /></ProtectedRoute>} />
           <Route path="/matches" element={<ProtectedRoute allowedRoles={["candidate"]}><Matches /></ProtectedRoute>} />
+          <Route path="/tech-assessment" element={<ProtectedRoute allowedRoles={["candidate"]}><TechAssessment /></ProtectedRoute>} />
+          <Route path="/premium/pricing" element={<ProtectedRoute allowedRoles={["candidate"]}><PremiumPricing /></ProtectedRoute>} />
+          <Route path="/premium/checkout" element={<ProtectedRoute allowedRoles={["candidate"]}><PremiumCheckout /></ProtectedRoute>} />
           <Route path="/job-search" element={<ProtectedRoute allowedRoles={["candidate"]}><JobSearch /></ProtectedRoute>} />
           <Route path="/job/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
           <Route path="/my-jobs" element={<ProtectedRoute allowedRoles={["candidate"]}><MyJobs /></ProtectedRoute>} />
@@ -84,7 +99,6 @@ function App() {
           <Route path="/candidate/notifications" element={<ProtectedRoute allowedRoles={["candidate"]}><CandidateNotifications /></ProtectedRoute>} />
           <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
-          <Route path="/growth" element={<ProtectedRoute><Growth /></ProtectedRoute>} />
           <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
           <Route path="/eq-journey" element={<ProtectedRoute><EQJourney /></ProtectedRoute>} />
           <Route path="/eq-assessment" element={<ProtectedRoute><EQAssessment /></ProtectedRoute>} />

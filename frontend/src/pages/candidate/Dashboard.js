@@ -2,27 +2,34 @@ import { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Crown, Zap } from "lucide-react";
 import EQProfileCard from "../../components/cards/EQProfileCard";
+import CreatePostBox from "../../components/candidate/CreatePostBox";
+import PostFeed from "../../components/candidate/PostFeed";
 import api from "../../services/api";
 
 export default function Dashboard() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const [savedJobs, setSavedJobs] = useState([]);
     const [activeApps, setActiveApps] = useState([]);
+    const [dashboardData, setDashboardData] = useState(null);
+    
+    // Posts state
+    const [posts, setPosts] = useState([]);
+    const [postsLoading, setPostsLoading] = useState(true);
+
     const firstName = user?.firstName || 'Smith';
-    const lastName = user?.lastName || 'Patel';
-    const fullName = `${firstName} ${lastName}`;
-    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     const hasEqScores = user?.eqScores && user.eqScores.aggregate > 0;
 
     useEffect(() => {
         if (!user?._id) return;
         const fetchDashboardData = async () => {
             try {
-                const [savedRes, appsRes] = await Promise.all([
+                const [savedRes, appsRes, dashboardRes] = await Promise.all([
                     api.get('/jobs/saved'),
-                    api.get(`/applications?candidateId=${user._id}`)
+                    api.get(`/applications?candidateId=${user._id}`),
+                    api.get('/candidate-dashboard')
                 ]);
                 
                 if (savedRes.data && savedRes.data.success) {
@@ -43,12 +50,57 @@ export default function Dashboard() {
                         
                     setActiveApps(activeAppsList);
                 }
+
+                if (dashboardRes.data && dashboardRes.data.success) {
+                    setDashboardData(dashboardRes.data.data);
+                }
             } catch (err) {
                 console.error("Failed to fetch dashboard data:", err);
             }
         };
+
+        const fetchPosts = async () => {
+            try {
+                const res = await api.get('/community');
+                if (res.data.success) {
+                    setPosts(res.data.data || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch posts:", err);
+            } finally {
+                setPostsLoading(false);
+            }
+        };
+
+        const refreshUserData = async () => {
+            try {
+                const res = await api.get('/auth/me');
+                if (res.data.success && res.data.user) {
+                    const latest = res.data.user;
+                    updateUser({
+                        eqScores: latest.eqScores,
+                        technicalScores: latest.technicalScores,
+                        lastAssessedAt: latest.lastAssessedAt,
+                        lastTechAssessedAt: latest.lastTechAssessedAt,
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to refresh user data:", err);
+            }
+        };
+
         fetchDashboardData();
-    }, [user]);
+        fetchPosts();
+        refreshUserData();
+    }, [user?._id]);
+
+    const handlePostCreated = (newPost) => {
+        setPosts([{ ...newPost, likesCount: 0, commentsCount: 0, isLiked: false, comments: [] }, ...posts]);
+    };
+
+    const handleDeletePost = (postId) => {
+        setPosts(posts.filter(p => p._id !== postId));
+    };
 
     const timeAgo = (date) => {
         if (!date) return '';
@@ -75,81 +127,92 @@ export default function Dashboard() {
                             <h1 className="text-[32px] font-bold mb-4">Welcome back, {firstName}</h1>
                         </div>
                         <div className="flex gap-4 mt-2">
-                            {/* <button className="bg-transparent border border-white/30 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-white/10 transition-colors">
-                                Update Resume
-                            </button> */}
-                            <button className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold hover:bg-yellow-300 transition-colors shadow-sm ml-auto">
-                                Try Premium
-                            </button>
+                            {!dashboardData?.isPremium ? (
+                                <button onClick={() => navigate('/premium/pricing')} className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold hover:bg-yellow-300 transition-colors shadow-sm ml-auto text-center">
+                                    Try Premium
+                                </button>
+                            ) : (
+                                <div className="bg-yellow-400 text-yellow-900 px-6 py-2.5 rounded-lg font-bold shadow-sm ml-auto inline-flex items-center gap-2">
+                                    <Crown className="w-5 h-5" /> Premium Active
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Create Post */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[12px] p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div className="flex gap-4 mb-4">
-                            <div className="w-12 h-12 bg-[#0d2a45] rounded-full flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                                {initials}
-                            </div>
-                            <button className="flex-1 text-left bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-full px-5 text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
-                                Start a post
-                            </button>
-                        </div>
-                        <div className="flex justify-around items-center pt-2">
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                Video
-                            </button>
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                Photo
-                            </button>
-                            <button className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm">
-                                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-                                Write article
-                            </button>
-                        </div>
+                    <div className="mb-2">
+                        <CreatePostBox onPostCreated={handlePostCreated} />
                     </div>
 
                     {/* Sort By */}
-                    <div className="flex justify-end items-center px-1 border-t border-slate-200 dark:border-slate-800 pt-4 mt-2">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Sort by: <strong className="text-slate-800 dark:text-slate-200">Top</strong></span>
+                    <div className="flex items-center gap-2 py-3 mb-1">
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
+                            Sort by: <button className="font-bold text-slate-700 dark:text-slate-300 hover:text-[#0a66c2] dark:hover:text-blue-400 transition-colors">Top</button>
+                        </span>
                     </div>
 
-                    {/* Feed Post */}
-                    <div className="bg-white dark:bg-slate-900 rounded-[12px] p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex gap-3 items-center">
-                                <div className="w-12 h-12 bg-[#0d2a45] rounded-full flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                                    {initials}
+                    {/* Post Feed */}
+                    <div className="mb-8">
+                        {postsLoading ? (
+                            <div className="text-center py-8">
+                                <div className="w-8 h-8 border-3 border-slate-200 dark:border-slate-700 border-t-[#0a66c2] rounded-full animate-spin mx-auto" />
+                                <p className="text-xs text-slate-400 mt-3 font-medium">Loading feed...</p>
+                            </div>
+                        ) : (
+                            <PostFeed posts={posts} onDeletePost={handleDeletePost} />
+                        )}
+                    </div>
+
+                    {/* Premium Insights Section (Only for Premium Users) */}
+                    {dashboardData?.isPremium && dashboardData?.premiumInsights && (
+                        <div className="mb-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl p-8 border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-400/30">
+                                    <Zap className="w-6 h-6 text-yellow-400" />
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-[16px] text-slate-900 dark:text-white leading-tight">{fullName}</h3>
-                                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">1d • 🌍</p>
+                                <div className="text-left">
+                                    <h2 className="text-2xl font-bold text-white">Deep AI EQ Insights</h2>
+                                    <p className="text-blue-200 text-sm">Personalized analysis generated by Gemini from your EQ footprint.</p>
                                 </div>
                             </div>
-                            <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-emerald-400 font-bold mb-4 uppercase tracking-wider text-xs text-left">Top Strengths</h3>
+                                    <ul className="space-y-3 text-left">
+                                        {dashboardData.premiumInsights.strengths?.map((s, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                                <span>{s}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-amber-400 font-bold mb-4 uppercase tracking-wider text-xs text-left">Areas of Improvement</h3>
+                                    <ul className="space-y-3 text-left">
+                                        {dashboardData.premiumInsights.weaknesses?.map((w, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-2"></span>
+                                                <span>{w}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                                    <h3 className="text-blue-300 font-bold mb-4 uppercase tracking-wider text-xs text-left">Actionable Recommendations</h3>
+                                    <ul className="space-y-3 text-left">
+                                        {dashboardData.premiumInsights.recommendations?.map((r, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm text-blue-50">
+                                                <svg className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                <span>{r}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-
-                        {/* Repost info */}
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Reposted from {fullName}:
-                        </div>
-
-                        {/* Content */}
-                        <p className="text-[15px] text-slate-800 dark:text-slate-200 mb-4">
-                            What's Up???
-                        </p>
-
-                        {/* Image */}
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700">
-                            {/* Placeholder for the large image in the user's screenshot */}
-                            <img src="https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&w=1200&q=80" alt="Post attachment" className="w-full h-auto object-cover max-h-[500px]" />
-                        </div>
-                    </div>
+                    )}
 
                 </div>
 
@@ -162,9 +225,32 @@ export default function Dashboard() {
                             <>
                                 <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-4 w-full text-left">Your EQ DNA</h2>
                                 <EQProfileCard eqScores={user.eqScores} />
-                                <button className="mt-4 text-sm font-bold text-[#0070f3] dark:text-blue-400 hover:underline" onClick={() => navigate('/eq-assessment')}>
-                                    Retake Assessment (If Eligible)
-                                </button>
+                                {(() => {
+                                    const cooldownTimestamp = user?.lastAssessedAt || (user?.eqScores?.aggregate ? user?.updatedAt : null);
+                                    let cooldownDaysLeft = 0;
+                                    if (cooldownTimestamp) {
+                                        const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+                                        const timeSince = Date.now() - new Date(cooldownTimestamp).getTime();
+                                        if (timeSince < cooldownMs) {
+                                            cooldownDaysLeft = Math.ceil((cooldownMs - timeSince) / (24 * 60 * 60 * 1000));
+                                        }
+                                    }
+                                    const isOnCooldown = cooldownDaysLeft > 0;
+                                    return (
+                                        <button 
+                                            disabled={isOnCooldown}
+                                            className={`mt-4 text-sm font-bold transition-all ${
+                                                isOnCooldown 
+                                                    ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed' 
+                                                    : 'text-[#0070f3] dark:text-blue-400 hover:underline'
+                                            }`} 
+                                            onClick={() => !isOnCooldown && navigate('/eq-journey')}
+                                            title={isOnCooldown ? `Next retake available in ${cooldownDaysLeft} days` : ''}
+                                        >
+                                            {isOnCooldown ? `Retake available in ${cooldownDaysLeft}d` : 'Retake Assessment (If Eligible)'}
+                                        </button>
+                                    );
+                                })()}
                             </>
                         ) : (
                             <>
@@ -176,6 +262,32 @@ export default function Dashboard() {
                                     Take EQ Assessment
                                 </button>
                             </>
+                        )}
+                    </div>
+
+                    {/* Technical Assessment Section */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[16px] p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                        <h2 className="text-[12px] font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-4 w-full text-left">Technical Skills</h2>
+                        
+                        {!user?.technicalScores?.aggregate ? (
+                            <>
+                                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6 font-medium">
+                                    Take the 25-question technical assessment to showcase your hard skills and stand out to top recruiters!
+                                </p>
+                                <button onClick={() => navigate('/tech-assessment')} className="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm">
+                                    Take Technical Test
+                                </button>
+                            </>
+                        ) : (
+                            <div className="w-full flex items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
+                                    {user.technicalScores.aggregate}%
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Assessment Complete</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.technicalScores.proficiencyLevel?.replace('_', ' ') || 'Completed'}</p>
+                                </div>
+                            </div>
                         )}
                     </div>
 

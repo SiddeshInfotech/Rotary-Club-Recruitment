@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
-import { Search, MoreVertical, Send, Paperclip, Check, CheckCheck, Calendar, Video, Phone, MapPin, AlertCircle, ChevronLeft, ChevronRight, User, Building2, Briefcase, Globe, Mail } from "lucide-react";
+import { Search, MoreVertical, Send, Paperclip, Check, CheckCheck, Calendar, Video, Phone, MapPin, AlertCircle, ChevronLeft, ChevronRight, User, Building2, Briefcase, Globe, Mail, X } from "lucide-react";
 import CandidateLayout from "../../layouts/CandidateLayout";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -474,6 +474,35 @@ export default function CandidateMessages() {
 
   // Helper to render message content with interactive cards
   const renderMessageContent = (msg, isMe) => {
+    if (msg.sharedPost) {
+      return (
+        <div className="bg-white dark:bg-[#1d2226] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-md w-[400px] max-w-full text-left">
+          <div className="p-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="flex gap-3 items-start">
+              <img src={msg.sharedPost.authorAvatar} alt="author" className="w-10 h-10 rounded-full flex-shrink-0 object-cover" />
+              <div className="min-w-0 pt-0.5">
+                <div className="flex items-center gap-1">
+                  <span className="text-[14px] font-bold text-slate-900 dark:text-white truncate">{msg.sharedPost.authorName}</span>
+                </div>
+                <p className="text-[12px] text-slate-500 truncate leading-snug mt-0.5">{msg.sharedPost.authorTitle || 'Community Member'}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">Recent • Edited • <Globe className="w-2.5 h-2.5 inline" /></p>
+              </div>
+            </div>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-[13px] text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+              {msg.sharedPost.content && msg.sharedPost.content.length > 200 ? msg.sharedPost.content.substring(0, 200) + "...more" : msg.sharedPost.content}
+            </p>
+          </div>
+          {msg.sharedPost.image && (
+            <div className="w-full bg-slate-100 dark:bg-black/50 border-t border-slate-100 dark:border-slate-800">
+              <img src={msg.sharedPost.image} alt="Shared post content" className="w-full h-auto object-cover max-h-[220px]" />
+            </div>
+          )}
+        </div>
+      );
+    }
+
     try {
       if (msg.content && typeof msg.content === 'string' && msg.content.startsWith('{"cardType":"interview_invite"')) {
         const invite = JSON.parse(msg.content);
@@ -712,7 +741,7 @@ export default function CandidateMessages() {
                             className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
                           />
                         )}
-                        <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? "items-end" : ""}`}>
+                        <div className={`flex flex-col gap-1 ${msg.sharedPost ? 'max-w-[85%]' : 'max-w-[70%]'} ${isMe ? "items-end" : ""}`}>
                           {renderMessageContent(msg, isMe)}
                           <div className="flex items-center gap-1 mt-0.5">
                             <span className="text-[10px] text-slate-400 font-medium">

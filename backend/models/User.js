@@ -58,6 +58,27 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpires: { type: Date },
 
+    // Technical Scores (written by AI service, synced via shared DB)
+    technicalScores: {
+      fundamentals: { type: Number, default: 0 },
+      architecture: { type: Number, default: 0 },
+      debugging: { type: Number, default: 0 },
+      bestPractices: { type: Number, default: 0 },
+      tooling: { type: Number, default: 0 },
+      aggregate: { type: Number, default: 0 },
+      proficiencyLevel: { type: String, default: "not_assessed" },
+    },
+
+    // EQ Assessment tracking
+    lastAssessedAt: { type: Date },
+    // Technical Assessment tracking
+    lastTechAssessedAt: { type: Date },
+
+    // Settings / Preferences
+    emailNotifications: { type: Boolean, default: true },
+    inAppNotifications: { type: Boolean, default: true },
+    isPublicProfile: { type: Boolean, default: true },
+
     // reset password fields
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },

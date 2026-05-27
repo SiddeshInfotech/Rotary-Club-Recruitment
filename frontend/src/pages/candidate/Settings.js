@@ -1,11 +1,51 @@
 import React, { useState, useEffect } from "react";
 import CandidateLayout from "../../layouts/CandidateLayout";
-import { User, Shield, Sliders, Bell } from "lucide-react";
+import { User, Shield, Sliders, Bell, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 export default function CandidateSettings() {
+    const { user, login } = useAuth();
     const [activeTab, setActiveTab] = useState("Account Basics");
     const [isDarkMode, setIsDarkMode] = useState(false);
 
+    // --- Account Basics State ---
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [accountLoading, setAccountLoading] = useState(false);
+    const [accountMsg, setAccountMsg] = useState({ type: '', text: '' });
+
+    // --- Security State ---
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [securityLoading, setSecurityLoading] = useState(false);
+    const [securityMsg, setSecurityMsg] = useState({ type: '', text: '' });
+
+    // --- Preferences State ---
+    const [isPublicProfile, setIsPublicProfile] = useState(true);
+
+    // --- Notifications State ---
+    const [emailNotifications, setEmailNotifications] = useState(true);
+    const [inAppNotifications, setInAppNotifications] = useState(true);
+
+    // --- Load user data from context ---
+    useEffect(() => {
+        if (user) {
+            const nameParts = (user.name || '').split(' ');
+            setFirstName(nameParts[0] || '');
+            setLastName(nameParts.slice(1).join(' ') || '');
+            setEmail(user.email || '');
+            // Load persisted preferences
+            setEmailNotifications(user.emailNotifications !== false);
+            setInAppNotifications(user.inAppNotifications !== false);
+            setIsPublicProfile(user.isPublicProfile !== false);
+        }
+    }, [user]);
+
+    // --- Dark mode init ---
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -31,12 +71,93 @@ export default function CandidateSettings() {
         });
     };
 
+    // --- Save Account Basics ---
+    const handleSaveAccount = async () => {
+        setAccountMsg({ type: '', text: '' });
+        setAccountLoading(true);
+        try {
+            const fullName = `${firstName} ${lastName}`.trim();
+            const payload = { name: fullName };
+            // Only send email if it changed
+            if (email !== user.email) {
+                payload.email = email;
+            }
+            const res = await api.put('/auth/me', payload);
+            if (res.data.success) {
+                // Update context so the rest of the app reflects the changes
+                login({ ...user, ...res.data.data }, true);
+                setAccountMsg({ type: 'success', text: 'Account updated successfully!' });
+            }
+        } catch (err) {
+            setAccountMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update account.' });
+        } finally {
+            setAccountLoading(false);
+        }
+    };
+
+    // --- Save a single preference toggle ---
+    const savePreference = async (field, value) => {
+        try {
+            const res = await api.put('/auth/me', { [field]: value });
+            if (res.data.success) {
+                login({ ...user, ...res.data.data }, true);
+            }
+        } catch (err) {
+            console.error('Failed to save preference:', err);
+        }
+    };
+
+    const togglePublicProfile = () => {
+        const newVal = !isPublicProfile;
+        setIsPublicProfile(newVal);
+        savePreference('isPublicProfile', newVal);
+    };
+
+    const toggleEmailNotifications = () => {
+        const newVal = !emailNotifications;
+        setEmailNotifications(newVal);
+        savePreference('emailNotifications', newVal);
+    };
+
+    const toggleInAppNotifications = () => {
+        const newVal = !inAppNotifications;
+        setInAppNotifications(newVal);
+        savePreference('inAppNotifications', newVal);
+    };
+
+    // --- Update Password ---
+    const handleUpdatePassword = async () => {
+        setSecurityMsg({ type: '', text: '' });
+        if (!currentPassword || !newPassword) {
+            return setSecurityMsg({ type: 'error', text: 'Both fields are required.' });
+        }
+        if (newPassword.length < 6) {
+            return setSecurityMsg({ type: 'error', text: 'New password must be at least 6 characters.' });
+        }
+        setSecurityLoading(true);
+        try {
+            const res = await api.put('/auth/me', { currentPassword, newPassword });
+            if (res.data.success) {
+                setSecurityMsg({ type: 'success', text: 'Password updated successfully!' });
+                setCurrentPassword('');
+                setNewPassword('');
+            }
+        } catch (err) {
+            setSecurityMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update password.' });
+        } finally {
+            setSecurityLoading(false);
+        }
+    };
+
     const tabs = [
         { icon: User, label: "Account Basics" },
         { icon: Shield, label: "Security" },
         { icon: Sliders, label: "Preferences" },
         { icon: Bell, label: "Notifications" }
     ];
+
+    const displayName = user?.name || 'Candidate';
+    const avatarName = encodeURIComponent(displayName);
 
     return (
         <CandidateLayout>
@@ -69,48 +190,73 @@ export default function CandidateSettings() {
                             <div className="space-y-6">
                                 <div className="flex items-center gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                                     <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
-                                        <img src={`https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=fff`} className="w-full h-full object-cover" alt="Profile" />
+                                        <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff`} className="w-full h-full object-cover" alt="Profile" />
                                     </div>
-                                    <div className="flex gap-3">
-                                        <button className="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition shadow-sm">Upload New</button>
-                                        <button className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700">Remove</button>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">{displayName}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
                                     </div>
                                 </div>
+
+                                {accountMsg.text && (
+                                    <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-bold ${accountMsg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'}`}>
+                                        {accountMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                                        {accountMsg.text}
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-slate-500">First Name</label>
-                                        <input type="text" defaultValue="John" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                        <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Last Name</label>
-                                        <input type="text" defaultValue="Doe" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                        <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Email Address</label>
-                                        <input type="email" defaultValue="johndoe@example.com" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
                                     </div>
                                 </div>
                                 <div className="flex justify-end pt-4">
-                                    <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Save Changes</button>
+                                    <button onClick={handleSaveAccount} disabled={accountLoading} className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm disabled:opacity-60">
+                                        {accountLoading ? 'Saving...' : 'Save Changes'}
+                                    </button>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === "Security" && (
                             <div className="space-y-6">
+                                {securityMsg.text && (
+                                    <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-bold ${securityMsg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'}`}>
+                                        {securityMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                                        {securityMsg.text}
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Current Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                    <div className="relative">
+                                        <input type={showCurrentPassword ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-2.5 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                        <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                            {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500">New Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
-                                </div>
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                    <button className="text-red-500 text-sm font-bold hover:underline">Deactivate Account</button>
+                                    <div className="relative">
+                                        <input type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-2.5 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium dark:text-white" />
+                                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="flex justify-end pt-4">
-                                    <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm">Update Password</button>
+                                    <button onClick={handleUpdatePassword} disabled={securityLoading} className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm shadow-sm disabled:opacity-60">
+                                        {securityLoading ? 'Updating...' : 'Update Password'}
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -133,7 +279,7 @@ export default function CandidateSettings() {
                                         <p className="text-xs text-slate-500 dark:text-slate-400">Allow recruiters to find you in search.</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <input type="checkbox" className="sr-only peer" checked={isPublicProfile} onChange={togglePublicProfile} />
                                         <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                     </label>
                                 </div>
@@ -148,7 +294,7 @@ export default function CandidateSettings() {
                                         <p className="text-xs text-slate-500 dark:text-slate-400">Receive alerts via email.</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <input type="checkbox" className="sr-only peer" checked={emailNotifications} onChange={toggleEmailNotifications} />
                                         <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                     </label>
                                 </div>
@@ -158,7 +304,7 @@ export default function CandidateSettings() {
                                         <p className="text-xs text-slate-500 dark:text-slate-400">Show alerts inside the platform.</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                                        <input type="checkbox" className="sr-only peer" checked={inAppNotifications} onChange={toggleInAppNotifications} />
                                         <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                     </label>
                                 </div>

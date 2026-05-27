@@ -4,31 +4,53 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
+        const remembered = localStorage.getItem("eqhire_user");
+        if (remembered) return JSON.parse(remembered);
         const saved = sessionStorage.getItem("eqhire_user");
         return saved ? JSON.parse(saved) : null;
     });
 
     const [token, setToken] = useState(() => {
-        return sessionStorage.getItem("eqhire_token") || null;
+        return localStorage.getItem("eqhire_token") || sessionStorage.getItem("eqhire_token") || null;
+    });
+
+    const [rememberMe, setRememberMe] = useState(() => {
+        return !!localStorage.getItem("eqhire_user");
     });
 
     useEffect(() => {
         if (user) {
-            sessionStorage.setItem("eqhire_user", JSON.stringify(user));
+            const data = JSON.stringify(user);
+            if (rememberMe) {
+                localStorage.setItem("eqhire_user", data);
+                sessionStorage.removeItem("eqhire_user");
+            } else {
+                sessionStorage.setItem("eqhire_user", data);
+                localStorage.removeItem("eqhire_user");
+            }
         } else {
+            localStorage.removeItem("eqhire_user");
             sessionStorage.removeItem("eqhire_user");
         }
-    }, [user]);
+    }, [user, rememberMe]);
 
     useEffect(() => {
         if (token) {
-            sessionStorage.setItem("eqhire_token", token);
+            if (rememberMe) {
+                localStorage.setItem("eqhire_token", token);
+                sessionStorage.removeItem("eqhire_token");
+            } else {
+                sessionStorage.setItem("eqhire_token", token);
+                localStorage.removeItem("eqhire_token");
+            }
         } else {
+            localStorage.removeItem("eqhire_token");
             sessionStorage.removeItem("eqhire_token");
         }
-    }, [token]);
+    }, [token, rememberMe]);
 
-    const login = (userData, authToken) => {
+    const login = (userData, authToken, remember = false) => {
+        setRememberMe(remember);
         setUser(userData);
         if (authToken) setToken(authToken);
     };
@@ -36,6 +58,9 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         setToken(null);
+        setRememberMe(false);
+        localStorage.removeItem("eqhire_user");
+        localStorage.removeItem("eqhire_token");
         sessionStorage.removeItem("eqhire_user");
         sessionStorage.removeItem("eqhire_token");
     };

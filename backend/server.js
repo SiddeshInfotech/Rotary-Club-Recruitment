@@ -11,6 +11,7 @@ const jobRoutes = require("./routes/jobRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const recruiterProfileRoutes = require("./routes/recruiterProfileRoutes");
+const candidateDashboardRoutes = require("./routes/candidateDashboardRoutes");
 
 // Import routes — TEAMMATES' routes (auth, profiles, team recruiter)
 const authRoutes = require("./routes/authRoutes");
@@ -43,7 +44,7 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // ── Routes (Job Match / Search / Details — from backend_job) ──
 app.get("/api/jobs/search", jobMatchController.searchJobs);
@@ -62,6 +63,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/recruiter-profile", recruiterProfileRoutes);
+app.use("/api/candidate-dashboard", candidateDashboardRoutes);
 
 // ── Routes (Teammates' Auth & Profiles) ────────────────
 app.use("/api/auth", authRoutes);

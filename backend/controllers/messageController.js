@@ -98,12 +98,14 @@ exports.getMessages = async (req, res) => {
       buckets = await Message.find({ conversationId })
         .sort({ bucketNumber: 1 })
         .populate("messages.sender", "name")
-        .populate("messages.receiver", "name");
+        .populate("messages.receiver", "name")
+        .populate({ path: "messages.sharedPost", select: "content image authorName authorAvatar authorTitle createdAt" });
     } else {
-      // Populate sender/receiver for existing buckets
+      // Populate sender/receiver/sharedPost for existing buckets
       buckets = await Message.populate(buckets, [
         { path: "messages.sender", select: "name" },
-        { path: "messages.receiver", select: "name" }
+        { path: "messages.receiver", select: "name" },
+        { path: "messages.sharedPost", select: "content image authorName authorAvatar authorTitle createdAt" }
       ]);
     }
 
@@ -119,7 +121,7 @@ exports.getMessages = async (req, res) => {
 
 exports.sendMessage = async (req, res) => {
   try {
-    const { receiverId, content } = req.body;
+    const { receiverId, content, sharedPost } = req.body;
     
     // Create or find conversation
     let conversation = await Conversation.findOne({
@@ -151,6 +153,9 @@ exports.sendMessage = async (req, res) => {
       read: false,
       createdAt: new Date()
     };
+    if (sharedPost) {
+      newMessage.sharedPost = sharedPost;
+    }
 
     // Find the latest message bucket or create one if full (max 100 messages)
     let bucket = await Message.findOne({ conversationId: conversation._id })
@@ -179,10 +184,10 @@ exports.sendMessage = async (req, res) => {
     }
 
     // Populate sender info for Socket.io / Response format
-    const populatedBucket = await Message.populate(bucket, {
-      path: "messages.sender",
-      select: "name email role"
-    });
+    const populatedBucket = await Message.populate(bucket, [
+      { path: "messages.sender", select: "name email role" },
+      { path: "messages.sharedPost", select: "content image authorName authorAvatar authorTitle createdAt" }
+    ]);
 
     // Find the message we just added
     const savedMessage = populatedBucket.messages.find(m => m._id.toString() === messageId.toString());
