@@ -1,79 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RecruiterLayout from "../../layouts/RecruiterLayout";
-import EQRadarChart from "../../components/profile/EQRadarChart";
-import TraitBar from "../../components/profile/TraitBar";
 import StatBlock from "../../components/profile/StatBlock";
 import JobListingRow from "../../components/profile/JobListingRow";
-import TestimonialCard from "../../components/profile/TestimonialCard";
-import MembershipRow from "../../components/profile/MembershipRow";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 import {
-    MapPin, CheckCircle, Building2, Users,
-    Star, Globe, Mail, ChevronRight, Edit3, Settings, Briefcase,
-    X, Save, Eye, EyeOff, Key, FileText
+    MapPin, CheckCircle, Users, Building2,
+    Globe, Mail, ChevronRight, Edit3, Briefcase,
+    X, Save, Eye, EyeOff, Key
 } from "lucide-react";
-
-// Using the same mock data for now, but in reality it would come from useAuth or an API
-const RECRUITER_MOCK = {
-    name: "Priya Nair",
-    title: "Talent Director",
-    company: "NexCore Intelligence",
-    location: "Mumbai, India",
-    email: "p.nair@nexcore.ai",
-    website: "nexcore.ai",
-    verified: true,
-    memberSince: "2021",
-    //bio: "Passionate about matching emotionally intelligent professionals with organisations built for impact. 11+ years in strategic recruitment across FinTech and SaaS.",
-    hiresMade: 142,
-    avgMatchScore: 91,
-    responseTime: "< 24 hrs",
-    activeJobs: 6,
-};
-
-const EQ_FOCUS = {
-    Leadership: 95,
-    Adaptability: 88,
-    "Growth Mindset": 82,
-    Collaboration: 90,
-    Reliability: 78,
-    Teamwork: 85,
-    "Problem Solving": 80,
-    Loyalty: 72,
-};
-
-const ACTIVE_JOBS = [
-    { title: "Strategic Operations Director", type: "Full-time · Hybrid", location: "London, UK" },
-    { title: "Senior Product Catalyst", type: "Remote · Global", location: "Remote" },
-    { title: "Head of EQ Strategy", type: "Full-time · On-site", location: "Mumbai, IN" },
-    { title: "Talent Intelligence Lead", type: "Full-time · Hybrid", location: "Singapore" },
-];
-
-const TESTIMONIALS = [
-    {
-        name: "Marcus Sterling",
-        role: "VP of Operations",
-        text: "Priya understood exactly what I was looking for — not just skills, but cultural alignment. Placed me in under 3 weeks.",
-    },
-    {
-        name: "Ayesha Khan",
-        role: "Director of Product",
-        text: "The EQ-first approach made all the difference. Priya's shortlisting was incredibly precise and human.",
-    },
-];
-
-const MEMBERSHIPS = [
-    { org: "Rotary International", detail: "Active Professional Member", icon: Star },
-    { org: "BNI Global Network", detail: "Platinum Recruiter Chapter", icon: Building2 },
-    { org: "SHRM Certified", detail: "Senior Certified Professional", icon: CheckCircle },
-];
-
-const STATS = [
-    { label: "Hires Made", value: RECRUITER_MOCK.hiresMade },
-    { label: "Avg EQ Match", value: `${RECRUITER_MOCK.avgMatchScore}%` },
-    { label: "Response Time", value: RECRUITER_MOCK.responseTime },
-    { label: "Active Roles", value: RECRUITER_MOCK.activeJobs },
-];
 
 export default function MyProfile() {
     const { user, updateUser } = useAuth();
@@ -84,6 +20,30 @@ export default function MyProfile() {
     const [showNewPw, setShowNewPw] = useState(false);
     const [editSuccess, setEditSuccess] = useState("");
     const [editError, setEditError] = useState("");
+    
+    const [profileStats, setProfileStats] = useState(null);
+    const [openJobs, setOpenJobs] = useState([]);
+    
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const [statsRes, jobsRes] = await Promise.all([
+                    api.get("/dashboard/stats"),
+                    api.get("/dashboard/jobs")
+                ]);
+                
+                if (statsRes.data.success) {
+                    setProfileStats(statsRes.data.data);
+                }
+                if (jobsRes.data.success) {
+                    setOpenJobs(jobsRes.data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch dynamic profile data:", error);
+            }
+        };
+        fetchDashboardData();
+    }, []);
 
     const handleEditSave = async () => {
         setEditError("");
@@ -110,12 +70,15 @@ export default function MyProfile() {
         }
     };
     
-    // Fallback to mock data if user details aren't fully populated
     const RECRUITER = {
-        ...RECRUITER_MOCK,
-        name: user?.fullName || RECRUITER_MOCK.name,
-        email: user?.email || RECRUITER_MOCK.email,
-        // other overrides if needed
+        name: user?.fullName || user?.name || "Recruiter",
+        email: user?.email || "",
+        title: user?.currentTitle || user?.role || "Recruiter",
+        company: user?.company || "Independent Recruiter",
+        location: user?.location || "Not specified",
+        website: user?.website || "Not provided",
+        verified: user?.isVerified ?? true,
+        memberSince: user?.createdAt ? new Date(user.createdAt).getFullYear() : new Date().getFullYear(),
     };
 
     return (
@@ -157,9 +120,10 @@ export default function MyProfile() {
                             ABOUT
                         </p>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
-                            {STATS.map((s) => (
-                                <StatBlock key={s.label} label={s.label} value={s.value} />
-                            ))}
+                            <StatBlock label="Shortlisted" value={profileStats?.shortlisted || 0} />
+                            <StatBlock label="Avg EQ Match" value={`${profileStats?.avgEqMatch || 0}%`} />
+                            <StatBlock label="Total Applications" value={profileStats?.totalApplications || 0} />
+                            <StatBlock label="Active Roles" value={profileStats?.activeJobs || 0} />
                         </div>
                     </div>
 
@@ -192,35 +156,18 @@ export default function MyProfile() {
                             </Link>
                         </div>
                         <div className="flex flex-col gap-3">
-                            {ACTIVE_JOBS.map((job) => (
-                                <JobListingRow key={job.title} {...job} />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-8 shadow-sm">
-                        <p className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 mb-6">
-                            Candidate Testimonials
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            {TESTIMONIALS.map((t) => (
-                                <TestimonialCard key={t.name} {...t} />
-                            ))}
+                            {openJobs.length > 0 ? (
+                                openJobs.slice(0, 4).map((job) => (
+                                    <JobListingRow key={job._id} {...job} />
+                                ))
+                            ) : (
+                                <p className="text-sm text-slate-500 italic">No active jobs posted yet.</p>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-6">
-                    <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-[20px] p-6 shadow-sm">
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-4">
-                            MEMBERSHIPS
-                        </p>
-                        <div className="flex flex-col gap-3">
-                            {MEMBERSHIPS.map((m) => (
-                                <MembershipRow key={m.org} {...m} />
-                            ))}
-                        </div>
-                    </div>
 
                     <div className="bg-white dark:bg-[#131b2f] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mb-5">
@@ -269,18 +216,6 @@ export default function MyProfile() {
                             <Edit3 className="w-3.5 h-3.5" />
                             Edit Profile Details
                             <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-
-                    <div className="bg-slate-900 dark:bg-slate-800 rounded-[20px] p-6 flex flex-col gap-4">
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                            YOUR TIER
-                        </p>
-                        <p className="text-2xl font-black text-white leading-tight">
-                            Top 5% on<br />EQ-Hire Platform
-                        </p>
-                        <button className="w-full border border-white/20 hover:bg-white/10 text-white rounded-[20px] py-3 text-xs font-bold uppercase tracking-widest transition">
-                            View Tier Benefits
                         </button>
                     </div>
                 </div>

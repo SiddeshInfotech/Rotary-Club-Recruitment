@@ -47,9 +47,10 @@ exports.getAllJobs = async (req, res) => {
         const pageNumber = parseInt(page) || 1;
         const limitNumber = parseInt(limit) || 50;
         const skip = (pageNumber - 1) * limitNumber;
-
-        let query = { status: "Active" };
-
+        let query = {};
+        if (req.query.status !== "All") {
+            query.status = "Active";
+        }
         // ... (Keep your existing filtering logic here)
         if (keyword) {
             query.$or = [

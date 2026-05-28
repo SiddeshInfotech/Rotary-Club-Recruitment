@@ -128,7 +128,7 @@ export default function RecruiterLayout({ children }) {
                             <img src={`https://ui-avatars.com/api/?name=${avatarName}&background=0F172A&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Recruitment Tier</p>
+                            <p className="text-xs font-bold text-blue-600 dark:text-blue-400 truncate max-w-[150px]">{user?.company || user?.currentTitle || "Recruiter Profile"}</p>
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide truncate max-w-[150px]">{displayName.toUpperCase()}</p>
                         </div>
                     </Link>

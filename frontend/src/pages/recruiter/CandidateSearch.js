@@ -6,36 +6,87 @@ import api from "../../services/api";
 
 export default function CandidateSearch() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedRole, setSelectedRole] = useState("All Roles");
+    const [minMatchScore, setMinMatchScore] = useState(0);
+    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+    const [showMoreFiltersDropdown, setShowMoreFiltersDropdown] = useState(false);
+
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const jobId = searchParams.get("jobId");
     
     const [applications, setApplications] = useState([]);
+    const [allJobs, setAllJobs] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Close dropdowns when clicking outside
     useEffect(() => {
-        const fetchApplications = async () => {
+        const closeDropdowns = (e) => {
+            if (!e.target.closest('.filter-dropdown')) {
+                setShowRoleDropdown(false);
+                setShowMoreFiltersDropdown(false);
+            }
+        };
+        document.addEventListener('click', closeDropdowns);
+        return () => document.removeEventListener('click', closeDropdowns);
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
             try {
                 const url = jobId ? `/applications?jobId=${jobId}` : `/applications`;
-                const res = await api.get(url);
-                if (res.data.success) {
-                    setApplications(res.data.data);
+                const [appRes, jobsRes] = await Promise.all([
+                    api.get(url),
+                    api.get("/dashboard/jobs?status=All")
+                ]).catch(err => {
+                    console.error("Error fetching data parallelly", err);
+                    return [null, null]; // Provide fallback so we can still try to handle what we can
+                });
+                
+                if (appRes && appRes.data.success) {
+                    setApplications(appRes.data.data);
+                } else if (!appRes) { // fallback
+                     const fallbackRes = await api.get(url);
+                     if (fallbackRes.data.success) setApplications(fallbackRes.data.data);
+                }
+
+                if (jobsRes && jobsRes.data.success) {
+                    setAllJobs(jobsRes.data.data);
                 }
             } catch (error) {
-                console.error("Failed to fetch applications:", error);
+                console.error("Failed to fetch applications and jobs:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchApplications();
+        fetchData();
     }, [jobId]);
 
-    // Use candidate name or job title for filtering
+    // Extract unique roles from applications AND recruiter's posted jobs
+    const applicationRoles = applications.map(app => app.jobId?.title);
+    const postedRoles = allJobs.map(job => job.title);
+    const uniqueRoles = ["All Roles", ...new Set([...applicationRoles, ...postedRoles].filter(Boolean))];
+
+    // Filter Candidates based on Search, Role, and Match Score
     const filteredCandidates = applications.filter(app => {
         const candidateName = app.candidateId?.name || "";
         const role = app.jobId?.title || "";
-        return candidateName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-               role.toLowerCase().includes(searchQuery.toLowerCase());
+        const skills = app.candidateId?.skills || [];
+        
+        // 1. Text Search
+        const matchesSearch = 
+               candidateName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        // 2. Role Filter
+        const matchesRole = selectedRole === "All Roles" || role === selectedRole;
+
+        // 3. Match Score Filter
+        const matchScore = app.eqMatchScore !== undefined ? app.eqMatchScore : -1;
+        const matchesScore = minMatchScore === 0 || matchScore >= minMatchScore;
+
+        return matchesSearch && matchesRole && matchesScore;
     });
 
     return (
@@ -60,15 +111,59 @@ export default function CandidateSearch() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                            <span className="hidden sm:inline">Role Filter</span>
-                            <ChevronDown className="w-4 h-4" />
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                            <Filter className="w-4 h-4" />
-                            <span className="hidden sm:inline">More Filters</span>
-                        </button>
+                    <div className="flex gap-3 filter-dropdown relative">
+                        {/* Role Filter Dropdown */}
+                        <div className="relative">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setShowRoleDropdown(!showRoleDropdown); setShowMoreFiltersDropdown(false); }}
+                                className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${selectedRole !== "All Roles" ? 'bg-cyan-50 border-cyan-200 text-cyan-700 dark:bg-cyan-900/20 dark:border-cyan-800 dark:text-cyan-400' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                            >
+                                <span className="hidden sm:inline whitespace-nowrap">{selectedRole === "All Roles" ? "Role Filter" : selectedRole}</span>
+                                <ChevronDown className="w-4 h-4" />
+                            </button>
+                            {showRoleDropdown && (
+                                <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 py-2 z-50">
+                                    {uniqueRoles.map(role => (
+                                        <button 
+                                            key={role}
+                                            onClick={() => { setSelectedRole(role); setShowRoleDropdown(false); }}
+                                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${selectedRole === role ? "font-bold text-cyan-600 dark:text-cyan-400" : "text-gray-700 dark:text-slate-300"}`}
+                                        >
+                                            {role}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* More Filters Dropdown */}
+                        <div className="relative">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setShowMoreFiltersDropdown(!showMoreFiltersDropdown); setShowRoleDropdown(false); }}
+                                className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${minMatchScore > 0 ? 'bg-cyan-50 border-cyan-200 text-cyan-700 dark:bg-cyan-900/20 dark:border-cyan-800 dark:text-cyan-400' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span className="hidden sm:inline whitespace-nowrap">More Filters {minMatchScore > 0 && `(>${minMatchScore}%)`}</span>
+                            </button>
+                            {showMoreFiltersDropdown && (
+                                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 p-4 z-50 space-y-4">
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Minimum Match Score</h4>
+                                        <div className="space-y-1.5">
+                                            {[0, 50, 70, 80, 90].map(score => (
+                                                <button 
+                                                    key={score}
+                                                    onClick={() => { setMinMatchScore(score); setShowMoreFiltersDropdown(false); }}
+                                                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${minMatchScore === score ? "bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-bold" : "text-gray-700 dark:text-slate-300"}`}
+                                                >
+                                                    {score === 0 ? "Any Score" : `> ${score}% Match`}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

@@ -57,7 +57,12 @@ exports.getActiveJobListings = async (req, res) => {
     const recruiterId = req.user._id;
     const statusFilter = req.query.status || "Active";
 
-    const activeJobs = await Job.find({ recruiter: recruiterId, status: statusFilter }).lean();
+    const query = { recruiter: recruiterId };
+    if (statusFilter !== "All") {
+        query.status = statusFilter;
+    }
+
+    const activeJobs = await Job.find(query).lean();
 
     // For each job, get application count and top EQ match score
     const jobListings = await Promise.all(
