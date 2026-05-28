@@ -15,4 +15,7 @@ router.patch("/:id/shortlist", applicationController.shortlistApplication);
 // PATCH /api/applications/:id/reject — Mark as rejected
 router.patch("/:id/reject", applicationController.rejectApplication);
 
+// GET /api/applications/:id — Get a single application by ID
+router.get("/:id", applicationController.getApplicationById);
+
 module.exports = router;

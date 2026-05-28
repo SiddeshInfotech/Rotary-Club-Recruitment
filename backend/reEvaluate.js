@@ -10,7 +10,7 @@ async function run() {
   await mongoose.connect(MONGO_URI);
   console.log("Connected to DB");
 
-  const apps = await Application.find({ matchReasoning: { $in: ["", null, undefined] } });
+  const apps = await Application.find({});
   console.log(`Found ${apps.length} applications to evaluate.`);
 
   for (const app of apps) {
@@ -18,7 +18,7 @@ async function run() {
       const candidate = await User.findById(app.candidateId);
       const job = await Job.findById(app.jobId);
 
-      if (candidate && job && candidate.eqScores && candidate.eqScores.aggregate > 0) {
+      if (candidate && job) {
         console.log(`Evaluating Candidate ${candidate.name} for Job ${job.title}...`);
         
         // Ensure AI service is running or mock it if not
@@ -27,7 +27,8 @@ async function run() {
             name: candidate.name,
             currentTitle: candidate.currentTitle,
             skills: candidate.skills,
-            eqScores: candidate.eqScores
+            eqScores: candidate.eqScores,
+            technicalScores: candidate.technicalScores
           },
           job: {
             title: job.title,
@@ -40,8 +41,8 @@ async function run() {
         if (matchRes.data && matchRes.data.success) {
           const score = matchRes.data.data.matchScore;
           app.eqMatchScore = score;
-          app.technicalScore = matchRes.data.data.details.technicalScore || 0;
-          app.eqScore = matchRes.data.data.details.eqScore || 0;
+          app.technicalScore = matchRes.data.data.details.technicalScore !== undefined ? matchRes.data.data.details.technicalScore : 0;
+          app.eqScore = matchRes.data.data.details.eqScore !== undefined ? matchRes.data.data.details.eqScore : 0;
           app.matchReasoning = matchRes.data.data.details.reasoning || "";
           await app.save();
           console.log(`-> Saved score: ${score}%`);

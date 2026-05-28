@@ -13,6 +13,7 @@ const interviewSchema = new mongoose.Schema(
     time: { type: String, default: "" },
     duration: { type: Number, default: 30 },
     type: { type: String, enum: ["Video", "Phone", "In-person", "Panel"], default: "Video" },
+    round: { type: String, enum: ["Online Assessment", "Technical Round 1", "Technical Round 2", "HR Round", "Offer Discussion", "General Interview"], default: "General Interview" },
     status: { type: String, enum: ["Scheduled", "Completed", "Cancelled", "Rescheduled"], default: "Scheduled" },
     notes: { type: String, default: "" },
     meetingLink: { type: String, default: "" },

@@ -4,6 +4,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const axios = require("axios");
 
+
 // GET /api/applications — List all applications (optional filter by jobId)
 exports.getAllApplications = async (req, res) => {
   try {
@@ -53,7 +54,8 @@ exports.createApplication = async (req, res) => {
             name: candidate.name,
             currentTitle: candidate.currentTitle,
             skills: candidate.skills,
-            eqScores: candidate.eqScores
+            eqScores: candidate.eqScores,
+            technicalScores: candidate.technicalScores
           },
           job: {
             title: job.title,
@@ -78,6 +80,9 @@ exports.createApplication = async (req, res) => {
 
     const applicationData = { ...req.body, eqMatchScore, technicalScore, eqScore, matchReasoning };
     const application = await Application.create(applicationData);
+
+
+
     res.status(201).json({ success: true, data: application });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -90,14 +95,15 @@ exports.shortlistApplication = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid application ID" });
     }
-    const application = await Application.findByIdAndUpdate(
-      req.params.id,
-      { status: "Shortlisted" },
-      { new: true }
-    );
+    const application = await Application.findById(req.params.id).populate("jobId");
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
+    application.status = "Shortlisted";
+    await application.save();
+
+
+
     res.json({ success: true, data: application });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -110,14 +116,15 @@ exports.rejectApplication = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ success: false, message: "Invalid application ID" });
     }
-    const application = await Application.findByIdAndUpdate(
-      req.params.id,
-      { status: "Rejected" },
-      { new: true }
-    );
+    const application = await Application.findById(req.params.id).populate("jobId");
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
+    application.status = "Rejected";
+    await application.save();
+
+
+
     res.json({ success: true, data: application });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -143,7 +150,8 @@ exports.reEvaluateCandidateApplications = async (candidateId) => {
             name: candidate.name,
             currentTitle: candidate.currentTitle,
             skills: candidate.skills,
-            eqScores: candidate.eqScores
+            eqScores: candidate.eqScores,
+            technicalScores: candidate.technicalScores
           },
           job: {
             title: job.title,
@@ -167,5 +175,20 @@ exports.reEvaluateCandidateApplications = async (candidateId) => {
     }
   } catch (error) {
     console.error("Error in reEvaluateCandidateApplications:", error.message);
+  }
+};
+
+// GET /api/applications/:id — Get application by ID
+exports.getApplicationById = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate("jobId")
+      .populate("candidateId");
+    if (!application) {
+      return res.status(404).json({ success: false, message: "Application not found" });
+    }
+    res.json({ success: true, data: application });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

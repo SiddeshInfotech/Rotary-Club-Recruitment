@@ -324,11 +324,6 @@ exports.getAssessmentById = async (req, res) => {
 
 const { generateJSON } = require("../services/aiClient");
 
-/**
- * POST /api/assessment/evaluate-match
- * 
- * Dynamically calculates a Total Fit Score based on Technical (60%) and EQ (40%) match.
- */
 exports.evaluateMatch = async (req, res) => {
   try {
     const { candidate, job } = req.body;
@@ -337,19 +332,49 @@ exports.evaluateMatch = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing candidate or job data" });
     }
 
+    const hasTech = candidate.technicalScores && candidate.technicalScores.aggregate > 0;
+    const hasEQ = candidate.eqScores && candidate.eqScores.aggregate > 0;
+
+    const actualTechScore = hasTech ? candidate.technicalScores.aggregate : 0;
+    const actualEqScore = hasEQ ? candidate.eqScores.aggregate : 0;
+
+    // If both are not taken, we can skip Gemini entirely or just return -1 for all
+    if (!hasTech && !hasEQ) {
+      return res.json({
+        success: true,
+        data: {
+          matchScore: -1,
+          details: {
+            skillsAlignmentFactor: 0,
+            technicalScore: -1,
+            eqScore: -1,
+            totalMatchScore: -1,
+            reasoning: "Candidate has not taken either the EQ Assessment or the Technical Assessment, so no fit scores can be determined."
+          }
+        }
+      });
+    }
+
+    // Prepare prompt instructions dynamically
+    let promptInstructions = "";
+    if (hasTech) {
+      promptInstructions += `- Analyze the Skills Alignment Factor (0 to 100%): How well do the candidate's skills and experience match the requirements and title of this job?\n`;
+    } else {
+      promptInstructions += `- Skills Alignment Factor: Since the candidate has not completed their Technical Assessment, set this factor to 0.\n`;
+    }
+
     const prompt = `
 You are an expert technical and behavioral recruiter.
 Your task is to evaluate a candidate's fit for a specific job.
-
-The fit must be calculated as a Weighted Total Fit Score (out of 100).
-- Technical Match (60% weight): Compare the candidate's skills, experience, and current title against the job's title, description, skills required, and experience level.
-- EQ Match (40% weight): Compare the candidate's emotional intelligence scores (8 traits) against the psychological demands of the job.
 
 Candidate Profile:
 - Name: ${candidate.name || 'Candidate'}
 - Current Title: ${candidate.currentTitle || 'N/A'}
 - Skills: ${candidate.skills || 'N/A'}
-- EQ Scores: ${JSON.stringify(candidate.eqScores || {})}
+- Actual EQ Assessment Score: ${hasEQ ? actualEqScore + '%' : 'Not assessed yet (N/A)'}
+- Actual EQ Dimension Breakdown: ${JSON.stringify(candidate.eqScores || {})}
+- Actual Technical Assessment Score: ${hasTech ? actualTechScore + '%' : 'Not assessed yet (N/A)'}
+- Actual Technical Dimension Breakdown: ${JSON.stringify(candidate.technicalScores || {})}
 
 Job Profile:
 - Title: ${job.title || 'Job'}
@@ -357,22 +382,39 @@ Job Profile:
 - Experience Level: ${job.experienceLevel || 'Not specified'}
 - Description: ${job.description || 'Not specified'}
 
+Instructions:
+${promptInstructions}
+- Analyze the candidate's EQ traits in relation to the job's demands and integrate this analysis into your reasoning text.
+Generate an evaluation explaining the match. Write a 2-3 sentence reasoning explaining the alignment or lack thereof.
+
 Analyze the match and provide your evaluation as a valid JSON object with the following structure:
 {
-  "technicalScore": <0-100 number>,
-  "eqScore": <0-100 number>,
-  "totalMatchScore": <0-100 number (60% tech + 40% eq)>,
-  "reasoning": "<A 2-3 sentence explanation of why this score was given>"
+  "skillsAlignmentFactor": <0-100 number>,
+  "reasoning": "<A 2-3 sentence explanation explaining the match. If they have taken a test, explain how their general assessment score maps to this specific job. If they haven't taken a test, note that the assessment is pending.>"
 }
 `;
 
     const evaluation = await generateJSON(prompt);
 
+    // Compute scores strictly in JavaScript to avoid LLM math errors
+    const skillsAlignmentFactor = hasTech ? (evaluation.skillsAlignmentFactor || 0) : 0;
+
+    const technicalScore = hasTech ? Math.round(actualTechScore * (skillsAlignmentFactor / 100)) : -1;
+    const eqScore = hasEQ ? actualEqScore : -1;
+
+    const totalMatchScore = (hasTech && hasEQ) ? Math.round(0.60 * technicalScore + 0.40 * eqScore) : -1;
+
     res.json({
       success: true,
       data: {
-        matchScore: evaluation.totalMatchScore || 0,
-        details: evaluation
+        matchScore: totalMatchScore,
+        details: {
+          skillsAlignmentFactor,
+          technicalScore,
+          eqScore,
+          totalMatchScore,
+          reasoning: evaluation.reasoning || ""
+        }
       }
     });
 

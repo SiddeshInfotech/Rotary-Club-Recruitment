@@ -60,10 +60,10 @@ exports.getMetrics = async (req, res) => {
       jobId: { $in: jobIds },
     });
 
-    // Interviews scheduled (shortlisted applications)
+    // Interviews scheduled (shortlisted applications including scheduled and hired)
     const interviewsScheduled = await Application.countDocuments({
       jobId: { $in: jobIds },
-      status: "Shortlisted",
+      status: { $in: ["Shortlisted", "Interview Scheduled", "Offer Extended", "Hired"] },
     });
 
     // Average time to hire (in days) — computed from the time between
@@ -74,7 +74,7 @@ exports.getMetrics = async (req, res) => {
         {
           $match: {
             jobId: { $in: jobIds },
-            status: "Shortlisted",
+            status: { $in: ["Shortlisted", "Interview Scheduled", "Offer Extended", "Hired"] },
           },
         },
         {

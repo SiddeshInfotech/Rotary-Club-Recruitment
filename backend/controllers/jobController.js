@@ -45,7 +45,7 @@ exports.getAllJobs = async (req, res) => {
         
         // 2. Pagination Math
         const pageNumber = parseInt(page) || 1;
-        const limitNumber = parseInt(limit) || 10;
+        const limitNumber = parseInt(limit) || 50;
         const skip = (pageNumber - 1) * limitNumber;
 
         let query = { status: "Active" };

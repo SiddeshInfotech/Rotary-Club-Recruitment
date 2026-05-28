@@ -47,7 +47,7 @@ function getDefaultAvatar(type) {
 function getCTA(type) {
     switch (type) {
         case "job": return { label: "View jobs", path: "/job-search" };
-        case "interview": return { label: "View interview", path: "/candidate" };
+        case "interview": return { label: "View interview", path: "/my-jobs" };
         case "network": return { label: "View profile", path: "/network" };
         default: return null;
     }

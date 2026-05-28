@@ -23,10 +23,10 @@ exports.getStats = async (req, res) => {
       jobId: { $in: jobIds },
     });
 
-    // Shortlisted candidates
+    // Shortlisted candidates (includes shortlisted, interviewing, and offered/hired stages)
     const shortlisted = await Application.countDocuments({
       jobId: { $in: jobIds },
-      status: "Shortlisted",
+      status: { $in: ["Shortlisted", "Interview Scheduled", "Offer Extended", "Hired"] },
     });
 
     // Average EQ match score across all applications

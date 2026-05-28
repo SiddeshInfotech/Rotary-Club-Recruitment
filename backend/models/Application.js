@@ -14,21 +14,21 @@ const applicationSchema = new mongoose.Schema(
     },
     eqMatchScore: {
       type: Number,
-      min: 0,
+      min: -1,
       max: 100,
-      default: 0,
+      default: -1,
     },
     technicalScore: {
       type: Number,
-      min: 0,
+      min: -1,
       max: 100,
-      default: 0,
+      default: -1,
     },
     eqScore: {
       type: Number,
-      min: 0,
+      min: -1,
       max: 100,
-      default: 0,
+      default: -1,
     },
     matchReasoning: {
       type: String,
@@ -36,8 +36,12 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Applied", "Shortlisted", "Rejected", "Interview Scheduled", "Reviewing Profile"],
+      enum: ["Applied", "Shortlisted", "Rejected", "Interview Scheduled", "Reviewing Profile", "Offer Extended", "Hired"],
       default: "Applied",
+    },
+    currentRound: {
+      type: String,
+      default: "",
     },
   },
   {
