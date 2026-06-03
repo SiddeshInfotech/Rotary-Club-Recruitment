@@ -41,17 +41,20 @@ exports.createInterview = async (req, res) => {
         }
         app.currentRound = round || "General Interview";
         await app.save();
-
-        // Send notification to candidate
-        await createNotification({
-          user: candidateId,
-          type: "interview",
-          title: isAssessment ? "Online Assessment Scheduled" : "Interview Scheduled",
-          message: `Your ${round || "General Interview"} for ${jobTitle} is scheduled on ${date} at ${time}.`,
-          actorName: req.user.name || "Recruiter",
-          link: "/my-jobs"
-        });
       }
+    }
+
+    if (candidateId) {
+      const isAssessment = round === "Online Assessment";
+      // Send notification to candidate
+      await createNotification({
+        user: candidateId,
+        type: "interview",
+        title: isAssessment ? "Online Assessment Scheduled" : "Interview Scheduled",
+        message: `Your ${round || "General Interview"} for ${jobTitle} is scheduled on ${date} at ${time}.`,
+        actorName: req.user.name || "Recruiter",
+        link: "/my-jobs"
+      });
     }
 
     res.status(201).json({ success: true, data: interview });

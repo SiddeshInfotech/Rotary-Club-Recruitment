@@ -17,13 +17,15 @@ export default function RecruiterDashboard() {
         shortlisted: 0,
         avgEqMatch: 0
     });
+    const [topCandidates, setTopCandidates] = useState([]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [jobsRes, statsRes] = await Promise.all([
+                const [jobsRes, statsRes, topCandidatesRes] = await Promise.all([
                     api.get("/dashboard/jobs"),
-                    api.get("/dashboard/stats")
+                    api.get("/dashboard/stats"),
+                    api.get("/dashboard/top-candidates")
                 ]);
                 
                 if (jobsRes.data.success) {
@@ -31,6 +33,9 @@ export default function RecruiterDashboard() {
                 }
                 if (statsRes.data.success) {
                     setPipelineStats(statsRes.data.data);
+                }
+                if (topCandidatesRes.data.success) {
+                    setTopCandidates(topCandidatesRes.data.data);
                 }
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
@@ -219,26 +224,26 @@ export default function RecruiterDashboard() {
                             <span className="text-[9px] font-bold text-white tracking-widest uppercase bg-[#0070f3] px-2 py-0.5 rounded-md">NEW</span>
                         </div>
                         <div className="flex flex-col gap-3 mb-6">
-                            {[
-                                { name: "Sarah Chen", type: "Empathetic Leader", match: 89, avatarName: "Sarah+Chen" },
-                                { name: "Marcus Johnson", type: "Strategic Thinker", match: 82, avatarName: "Marcus+Johnson" },
-                                { name: "Emily Rodriguez", type: "Creative Innovator", match: 76, avatarName: "Emily+Rodriguez" }
-                            ].map((candidate, idx) => (
-                                <div key={idx} className="bg-white dark:bg-[#131b2f] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
-                                            <img src={`https://ui-avatars.com/api/?name=${candidate.avatarName}&background=f1f5f9&color=0f172a&bold=true`} alt="User" className="w-full h-full object-cover dark:opacity-80" />
+                            {topCandidates.length > 0 ? (
+                                topCandidates.map((candidate) => (
+                                    <div key={candidate._id} className="bg-white dark:bg-[#131b2f] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                                                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=f1f5f9&color=0f172a&bold=true`} alt="User" className="w-full h-full object-cover dark:opacity-80" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">{candidate.name}</h3>
+                                                <p className="text-[12px] text-slate-500 dark:text-slate-400 max-w-[150px] truncate">{candidate.title}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-[14px] text-slate-900 dark:text-white mb-0.5">{candidate.name}</h3>
-                                            <p className="text-[12px] text-slate-500 dark:text-slate-400">{candidate.type}</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-[#0070f3] dark:text-[#3b82f6] text-sm">{candidate.matchPercentage}%</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-[#0070f3] dark:text-[#3b82f6] text-sm">{candidate.match}%</span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <div className="text-center py-6 text-sm text-slate-500">No matches found yet.</div>
+                            )}
                         </div>
 
                         <div className="text-center">

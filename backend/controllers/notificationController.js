@@ -14,3 +14,27 @@ exports.markAsRead = async (req, res) => {
     res.json({ success: true, message: "All notifications marked as read" });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
+
+exports.markOneAsRead = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
+      { read: true },
+      { new: true }
+    );
+    if (!notification) {
+      return res.status(404).json({ success: false, message: "Notification not found" });
+    }
+    res.json({ success: true, data: notification });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
+exports.deleteNotification = async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    if (!notification) {
+      return res.status(404).json({ success: false, message: "Notification not found" });
+    }
+    res.json({ success: true, message: "Notification deleted" });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,15 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
+
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('eqhire_remembered_email');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
@@ -21,6 +30,12 @@ export default function Login() {
             const res = await api.post('/auth/login', { email, password });
 
             if (res.data.success) {
+                if (rememberMe) {
+                    localStorage.setItem('eqhire_remembered_email', email);
+                } else {
+                    localStorage.removeItem('eqhire_remembered_email');
+                }
+
                 const { user: userData, token } = res.data;
                 login({
                     ...userData,
@@ -104,7 +119,17 @@ export default function Login() {
                     <div className="flex items-center justify-between pt-2">
                         <label className="flex items-center gap-2 cursor-pointer group">
                             <div className="relative flex items-center justify-center">
-                                <input type="checkbox" className="peer sr-only" />
+                                <input 
+                                    type="checkbox" 
+                                    className="peer sr-only" 
+                                    checked={rememberMe}
+                                    onChange={(e) => {
+                                        setRememberMe(e.target.checked);
+                                        if (!e.target.checked) {
+                                            localStorage.removeItem('eqhire_remembered_email');
+                                        }
+                                    }}
+                                />
                                 <div className="w-5 h-5 border-2 border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all"></div>
                                 <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
                                     <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

@@ -195,6 +195,23 @@ exports.sendMessage = async (req, res) => {
     const populatedConversation = await Conversation.findById(conversation._id)
       .populate("participants", "name email role location company currentTitle");
 
+    // Generate a notification for the receiver
+    const createNotification = require("../utils/createNotification");
+    const senderName = req.user.name || "A user";
+    
+    const receiver = populatedConversation.participants.find(p => p._id.toString() === receiverId.toString());
+    const receiverRole = receiver ? receiver.role : "candidate";
+    const linkPath = receiverRole === "recruiter" ? "/recruiter/messages" : "/candidate/messages";
+
+    await createNotification({
+      user: receiverId,
+      type: "message",
+      title: "New Message",
+      message: `${senderName} sent you a direct message.`,
+      actorName: senderName,
+      link: linkPath
+    });
+
     // Emit live updates to both receiver and sender (for multi-tab sync)
     emitToUser(receiverId, "new_message", { message: savedMessage, conversation: populatedConversation });
     emitToUser(req.user.id, "new_message", { message: savedMessage, conversation: populatedConversation });

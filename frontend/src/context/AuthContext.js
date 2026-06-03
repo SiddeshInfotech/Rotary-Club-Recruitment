@@ -61,6 +61,7 @@ export function AuthProvider({ children }) {
         setRememberMe(false);
         localStorage.removeItem("eqhire_user");
         localStorage.removeItem("eqhire_token");
+        localStorage.removeItem("eqhire_remembered_email");
         sessionStorage.removeItem("eqhire_user");
         sessionStorage.removeItem("eqhire_token");
     };

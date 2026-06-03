@@ -128,6 +128,26 @@ const job = await Job.create({
 recruiter: req.user._id, // LINKING: Uses the ID from Auth Middleware
 companyName: req.user.company || "EQ Hire Partner" // Pulls from user profile
 });
+
+// Notify all candidates about the new job
+const User = require("../models/User");
+const Notification = require("../models/Notification");
+const candidates = await User.find({ role: "candidate" });
+const notifications = candidates.map(candidate => ({
+  user: candidate._id,
+  type: "job",
+  title: "New Job Posted",
+  message: `${job.companyName} is hiring for a ${job.title}.`,
+  actorName: job.companyName,
+  link: "/job-search",
+  createdAt: new Date(),
+  updatedAt: new Date()
+}));
+
+if (notifications.length > 0) {
+  await Notification.insertMany(notifications);
+}
+
 res.status(201).json({ success: true, data: job });
 } catch (error) {
 res.status(400).json({ success: false, message: error.message });

@@ -81,9 +81,20 @@ exports.createApplication = async (req, res) => {
     const applicationData = { ...req.body, eqMatchScore, technicalScore, eqScore, matchReasoning };
     const application = await Application.create(applicationData);
 
-
-
-    res.status(201).json({ success: true, data: application });
+    // Send notification to recruiter
+    if (job && job.recruiter) {
+      const candidateName = candidate ? candidate.name : "A candidate";
+      const createNotification = require("../utils/createNotification");
+      const matchText = eqMatchScore > 0 ? ` with a ${eqMatchScore}% EQ Match.` : ".";
+      await createNotification({
+        user: job.recruiter,
+        type: "application",
+        title: "New Application Received",
+        message: `${candidateName} applied for the ${job.title} role${matchText}`,
+        actorName: candidateName,
+        link: `/recruiter/candidate/${candidateId}`
+      });
+    }    res.status(201).json({ success: true, data: application });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
